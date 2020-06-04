@@ -5,6 +5,7 @@ import java.sql.*;
 import java.util.*;
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
+import edu.carleton.enchilada.gui.MainFrame;
 
 /**
  * A utility for importing and exporting the entire database without using SQL Server backups
@@ -153,7 +154,7 @@ public class RawDataLoader {
 	private void saveFile(String table, String fname) {
 		try {
 			Process proc = Runtime.getRuntime().exec(
-					"bcp \"USE SpASMSdb; SELECT * FROM " + table + "\" queryout " + fname + " -c -U SpASMS -P finally");
+					"bcp \"USE " + MainFrame.dbname + "; SELECT * FROM " + table + "\" queryout " + fname + " -c -U SpASMS -P finally");
 		}
 		catch (IOException ex) {
 			ex.printStackTrace();

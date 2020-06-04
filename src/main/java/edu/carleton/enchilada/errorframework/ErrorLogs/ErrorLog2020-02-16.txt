@@ -1,2 +1,0 @@
-ErrorLog: started @ 2020-02-16
-23:15:15:101 : SQLServer Error: SQL Exception inserting atom.  Please check incoming data for correct format.

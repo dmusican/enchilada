@@ -1,2 +1,0 @@
-ErrorLog: started @ 2020-02-16
-22:48:14:723 : SQLServer Error: Exception deleting collection.

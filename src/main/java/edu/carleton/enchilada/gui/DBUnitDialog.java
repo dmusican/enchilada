@@ -87,7 +87,7 @@ public class DBUnitDialog extends JFrame implements ActionListener{
 	private JButton saveButton;
 	private JButton loadButton;
 	private JButton exitButton;
-	private static final String databaseName = "SpASMSdb";
+	private static final String databaseName = MainFrame.dbname;
 
 	public DBUnitDialog(){
 		super("DB Unit Save/Restore Interface");

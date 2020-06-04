@@ -40,6 +40,8 @@
 
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.gui.MainFrame;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
@@ -58,7 +60,7 @@ public class MySQLDatabase extends Database {
 	public MySQLDatabase() {
 		url = "localhost";
 		port = "3306";
-		database = "SpASMSdb";
+		database = MainFrame.dbname;
 		loadConfiguration("MySQL");
 	}
 	

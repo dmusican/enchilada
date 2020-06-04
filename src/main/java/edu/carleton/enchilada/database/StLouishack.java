@@ -1,5 +1,7 @@
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.gui.MainFrame;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -26,7 +28,7 @@ public class StLouishack {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		Database db = (Database) Database.getDatabase("SpASMSDB");
+		Database db = (Database) Database.getDatabase(MainFrame.dbname);
 		db.openConnection();
 		Connection con = db.getCon();
 		try {

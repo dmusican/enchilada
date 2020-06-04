@@ -184,7 +184,8 @@ public class MainFrame extends JFrame implements ActionListener
 	private JLabel currentlyShowing;
 	private JButton searchButton;
 	private int currCollection;
-	
+
+	public static String dbname = "SpASMSdb";
 	/**
 	 * Constructor.  Creates and shows the GUI.	 
 	 */
@@ -920,7 +921,7 @@ public class MainFrame extends JFrame implements ActionListener
 					public Object construct() {
 						db.closeConnection();
 						try {
-							Database.rebuildDatabase("SpASMSdb");
+							Database.rebuildDatabase(dbname);
 							return true;
 						}
 						catch (SQLException ex) {
@@ -1774,7 +1775,7 @@ public class MainFrame extends JFrame implements ActionListener
 	
 	/**
 	 * Offers functionality for connecting different databases while maintaining
-	 * the connection to "SpASMSdb" in main method, refactored by @author xzhang9
+	 * the connection to dbname in main method, refactored by @author xzhang9
 	 */
 	public static void main(String[] args) {
 		/* "If you are going to set the look and feel, you should do it as the 
@@ -1795,7 +1796,7 @@ public class MainFrame extends JFrame implements ActionListener
 		
 		// @author xzhang9 
 		// Verify that production database exists, and give user opportunity to create if it does not.
-		if(!connectDB("SpASMSdb")) return;
+		if(!connectDB(dbname)) return;
 		db.openConnection();
 		
 
@@ -1820,7 +1821,7 @@ public class MainFrame extends JFrame implements ActionListener
 				if (action == 0){
 					try{
 						db.closeConnection();
-						Database.rebuildDatabase("SpASMSdb");
+						Database.rebuildDatabase(dbname);
 						db.openConnection();
 					}
 					catch(SQLException e){
@@ -1846,7 +1847,7 @@ public class MainFrame extends JFrame implements ActionListener
 
 	/**
 	 * Offers functionality for connecting different databases while maintaining
-	 * the connection to "SpASMSdb" in main method
+	 * the connection to dbname in main method
 	 * @author xzhang9
 	 */
 	private static boolean connectDB(String dbName) {

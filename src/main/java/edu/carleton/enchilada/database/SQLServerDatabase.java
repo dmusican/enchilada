@@ -46,6 +46,8 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.gui.MainFrame;
+
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -67,7 +69,7 @@ public class SQLServerDatabase extends Database
 	{
 		url = "localhost";
 		port = "1433";
-		database = "SpASMSdb";
+		database = MainFrame.dbname;
 		loadConfiguration("SQLServer");
 	}
 	

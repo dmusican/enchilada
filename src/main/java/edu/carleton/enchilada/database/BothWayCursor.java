@@ -8,10 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import net.sourceforge.jtds.jdbc.ColInfo;
-import net.sourceforge.jtds.jdbc.JtdsResultSet;
-import net.sourceforge.jtds.jdbc.JtdsStatement;
-
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 

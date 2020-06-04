@@ -153,7 +153,7 @@ public abstract class Database implements InfoWarehouse {
 	public static InfoWarehouse getDatabase(String dbName) {
 		//TODO-POSTGRES
 		//return new SQLServerDatabase(dbName);
-		return  new PostgreSQLDatabase(dbName);
+		return  new SQLiteDatabase(dbName);
 		//TODO-POSTGRES
 	}
 	public String getDatabaseName(){
@@ -271,13 +271,13 @@ public abstract class Database implements InfoWarehouse {
 	 * @return true on success
 	 */
 	protected boolean openConnectionImpl(String driver, String connectionstr, String user, String pass) {
-		try {
-			Class.forName(driver).newInstance();
-		} catch (Exception e) {
-			ErrorLogger.writeExceptionToLogAndPrompt("Database","Failed to load current driver for database " + database);
-			System.err.println("Failed to load current driver.");
-			return false;
-		} // end catch
+//		try {
+//			Class.forName(driver).newInstance();
+//		} catch (Exception e) {
+//			ErrorLogger.writeExceptionToLogAndPrompt("Database","Failed to load current driver for database " + database);
+//			System.err.println("Failed to load current driver.");
+//			return false;
+//		} // end catch
 		con = null;
 		try {
 			con = DriverManager.getConnection(connectionstr, user, pass);

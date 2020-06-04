@@ -19,6 +19,7 @@ import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.errorframework.WriteException;
 import edu.carleton.enchilada.externalswing.ProgressTask;
+import edu.carleton.enchilada.gui.MainFrame;
 
 /**
  * TSImport.java - Import a list of CSV files to the database.
@@ -383,7 +384,7 @@ public class TSImport{
     }
 
     public static void main(String[] args) {
-    	InfoWarehouse db = Database.getDatabase("SpASMSdb");
+    	InfoWarehouse db = Database.getDatabase(MainFrame.dbname);
     	db.openConnection();
     	
     	TSImport t = new TSImport(db, null, true);

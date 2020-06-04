@@ -1,2 +1,0 @@
-ErrorLog: started @ 2020-02-17
-19:09:19:066 : SQLServer Error: SQL exception creating aggregate basis temp table

@@ -8,9 +8,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 /**
- * Makes database work with PostgreSQL
+ * Makes database work with SQLite
  */
-public class PostgreSQLDatabase extends Database {
+public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
 
@@ -18,15 +18,15 @@ public class PostgreSQLDatabase extends Database {
      * Connect to the database using default settings, or overriding them with
      * the SQLServer section from config.ini if applicable.
      */
-    public PostgreSQLDatabase()
+    public SQLiteDatabase()
     {
         url = "localhost";
         port = "1433";
         database = MainFrame.dbname;
-        loadConfiguration("PostgreSQL");
+        loadConfiguration("SQLite");
     }
 
-    public PostgreSQLDatabase(String dbName) {
+    public SQLiteDatabase(String dbName) {
         this();
         database = dbName;
     }
@@ -35,7 +35,10 @@ public class PostgreSQLDatabase extends Database {
      * @see InfoWarehouse.java#isPresent()
      */
     public boolean isPresent() {
-        return isPresentImpl("SELECT datname FROM pg_database");
+        return isPresentImpl(
+                "SELECT name FROM sqlite_master\n" +
+                "WHERE type='table'\n" +
+                "ORDER BY name");
     }
 
     /**
@@ -45,11 +48,12 @@ public class PostgreSQLDatabase extends Database {
      */
     public boolean openConnection() {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
-                "jdbc:postgresql://localhost/"+MainFrame.dbname,
+                "java.sql.Driver",
+//                "net.sourceforge.jtds.jdbc.Driver",
+                "jdbc:sqlite:/tmp/enchilada/" + MainFrame.dbname,
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName=SpASMSdb;SelectMethod=cursor;",
-                "postgres",
+                "SpASMS",
                 "finally");
     }
     public boolean openConnection(String s) {
@@ -69,10 +73,10 @@ public class PostgreSQLDatabase extends Database {
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
                 "net.sourceforge.jtds.jdbc.Driver",
-                "jdbc:postgresql://localhost/",
+                "jdbc:sqlite:/tmp/enchilada/" + MainFrame.dbname,
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;SelectMethod=cursor;",
-                "postgres",
+                "SpASMS",
                 "finally");
     }
 
@@ -89,7 +93,7 @@ public class PostgreSQLDatabase extends Database {
      * faster than equivalent addBatch() and executeBatch()
      */
     protected BatchExecuter getBatchExecuter(Statement stmt) {
-        return new PostgreSQLDatabase.StringBatchExecuter(stmt);
+        return new SQLiteDatabase.StringBatchExecuter(stmt);
     }
 
     protected class StringBatchExecuter extends BatchExecuter {
