@@ -416,4 +416,6 @@ public interface InfoWarehouse {
 
 	public void dropDatabaseCommands() throws SQLException;
 	public void createDatabaseCommands(String dbName) throws SQLException;
+	public String getRebuildScriptFilename();
+
 }

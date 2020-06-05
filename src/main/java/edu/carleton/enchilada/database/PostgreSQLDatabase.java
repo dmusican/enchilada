@@ -38,6 +38,10 @@ public class PostgreSQLDatabase extends Database {
         return isPresentImpl("SELECT datname FROM pg_database");
     }
 
+    public String getRebuildScriptFilename() {
+        return "PostgreSQLRebuildDatabase.txt";
+    }
+
     /**
      * Open a connection to a MySQL database:
      * uses the jtds driver from jtds-*.jar

@@ -658,10 +658,7 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			db.openConnection(dbName);
 			con = db.getCon();
-			//TODO-POSTGRES
-			//in = new Scanner(new File("SQLServerRebuildDatabase.txt"));
-			in = new Scanner(new File("PostgreSQLRebuildDatabase.txt"));
-			//TODO-POSTGRES
+			in = new Scanner(new File(db.getRebuildScriptFilename()));
 			String query = "";
 			StringTokenizer token;
 			// loop through license block

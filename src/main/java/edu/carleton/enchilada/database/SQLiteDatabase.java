@@ -17,7 +17,7 @@ public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
     // TODO: change path to something more permanent
-    private static String dbPath = "/tmp/enchilada/";
+    private static final String dbPath = "/tmp/enchilada/";
 
     /**
      * Connect to the database using default settings, or overriding them with
@@ -46,10 +46,12 @@ public class SQLiteDatabase extends Database {
                         "ORDER BY name");
     }
 
+    public String getRebuildScriptFilename() {
+        return "SQLiteRebuildDatabase.sql";
+    }
+
     /**
-     * Open a connection to a MySQL database:
-     * uses the jtds driver from jtds-*.jar
-     * TODO: change security model
+     * Open a connection to a SQLite database:
      */
     public boolean openConnection() {
         return openConnectionImpl(
@@ -59,17 +61,11 @@ public class SQLiteDatabase extends Database {
     }
     public boolean openConnection(String s) {
         return openConnectionImpl(
-                "jdbc:postgresql://localhost/"+s+"",
-                //Use this string to connect to a SQL Server Express instance
-                //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName="+s+";SelectMethod=cursor;",
-                "postgres",
+                "jdbc:sqlite:" + dbPath + s,
+                "SpASMS",
                 "finally");
     }
-    /**
-     * Open a connection to a MySQL database:
-     * uses the jtds driver from jtds-*.jar
-     * TODO: change security model
-     */
+
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
                 "jdbc:sqlite:" + dbPath + MainFrame.dbname,

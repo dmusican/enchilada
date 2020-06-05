@@ -84,7 +84,11 @@ public class SQLServerDatabase extends Database
 	public boolean isPresent() {
 		return isPresentImpl("EXEC sp_helpdb");
 	}
-	
+
+	public String getRebuildScriptFilename() {
+		return "SQLServerRebuildDatabase.txt";
+	}
+
 	/**
 	 * Open a connection to a MySQL database:
 	 * uses the jtds driver from jtds-*.jar

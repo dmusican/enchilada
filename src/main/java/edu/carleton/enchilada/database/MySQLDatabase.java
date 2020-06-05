@@ -75,7 +75,11 @@ public class MySQLDatabase extends Database {
 	public boolean isPresent() {
 		return isPresentImpl("SHOW DATABASES");
 	}
-	
+
+	public String getRebuildScriptFilename() {
+		return "MySQLRebuildDatabase.txt";
+	}
+
 	/**
 	 * Open a connection to a MySQL database:
 	 * uses the jdbc driver from mysql-connector-java-*-bin.jar
