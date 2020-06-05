@@ -131,10 +131,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @return an InfoWarehouse backed by a relational database
 	 */
 	public static InfoWarehouse getDatabase() {
-		//TODO-POSTGRES
-		//return new SQLServerDatabase();
-		return  new PostgreSQLDatabase();
-		//TODO-POSTGRES
+		return new SQLiteDatabase();
 	}
 	
 	/**

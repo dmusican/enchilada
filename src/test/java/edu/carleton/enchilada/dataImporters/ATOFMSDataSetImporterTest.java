@@ -128,18 +128,9 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 	protected void tearDown()
 	{
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			
-			InfoWarehouse tempDB = Database.getDatabase();
-			tempDB.openConnection();
-			Connection con = tempDB.getCon();
-			con.createStatement().executeUpdate("DROP DATABASE TestDB");
-			tempDB.closeConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		System.runFinalization();
+		System.gc();
+		Database.dropDatabase("TestDB");
 		table = null;
 		
 	}
