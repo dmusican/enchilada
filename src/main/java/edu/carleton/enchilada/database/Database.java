@@ -60,7 +60,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -88,9 +87,7 @@ import edu.carleton.enchilada.ATOFMS.AMSPeak;
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.ATOFMS.Peak;
-import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
-import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.DummyNormalizer;
 import edu.carleton.enchilada.analysis.Normalizer;
 import edu.carleton.enchilada.analysis.clustering.ClusterInformation;
@@ -101,8 +98,6 @@ import edu.carleton.enchilada.collection.AggregationOptions;
 import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.errorframework.ErrorLogger;
-import gnu.trove.list.TLinkableAdapter;
-import gnu.trove.list.linked.TLinkedList;
 import edu.carleton.enchilada.gui.LabelingIon;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
@@ -264,20 +259,12 @@ public abstract class Database implements InfoWarehouse {
 	
 	/**
 	 * Open a connection to the database
-	 * @param driver the driver name to use
 	 * @param connectionstr the connection string to be used with DriverManager.getConnection
 	 * @param user username
 	 * @param pass password
 	 * @return true on success
 	 */
-	protected boolean openConnectionImpl(String driver, String connectionstr, String user, String pass) {
-//		try {
-//			Class.forName(driver).newInstance();
-//		} catch (Exception e) {
-//			ErrorLogger.writeExceptionToLogAndPrompt("Database","Failed to load current driver for database " + database);
-//			System.err.println("Failed to load current driver.");
-//			return false;
-//		} // end catch
+	protected boolean openConnectionImpl(String connectionstr, String user, String pass) {
 		con = null;
 		try {
 			con = DriverManager.getConnection(connectionstr, user, pass);
@@ -778,21 +765,7 @@ public abstract class Database implements InfoWarehouse {
 		// databases and tables.
 		try {
 			db = Database.getDatabase(dbName);
-			if (db.isPresent()) {
-				con = db.getCon();
-				Statement stmt = con.createStatement();
-				//TODO-POSTGRES
-				//stmt.executeUpdate("drop database " + dbName);
-				stmt.executeUpdate("drop database \"" + dbName + "\"");
-				//TODO-POSTGRES
-				stmt.close();
-			}
-			//TODO-POSTGRES
-			con = db.getCon();
-			Statement stmt = con.createStatement();
-			stmt.executeUpdate("DROP DATABASE IF EXISTS \"" + dbName + "\"");
-			stmt.close();
-			//TODO-POSTGRES
+			db.dropDatabaseCommands();
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(db.getName(),"Error dropping database.");
 			System.err.println("Error in dropping database.");
@@ -803,8 +776,30 @@ public abstract class Database implements InfoWarehouse {
 				db.closeConnection();
 		}
 		return true;
-	}		
-	
+	}
+
+	/**
+	 * Specific commands to drop database.
+	 * @throws SQLException
+	 */
+	public void dropDatabaseCommands() throws SQLException {
+		Connection con;
+		if (isPresent()) {
+			con = getCon();
+			Statement stmt = con.createStatement();
+			//stmt.executeUpdate("drop database " + dbName);
+			stmt.executeUpdate("drop database \"" + getDatabaseName() + "\"");
+			//TODO-POSTGRES
+			stmt.close();
+		}
+		//TODO-POSTGRES
+		con = getCon();
+		Statement stmt = con.createStatement();
+		stmt.executeUpdate("DROP DATABASE IF EXISTS \"" + getDatabaseName() + "\"");
+		stmt.close();
+		//TODO-POSTGRES
+	}
+
 	/**
 	 * Create an index on some part of AtomInfoDense for a datatype.  Possibly
 	 * useful if you're going to be doing a *whole lot* of queries on a

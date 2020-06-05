@@ -1,7 +1,10 @@
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
 
+import java.io.File;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
@@ -13,6 +16,8 @@ import java.text.SimpleDateFormat;
 public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
+    // TODO: change path to something more permanent
+    private static String dbPath = "/tmp/enchilada/";
 
     /**
      * Connect to the database using default settings, or overriding them with
@@ -37,8 +42,8 @@ public class SQLiteDatabase extends Database {
     public boolean isPresent() {
         return isPresentImpl(
                 "SELECT name FROM sqlite_master\n" +
-                "WHERE type='table'\n" +
-                "ORDER BY name");
+                        "WHERE type='table'\n" +
+                        "ORDER BY name");
     }
 
     /**
@@ -48,17 +53,12 @@ public class SQLiteDatabase extends Database {
      */
     public boolean openConnection() {
         return openConnectionImpl(
-                "java.sql.Driver",
-//                "net.sourceforge.jtds.jdbc.Driver",
-                "jdbc:sqlite:/tmp/enchilada/" + MainFrame.dbname,
-                //Use this string to connect to a SQL Server Express instance
-                //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName=SpASMSdb;SelectMethod=cursor;",
+                "jdbc:sqlite:" + dbPath + MainFrame.dbname,
                 "SpASMS",
                 "finally");
     }
     public boolean openConnection(String s) {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
                 "jdbc:postgresql://localhost/"+s+"",
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName="+s+";SelectMethod=cursor;",
@@ -72,10 +72,7 @@ public class SQLiteDatabase extends Database {
      */
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
-                "jdbc:sqlite:/tmp/enchilada/" + MainFrame.dbname,
-                //Use this string to connect to a SQL Server Express instance
-                //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;SelectMethod=cursor;",
+                "jdbc:sqlite:" + dbPath + MainFrame.dbname,
                 "SpASMS",
                 "finally");
     }
@@ -130,4 +127,29 @@ public class SQLiteDatabase extends Database {
             }
         };
     }
+
+    /**
+     * Specific commands to drop database.
+     * @throws SQLException
+     */
+    public void dropDatabaseCommands() throws SQLException {
+        File dbFile = new File(dbPath + getDatabaseName());
+        if (!dbFile.exists()) {
+            // easy: wasn't there anyway
+            return;
+        } else if (dbFile.isDirectory()) {
+            // so it's there, but it's a directory. That should never happen,
+            // but it's an error, so throw an exception so we know about it.
+            // This isn't really an SQLException, but this file delete is taking
+            // the place of an SQL command for SQLite.
+            throw new SQLException("Tried to delete a database file that's actually a directory.");
+        } else {
+            // The file must be here, so delete it.
+            boolean success = dbFile.delete();
+            if (!success) {
+                throw new SQLException("Failed to delete database file.");
+            }
+        }
+    }
+
 }

@@ -413,4 +413,6 @@ public interface InfoWarehouse {
 	public ArrayCursor getArrayCursor(Collection parent) throws SQLException;
 
 	public ArrayCursor getArrayCursor(ArrayCursor other);
+
+	public void dropDatabaseCommands() throws SQLException;
 }

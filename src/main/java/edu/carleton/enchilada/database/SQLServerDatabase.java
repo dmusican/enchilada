@@ -92,7 +92,6 @@ public class SQLServerDatabase extends Database
 	 */
 	public boolean openConnection() {
 		return openConnectionImpl(
-				"net.sourceforge.jtds.jdbc.Driver",
 				//Use this string to connect to the default SQL Server 2005 instance
 				"jdbc:jtds:sqlserver://localhost;databaseName=SpASMSdb;SelectMethod=cursor;",
 				//Use this string to connect to a SQL Server Express instance
@@ -103,7 +102,6 @@ public class SQLServerDatabase extends Database
 	}
 	public boolean openConnection(String s) {
 		return openConnectionImpl(
-				"net.sourceforge.jtds.jdbc.Driver",
 				//Use this string to connect to the default SQL Server 2005 instance
 				"jdbc:jtds:sqlserver://localhost;databaseName="+s+";SelectMethod=cursor;",
 				//Use this string to connect to a SQL Server Express instance
@@ -119,7 +117,6 @@ public class SQLServerDatabase extends Database
 	 */
 	public boolean openConnectionNoDB() {
 		return openConnectionImpl(
-				"net.sourceforge.jtds.jdbc.Driver",
 				//Use this string to connect to the default SQL Server 2005 instance
 				"jdbc:jtds:sqlserver://localhost;SelectMethod=cursor;",
 				//Use this string to connect to a SQL Server Express instance

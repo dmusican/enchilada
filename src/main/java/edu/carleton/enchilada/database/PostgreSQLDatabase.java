@@ -45,7 +45,6 @@ public class PostgreSQLDatabase extends Database {
      */
     public boolean openConnection() {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
                 "jdbc:postgresql://localhost/"+MainFrame.dbname,
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName=SpASMSdb;SelectMethod=cursor;",
@@ -54,7 +53,6 @@ public class PostgreSQLDatabase extends Database {
     }
     public boolean openConnection(String s) {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
                 "jdbc:postgresql://localhost/"+s+"",
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;databaseName="+s+";SelectMethod=cursor;",
@@ -68,7 +66,6 @@ public class PostgreSQLDatabase extends Database {
      */
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
-                "net.sourceforge.jtds.jdbc.Driver",
                 "jdbc:postgresql://localhost/",
                 //Use this string to connect to a SQL Server Express instance
                 //"jdbc:jtds:sqlserver://localhost;instance=SQLEXPRESS;SelectMethod=cursor;",
