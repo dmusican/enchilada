@@ -415,4 +415,5 @@ public interface InfoWarehouse {
 	public ArrayCursor getArrayCursor(ArrayCursor other);
 
 	public void dropDatabaseCommands() throws SQLException;
+	public void createDatabaseCommands(String dbName) throws SQLException;
 }

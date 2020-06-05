@@ -152,4 +152,10 @@ public class SQLiteDatabase extends Database {
         }
     }
 
+    public void createDatabaseCommands(String dbName) throws SQLException {
+        // For SQLite, there is no create necesary: it happens automatically as
+        // soon as you use it.
+    }
+
+
 }

@@ -40,49 +40,6 @@
 
 package edu.carleton.enchilada.database;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.Vector;
-
-import org.dbunit.database.DatabaseConnection;
-import org.dbunit.database.DatabaseSequenceFilter;
-import org.dbunit.dataset.FilteredDataSet;
-import org.dbunit.dataset.IDataSet;
-import org.dbunit.dataset.csv.CsvDataSetWriter;
-import org.dbunit.dataset.excel.XlsDataSet;
-import org.dbunit.dataset.filter.ITableFilter;
-import org.dbunit.dataset.xml.FlatXmlDataSet;
-import org.dbunit.ext.mssql.InsertIdentityOperation;
-
 import edu.carleton.enchilada.ATOFMS.AMSPeak;
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
@@ -93,13 +50,28 @@ import edu.carleton.enchilada.analysis.Normalizer;
 import edu.carleton.enchilada.analysis.clustering.ClusterInformation;
 import edu.carleton.enchilada.analysis.clustering.PeakList;
 import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
-
 import edu.carleton.enchilada.collection.AggregationOptions;
 import edu.carleton.enchilada.collection.Collection;
-
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.LabelingIon;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
+import org.dbunit.database.DatabaseConnection;
+import org.dbunit.database.DatabaseSequenceFilter;
+import org.dbunit.dataset.FilteredDataSet;
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.csv.CsvDataSetWriter;
+import org.dbunit.dataset.excel.XlsDataSet;
+import org.dbunit.dataset.filter.ITableFilter;
+import org.dbunit.dataset.xml.FlatXmlDataSet;
+import org.dbunit.ext.mssql.InsertIdentityOperation;
+
+import java.io.*;
+import java.sql.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.*;
 
 /* 
  * Maybe a good way to re-factor this file is to separate out methods that
@@ -668,41 +640,22 @@ public abstract class Database implements InfoWarehouse {
 	 * @return true if successful
 	 */
 	public static boolean rebuildDatabase(String dbName) throws SQLException{
-		InfoWarehouse db = null;
+		boolean success = dropDatabase(dbName);
+		if (!success) {
+			ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");
+			System.err.println("Error in rebuilding database.");
+			throw new SQLException();
+		}
+		InfoWarehouse blankDb = Database.getDatabase("");
+		blankDb.createDatabaseCommands(dbName);
+
 		Scanner in = null;
 		Connection con = null;
-		
-		// Connect to SQL Server independent of a particular database,
-		// and drop and add the database.
-		// This code works under the assumption that a user called SpASMS has
-		// already been created with a password of 'finally'. This user must have
-		// already been granted appropriate privileges for adding and dropping
-		// databases and tables.
-		try {
-			dropDatabase(dbName);
-			db = Database.getDatabase("");
-			db.openConnectionNoDB();
-			Statement stmt = db.getCon().createStatement();
-			//TODO-POSTGRES
-			//stmt.executeUpdate("create database " + dbName);
-			stmt.executeUpdate("create database \"" + dbName + "\"");
-			//String sql = "ALTER DATABASE "+dbName+" SET RECOVERY SIMPLE";
-			//stmt.executeUpdate(sql);
-			//TODO-POSTGRES
-			stmt.close();
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(db.getName(),"Error rebuilding database.");
-			System.err.println("Error in rebuilding database.");
-			e.printStackTrace();
-			throw new SQLException();
-		} finally {
-			if (db != null)
-				db.closeConnection();
-		}
+
 		// Run all the queries in the SQLServerRebuildDatabase.txt file, which
 		// inserts all of the necessary tables.
+		InfoWarehouse db = Database.getDatabase(dbName);
 		try {
-			db = Database.getDatabase(dbName);
 			db.openConnection(dbName);
 			con = db.getCon();
 			//TODO-POSTGRES
@@ -747,7 +700,35 @@ public abstract class Database implements InfoWarehouse {
 		}
 		return true;
 	}
-	
+
+	public void createDatabaseCommands(String dbName) throws SQLException {
+		// Connect to SQL Server independent of a particular database,
+		// and drop and add the database.
+		// This code works under the assumption that a user called SpASMS has
+		// already been created with a password of 'finally'. This user must have
+		// already been granted appropriate privileges for adding and dropping
+		// databases and tables.
+		InfoWarehouse blankDb = Database.getDatabase("");
+		try {
+			blankDb.openConnectionNoDB();
+			Statement stmt = blankDb.getCon().createStatement();
+			//TODO-POSTGRES
+			//stmt.executeUpdate("create database " + dbName);
+			stmt.executeUpdate("create database \"" + dbName + "\"");
+			//String sql = "ALTER DATABASE "+dbName+" SET RECOVERY SIMPLE";
+			//stmt.executeUpdate(sql);
+			//TODO-POSTGRES
+			stmt.close();
+		} catch (SQLException e) {
+			ErrorLogger.writeExceptionToLogAndPrompt(blankDb.getName(),"Error rebuilding database.");
+			System.err.println("Error in rebuilding database.");
+			e.printStackTrace();
+			throw new SQLException();
+		} finally {
+			blankDb.closeConnection();
+		}
+	}
+
 	/**
 	 * Drops the given database.
 	 * @param dbName the database to drop
