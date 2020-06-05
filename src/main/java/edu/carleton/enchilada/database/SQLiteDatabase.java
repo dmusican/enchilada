@@ -1,5 +1,6 @@
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
 
@@ -151,6 +152,56 @@ public class SQLiteDatabase extends Database {
     public void createDatabaseCommands(String dbName) throws SQLException {
         // For SQLite, there is no create necesary: it happens automatically as
         // soon as you use it.
+    }
+
+
+    /**
+     * Percolate all atoms in the given collection up the collection hierarchy.
+     * This should be called whenever a new collection is created.  If it has one or more
+     * parent, it will cause the parent to contain all of the new collection's atoms
+     *
+     * @param newCollection
+     */
+    public void propagateNewCollection(Collection newCollection){
+        try {
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate("DROP TABLE IF EXISTS newCollection\n");
+
+            stmt.executeUpdate("CREATE TEMP TABLE newCollection (AtomID int, CollectionID int)");
+            String query = "INSERT INTO newCollection (AtomID)" +
+                    " SELECT AtomID FROM InternalAtomOrder WHERE (CollectionID = "+newCollection.getCollectionID()+");";
+            stmt.execute(query);
+            propagateNewCollection(newCollection,newCollection.getParentCollection());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void propagateNewCollection(Collection newCollection, Collection parentCollection){
+        if (parentCollection == null ||
+                parentCollection.getCollectionID() == 0 ||
+                parentCollection.getCollectionID() == 1){
+            try {
+                Statement stmt = con.createStatement();
+                String query = "DROP TABLE IF EXISTS newCollection;";
+                stmt.execute(query);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+        try {
+            Statement stmt = con.createStatement();
+            stmt.execute("UPDATE newCollection SET CollectionID = " + parentCollection.getCollectionID());
+            stmt.execute("INSERT INTO InternalAtomOrder (AtomID, CollectionID) SELECT * FROM newCollection;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        propagateNewCollection(newCollection,parentCollection.getParentCollection());
+
+
     }
 
 

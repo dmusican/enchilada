@@ -47,6 +47,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.zip.DataFormatException;
@@ -105,8 +107,10 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		// create table with one entry.
 		table = new ParTableModel(true);
 		// TODO: insert dummy row.
-		table.setValueAt("testRow\\b\\b.par", 0, 1);   // dataset
-		table.setValueAt("testRow\\b\\cal.cal", 0, 2); // mass cal file
+		String parFile = Paths.get("testRow", "b", "b.par").toString();
+		String calFile = Paths.get("testRow", "b", "cal.cal").toString();
+		table.setValueAt(parFile, 0, 1);   // dataset
+		table.setValueAt(calFile, 0, 2); // mass cal file
 		table.setValueAt(10, 0, 4);    // Min height
 		table.setValueAt(20, 0, 5);	   // Min area
 		table.setValueAt(new Float(0.1), 0, 6);  // Min relative area
@@ -401,7 +405,8 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		try {
 			try {
 				importer.parFile = new File((String)table.getValueAt(0,1));
-				ATOFMSParticle.currCalInfo = new CalInfo("testRow\\b\\cal.cal", true);
+				String massCalFile = Paths.get("testRow", "b", "cal.cal").toString();
+				ATOFMSParticle.currCalInfo = new CalInfo(massCalFile, true);
 				ATOFMSParticle.currPeakParams = new PeakParams(10, 20, .1f, .5f);
 				importer.numParticles = new int[1];
 				importer.numParticles[0] = 10;
@@ -439,15 +444,20 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				
 				//Compare to expected dense info
 				String root = System.getProperty("user.dir");
+				Path rootPath = Paths.get(root);
 				ArrayList<String[]> expected = new ArrayList<String[]>();
-				expected.add(new String[]{"1", "2004-08-04 15:39:13.0", "1.031E-6", "0.0", "3129", 
-						root + "\\testRow\\b\\b-040804153913-00001.amz"});
-				expected.add(new String[]{"2", "2004-08-04 15:39:17.0", "9.96E-7", "0.0", "2763", 
-						root + "\\testRow\\b\\b-040804153917-00002.amz"});
-				expected.add(new String[]{"3", "2004-08-04 15:39:40.0", "1.002E-6", "0.0", "2482", 
-						root + "\\testRow\\b\\b-040804153940-00003.amz"});			
-				expected.add(new String[]{"4", "2004-08-04 15:40:10.0", "9.84E-7", "0.0", "2948", 
-						root + "\\testRow\\b\\b-040804154010-00004.amz"});
+				expected.add(new String[]{"1", "2004-08-04 15:39:13.0", "1.031E-6", "0.0", "3129",
+						rootPath.resolve("testRow").resolve("b").resolve("b-040804153913-00001.amz").toString()
+				});
+				expected.add(new String[]{"2", "2004-08-04 15:39:17.0", "9.96E-7", "0.0", "2763",
+						rootPath.resolve("testRow").resolve("b").resolve("b-040804153917-00002.amz").toString()
+				});
+				expected.add(new String[]{"3", "2004-08-04 15:39:40.0", "1.002E-6", "0.0", "2482",
+						rootPath.resolve("testRow").resolve("b").resolve("b-040804153940-00003.amz").toString()
+				});
+				expected.add(new String[]{"4", "2004-08-04 15:40:10.0", "9.84E-7", "0.0", "2948",
+						rootPath.resolve("testRow").resolve("b").resolve("b-040804154010-00004.amz").toString()
+				});
 				
 				int x = 0;
 				for (; x < expected.size(); ++x) {
@@ -508,7 +518,9 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 			}
 		}
 		finally {
-			assertEquals(ps.flush().length(), 0);
+			String errors = ps.flush();
+			System.out.println(errors);
+			assertEquals(errors.length(), 0);
 			System.setErr(oldErr);
 		}
 	}

@@ -82,28 +82,28 @@ public interface InfoWarehouse {
 	 * @return true on success
 	 */
 	public boolean openConnection();
-	
+
 	/**
 	 * Opens a connection to the database, flat file, memory structure,
 	 * or whatever you're working with.  
 	 * @return true on success
 	 */
 	public boolean openConnectionNoDB();
-	
+
 	/**
 	 * Closes existing connection
 	 * @return true on success.
 	 */
 	public boolean closeConnection();
-	
+
 	/**
 	 * @return true if this resource is available for use
 	 */
 	public boolean isPresent();
-	
+
 	/**
 	 * Creates an empty collection with no atomic analysis units in it.
-	 * 
+	 *
 	 * @param parent		The key to add this collection under (0
 	 * 						to add at the root).
 	 * @param name			What to call this collection in the interface
@@ -113,15 +113,15 @@ public interface InfoWarehouse {
 	 * @return				The collectionID of the resulting collection
 	 */
 	public int createEmptyCollection( String datatype,
-			int parent,
-			String name,
-			String comment,
-			String description);
-	
+									  int parent,
+									  String name,
+									  String comment,
+									  String description);
+
 	/**
 	 * Create a new collection from an array list of atomIDs which 
 	 * have yet to be inserted into the database.  
-	 * 
+	 *
 	 * @param parentID	The key of the parent to insert this
 	 * 					collection (0 to insert at root level)
 	 * @param name		What to call this collection
@@ -145,14 +145,14 @@ public interface InfoWarehouse {
 	 * parent containing particles also belonging to this collection, 
 	 * those particles will then exist both in the current collection and
 	 * its parent.  <br><br>
-	 * 
+	 *
 	 * To avoid removing particles, use copyCollection instead.
 	 * @param collectionID The collection id of the collection to move.
 	 * @param toParentID The collection id of the new parent.
 	 * @return True on success. 
 	 */
-	public boolean moveCollection(Collection collection, 
-			Collection toCollection);
+	public boolean moveCollection(Collection collection,
+								  Collection toCollection);
 
 	/**
 	 * Similar to moveCollection, except instead of removing the 
@@ -164,7 +164,7 @@ public interface InfoWarehouse {
 	 * @return The collection id of the copy.  
 	 */
 	public int copyCollection(Collection collection, Collection toCollection);
-	
+
 	/**
 	 * orphanAndAdopt() essentially deletes a collection and assigns 
 	 * the ownership of all its children (collections and atoms) to 
@@ -173,25 +173,25 @@ public interface InfoWarehouse {
 	 * @return true on success.
 	 */
 	public boolean orphanAndAdopt(Collection collection);
-	
+
 	/**
 	 * Percolate all atoms in the given collection up the collection hierarchy.
 	 * This should be called whenever a new collection is created.  If it has one or more
 	 * parent, it will cause the parent to contain all of the new collection's atoms
-	 * 
+	 *
 	 * @param newCollection
 	 */
 	public void propagateNewCollection(Collection newCollection);
-	
+
 	/**
 	 * Deletes a collection and unlike orphanAndAdopt() also recursively
 	 * deletes all direct descendents. 
-	 * 
+	 *
 	 * @param collectionID The id of the collection to delete
 	 * @return true on success. 
 	 */
 	public boolean recursiveDelete(Collection collection);
-	
+
 	/**
 	 * Renames a collection.
 	 * @param collection the collection to rename
@@ -200,17 +200,17 @@ public interface InfoWarehouse {
 	 * @author atlasr
 	 */
 	public boolean renameCollection(Collection collection, String newName);
-	
+
 	/**
 	 * Returns the id's of the immediate subchildren of the input
 	 * collection
 	 * @param collectionID 	ID of the collection you wish to see the 
 	 * 						subchildren of
 	 * @return	an array of subchildren
-	 */	
+	 */
 	public ArrayList<Integer> getImmediateSubCollections(Collection collection);
 	public ArrayList<Integer> getImmediateSubCollections(ArrayList<Integer> collections);
-	
+
 	/**
 	 * Returns every Atom that exists in the collection identified
 	 * by collectionID, and every Atom that is a child of 
@@ -222,7 +222,7 @@ public interface InfoWarehouse {
 	 * 			<em>are</em> distinct).
 	 */
 	public ArrayList<Integer> getAllDescendedAtoms(Collection collection);
-	
+
 	/**
 	 * Get the string representation of the given collection's name
 	 * @param collectionID	CollectionID of the collection whose name
@@ -230,16 +230,16 @@ public interface InfoWarehouse {
 	 * @return				A string representing the name of the collection
 	 */
 	public String getCollectionName(int collectionID);
-	
+
 	/**
 	 * Returns the number of atoms in a collection
 	 * @param collection
 	 * @return
 	 */
 	public int getCollectionSize(int collectionID);
-	
+
 	public ArrayList<Integer> getCollectionIDsWithAtoms(java.util.Collection<Integer> collectionIDs);
-	
+
 	/**
 	 * Returns an array list of ATOFMSAtomFromDB's describing
 	 * every particle descending from the given collection.
@@ -249,97 +249,97 @@ public interface InfoWarehouse {
 	 *
 	 *DEPRECIATED 12/05 - AR
 	public ArrayList<GeneralAtomFromDB> getCollectionParticles(Collection collection);
-	*/
-	
+	 */
+
 	public Set<Integer> getAllDescendantCollections(int collectionID, boolean includeTopLevel);
-	
+
 	public Date exportToMSAnalyzeDatabase(Collection collection, String newName, String sOdbcConnection, String fileName, ProgressBarWrapper progressBar);
-	
+
 	public String getCollectionComment(int collectionID);
-	
+
 	public boolean moveAtom(int atomID, int fromParentID, int toCollectionID);
-	
+
 	//public boolean moveAtomBatch(int atomID, int fromParentID, int toCollectionID);
-	
+
 	public boolean checkAtomParent(int atomID, int isMemberOf);
-	
+
 	public boolean addAtom(int atomID, int parentID);
-	
+
 	public boolean addAtomBatch(int atomID, int parentID);
-	
+
 	public boolean deleteAtomsBatch(String atomIDs, Collection collection);
-	
+
 	public boolean deleteAtomBatch(int atomID, Collection collection);
-	
+
 	public void atomBatchExecute();
-	
+
 	public String getCollectionDescription(int collectionID);
-	
+
 	public boolean setCollectionDescription(Collection collection,
-			String description);
-	
+											String description);
+
 	public ArrayList<Peak> getPeaks(String datatype, int atomID);
-	
+
 	public void atomBatchInit();
-	
+
 	public Collection getCollection(int collectionID);
-	
+
 	public CollectionCursor getAtomInfoOnlyCursor(Collection collection);
-	public CollectionCursor getSQLAtomIDCursor(Collection collection,  String where);	
+	public CollectionCursor getSQLAtomIDCursor(Collection collection,  String where);
 	public CollectionCursor getSQLCursor(Collection collection, String where);
 
 	public CollectionCursor getPeakCursor(Collection collection);
-	
+
 	public CollectionCursor getBinnedCursor(Collection collection);
 	public BPLOnlyCursor getBPLOnlyCursor(Collection collection) throws SQLException;
-	
+
 	public CollectionCursor getClusteringCursor(Collection collection, ClusterInformation cInfo);
-	
+
 	public CollectionCursor getMemoryClusteringCursor(Collection collection, ClusterInformation cInfo);
 	public CollectionCursor getMemoryBinnedCursor(Collection collection);
-	
+
 	public CollectionCursor getRandomizedCursor(Collection collection);
-	
+
 	public void seedRandom(int seed);
-	
+
 	/* Used for testing random number seeding */
 	public double getNumber();
-	
+
 	public ArrayList<String> getColNames(String datatype, DynamicTable table);
 	public Connection getCon();
 	public Vector<Vector<Object>> updateParticleTable(Collection collection, Vector<Vector<Object>> particleTable, int lowAtomID, int hightAtomID);
-	
+
 	public int saveMap(String name, Vector<int[]> mapRanges);
 	public Hashtable<Integer, String> getValueMaps();
 	public Vector<int[]> getValueMapRanges();
-	
+
 	public int applyMap(String mapName, Vector<int[]> map, Collection collection);
 	public void createTempAggregateBasis(Collection c, Collection basis);
 	public void createTempAggregateBasis(Collection c, Calendar start, Calendar end, Calendar interval);
 	public void deleteTempAggregateBasis();
 	public void getMaxMinDateInCollections(Collection[] collections, Calendar minDate, Calendar maxDate);
-	
-	public boolean createAggregateTimeSeries(ProgressBarWrapper progressBar, int rootCollectionID, 
-			Collection curColl, int[] mzValues) throws InterruptedException;
+
+	public boolean createAggregateTimeSeries(ProgressBarWrapper progressBar, int rootCollectionID,
+											 Collection curColl, int[] mzValues) throws InterruptedException;
 	public ArrayList<TreeMap<Date,Double>> createAndDetectPlumesFromPercent(Collection collection,double magnitude, int minDuration);
 	public ArrayList<TreeMap<Date,Double>> createAndDetectPlumesFromMedian(Collection collection,double magnitude, int minDuration);
 	public ArrayList<TreeMap<Date,Double>> createAndDetectPlumesFromValue(Collection collection,double magnitude, int minDuration);
-	
+
 	public int[] getValidSelectedMZValuesForCollection(Collection collection, Date startDate, Date endDate);
-	
+
 	public ArrayList<Date> getCollectionDates(Collection seq1, Collection seq2);
 	public ArrayList<Date> getCollectionDates(Collection[] collections);
-	
-	public Hashtable<Date, Double> getConditionalTSCollectionData(Collection seq, 
-			ArrayList<Collection> conditionalSeqs, ArrayList<String> conditionStrs);
+
+	public Hashtable<Date, Double> getConditionalTSCollectionData(Collection seq,
+																  ArrayList<Collection> conditionalSeqs, ArrayList<String> conditionStrs);
 
 	public void syncWithIonsInDB(ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons);
 	public void saveAtomRemovedIons(int atomID, ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons);
 	public void buildAtomRemovedIons(int atomID, ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons);
 //	public int getFirstAtomInCollection(Collection collection);
-	
+
 	public String getDynamicTableName(DynamicTable table, String datatype);
-	
+
 	public void addCompressedDatatype(String newDatatype, String oldDatatype);
 	public ArrayList<ArrayList<String>> getColNamesAndTypes(String datatype, DynamicTable table);
 	public int getNextID();
@@ -358,7 +358,7 @@ public interface InfoWarehouse {
 	public boolean beginTransaction();
 	public boolean commitTransaction();
 	public boolean rollbackTransaction();
-	
+
 	public int getRepresentedCluster(int atomID);
 	public ArrayList<String> getKnownDatatypes();
 	public String getVersion();
@@ -366,18 +366,18 @@ public interface InfoWarehouse {
 	public boolean containsDatatype(String type);
 	public String getATOFMSFileName(int atomID);
 	public boolean removeEmptyCollection(Collection collection);
-	
+
 	/**
 	 * Get the date format used by this InfoWarehouse
 	 * @return a DateFormat object that can format Dates inserted into this InfoWarehouse.
 	 */
 	public DateFormat getDateFormat();
-	
+
 	/**
 	 * @return the name of the backing store this InfoWarehouse uses (SQLServer, MySQL, FlatFile, etc.)
 	 */
 	public String getName();
-	
+
 	/**
 	 * Return true if the collection contains the given atomID.
 	 * @param collectionID - the ID of the collection to check
@@ -385,14 +385,14 @@ public interface InfoWarehouse {
 	 * @return				 True if the collection contains the atom.
 	 */
 	public boolean collectionContainsAtom(int collectionID, int atomID);
-	
+
 	/**
 	 * Given a filename for an ATOFMS particle, returns the atomID associated 
 	 * with it.
 	 * @param ATOFMSFileName	The filename for the particle.
 	 * @return					The atomID for the desired particle.
 	 */
-	 public int getATOFMSAtomID(String ATOFMSFileName);
+	public int getATOFMSAtomID(String ATOFMSFileName);
 	public boolean openConnection(String dbName);
 	public void bulkInsertInit() throws Exception;
 	public void bulkInsertAtom(int newChildID, int newHostID) throws Exception;
@@ -401,7 +401,7 @@ public interface InfoWarehouse {
 	public String getDatabaseName();
 
 	public void clearCache();
-	
+
 	/**
 	 * Given a collection, returns the average peak list of all non-zero particles
 	 * @param coll		The collection to average
@@ -417,5 +417,6 @@ public interface InfoWarehouse {
 	public void dropDatabaseCommands() throws SQLException;
 	public void createDatabaseCommands(String dbName) throws SQLException;
 	public String getRebuildScriptFilename();
+
 
 }
