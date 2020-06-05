@@ -22,9 +22,7 @@ public class FloatRenderer extends DefaultTableCellRenderer{
                             boolean isSelected, boolean hasFocus,
                             int row, int column) {
     	String formatted = floatFormat.format(((Float) value).floatValue());
-    	System.out.println(formatted);
     	Component result=super.getTableCellRendererComponent(table, formatted, isSelected, hasFocus, row, column);
-    	System.out.println(result);
     	return result;
     }	
 }

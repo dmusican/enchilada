@@ -437,9 +437,10 @@ public abstract class Database implements InfoWarehouse {
 			table = tableName;
 
 			try {
-				//tempFile = File.createTempFile(table, ".txt");
-				tempFile = new File("TEMP"+File.separator+"table"+".txt");
+				tempFile = File.createTempFile(table, ".txt");
+//				tempFile = new File("TEMP"+File.separator+"table"+".txt");
 				tempFile.deleteOnExit();
+				System.out.println(tempFile);
 				file = new BufferedWriter(new FileWriter(tempFile));
 			}
 			catch (IOException ex) {
