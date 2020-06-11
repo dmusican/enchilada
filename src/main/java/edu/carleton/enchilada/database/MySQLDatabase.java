@@ -40,12 +40,14 @@
 
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.gui.MainFrame;
 
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 /**
  * Makes database work with MySQL
@@ -172,5 +174,23 @@ public class MySQLDatabase extends Database {
 		return false;
 	}
 
-	
+	/**
+	 * insertParticle takes a string of dense info, a string of sparse info,
+	 * the collection, the datasetID and the nextID and inserts the info
+	 * into the dynamic tables based on the collection's datatype.
+	 * @param dense - string of dense info
+	 * @param sparse - string of sparse info
+	 * @param collection - current collection
+	 * @param datasetID - current datasetID
+	 * @param nextID - next ID
+	 * @param importing - true if importing, false if inserting for other reason
+	 * @return nextID if successful
+	 */
+	public int insertParticle(String dense, ArrayList<String> sparse,
+							  Collection collection,
+							  int datasetID, int nextID, boolean importing) {
+		throw new UnsupportedOperationException();
+	}
+
+
 }

@@ -418,5 +418,9 @@ public interface InfoWarehouse {
 	public void createDatabaseCommands(String dbName) throws SQLException;
 	public String getRebuildScriptFilename();
 
+	public int insertParticle(String dense, ArrayList<String> sparse,
+							  Collection collection,
+							  int datasetID, int nextID, boolean importing);
+
 
 }

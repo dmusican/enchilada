@@ -134,7 +134,7 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-		Database.dropDatabase("TestDB");
+		//Database.dropDatabase("TestDB");
 		table = null;
 		
 	}
@@ -421,7 +421,7 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 			}
 			
 			try {
-				importer.readSpectraAndCreateParticle();			
+				importer.readSpectraAndCreateParticle();
 			}
 			catch (java.io.IOException ex) {
 				ex.printStackTrace();
@@ -435,7 +435,7 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				ex.printStackTrace();
 				fail("Couldn't read spectra");
 			}
-			
+
 			try {
 				
 				Connection con = db.getCon();
@@ -517,11 +517,17 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				fail("Couldn't analyze success of readSpectraAndCreateParticle");
 			}
 		}
+		catch (Exception e) {
+			// If any exception is thrown, test should just fail
+			e.printStackTrace();
+			fail("Exception thrown.");
+		}
 		finally {
 			String errors = ps.flush();
 			System.out.println(errors);
 			assertEquals(errors.length(), 0);
 			System.setErr(oldErr);
 		}
+
 	}
 }
