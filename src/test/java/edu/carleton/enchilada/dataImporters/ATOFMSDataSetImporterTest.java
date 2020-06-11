@@ -446,16 +446,16 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				String root = System.getProperty("user.dir");
 				Path rootPath = Paths.get(root);
 				ArrayList<String[]> expected = new ArrayList<String[]>();
-				expected.add(new String[]{"1", "2004-08-04 15:39:13.0", "1.031E-6", "0.0", "3129",
+				expected.add(new String[]{"1", "2004-08-04 15:39:13", "1.031E-6", "0.0", "3129",
 						rootPath.resolve("testRow").resolve("b").resolve("b-040804153913-00001.amz").toString()
 				});
-				expected.add(new String[]{"2", "2004-08-04 15:39:17.0", "9.96E-7", "0.0", "2763",
+				expected.add(new String[]{"2", "2004-08-04 15:39:17", "9.96E-7", "0.0", "2763",
 						rootPath.resolve("testRow").resolve("b").resolve("b-040804153917-00002.amz").toString()
 				});
-				expected.add(new String[]{"3", "2004-08-04 15:39:40.0", "1.002E-6", "0.0", "2482",
+				expected.add(new String[]{"3", "2004-08-04 15:39:40", "1.002E-6", "0.0", "2482",
 						rootPath.resolve("testRow").resolve("b").resolve("b-040804153940-00003.amz").toString()
 				});
-				expected.add(new String[]{"4", "2004-08-04 15:40:10.0", "9.84E-7", "0.0", "2948",
+				expected.add(new String[]{"4", "2004-08-04 15:40:10", "9.84E-7", "0.0", "2948",
 						rootPath.resolve("testRow").resolve("b").resolve("b-040804154010-00004.amz").toString()
 				});
 				
@@ -463,7 +463,7 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				for (; x < expected.size(); ++x) {
 					assertTrue(rs.next());
 					for (int i = 0; i < expected.get(x).length; ++i)
-						assertEquals(rs.getString(i + 1), expected.get(x)[i]);
+						assertEquals(expected.get(x)[i], rs.getString(i + 1));
 				}
 				
 				for (; x < 10; ++x)

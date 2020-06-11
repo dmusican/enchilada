@@ -46,6 +46,7 @@
  */
 package edu.carleton.enchilada.ATOFMS;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -434,7 +435,7 @@ public class ATOFMSParticle {
 	}
 	
 	public String particleInfoDenseString(DateFormat d) {
-		return "'" + d.format(time) + "', " + 
+		return "'" + d.format(time) + "', " +
 		laserPower + ", " + size + ", " + scatDelay + ", '" + filename + "'";
 	}
 	

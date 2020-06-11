@@ -76,10 +76,10 @@ public class SQLiteDatabase extends Database {
     }
 
     /**
-     * @return the SQL Server native DATETIME format
+     * @return the format to match how elsewhere in SQL Server expects it
      */
     public DateFormat getDateFormat() {
-        return new SimpleDateFormat("MM-dd-yy HH:mm:ss");
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 
     /**
