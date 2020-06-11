@@ -108,6 +108,7 @@ public class SQLiteDatabase extends Database {
         }
 
         public void execute() throws SQLException {
+            System.out.println(sb);
             stmt.execute(sb.toString());
         }
     }
@@ -220,7 +221,52 @@ public class SQLiteDatabase extends Database {
     public int insertParticle(String dense, ArrayList<String> sparse,
                               Collection collection,
                               int datasetID, int nextID, boolean importing) {
-        throw new UnsupportedOperationException();
+
+        //System.out.println("next AtomID: "+nextID);
+        try {
+            Statement stmt = con.createStatement();
+            //System.out.println("Adding batches");
+//            BatchExecuter sql = getBatchExecuter(stmt);
+            stmt.execute("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + " VALUES (" +
+                    nextID + ", " + dense + ");");
+            stmt.execute("INSERT INTO AtomMembership " +
+                    "(CollectionID, AtomID) " +
+                    "VALUES (" +
+                    collection.getCollectionID() + ", " +
+                    nextID + ");");
+            stmt.execute("INSERT INTO DataSetMembers " +
+                    "(OrigDataSetID, AtomID) " +
+                    "VALUES (" +
+                    datasetID + ", " +
+                    nextID + ");");
+
+            String tableName = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
+
+
+//            Inserter bi = getBulkInserter(sql, tableName);
+            for (int j = 0; j < sparse.size(); ++j) {
+                String insertQuery = "INSERT INTO " + tableName + " VALUES (" + nextID + ", " + sparse.get(j) + ");\n";
+                stmt.execute(insertQuery);
+//                        bi.append(nextID + "," + sparse.get(j));
+            }
+//            bi.close();
+
+
+            stmt.close();
+//            bi.cleanUp();
+        } catch (SQLException e) {
+            ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");
+            System.err.println("Exception inserting particle.");
+            e.printStackTrace();
+
+            return -1;
+        }
+        if (!importing)
+            updateInternalAtomOrder(collection);
+        else
+            addInternalAtom(nextID, collection.getCollectionID());
+        return nextID;
     }
+
 
 }
