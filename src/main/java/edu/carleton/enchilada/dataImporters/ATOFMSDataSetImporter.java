@@ -482,18 +482,18 @@ public class ATOFMSDataSetImporter {
 						ReadSpec read = new ReadSpec(particleFileName, d);
 						
 						currentParticle = read.getParticle();
-						
-						/***SLH ((Database)db).insertParticle(
+
+						((Database)db).insertParticle(
 								currentParticle.particleInfoDenseString(db.getDateFormat()),
 								currentParticle.particleInfoSparseString(),
 								destination,id[1],nextID, true);
-						**/
-						//***SLH						
-						((Database)db).saveDataParticle(														// daves  do I need a try/catch around here?
-								currentParticle.particleInfoDenseStr(db.getDateFormat()),
-								currentParticle.particleInfoSparseString(),
-								destination,id[1],nextID, ATOFMS_buckets);
 						//***SLH
+						// BULK INSERT CODE, GONE
+//						((Database)db).saveDataParticle(														// daves  do I need a try/catch around here?
+//								currentParticle.particleInfoDenseStr(db.getDateFormat()),
+//								currentParticle.particleInfoSparseString(),
+//								destination,id[1],nextID, ATOFMS_buckets);
+//						//***SLH
 					
 						nextID++;
 						particleNum++;
@@ -507,7 +507,7 @@ public class ATOFMSDataSetImporter {
 							
 						}
 					} //***SLH
-					((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
+//					((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
 					//Percolate new atoms upward
 					db.propagateNewCollection(curCollection);
 					readSet.close();

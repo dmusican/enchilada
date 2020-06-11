@@ -18,7 +18,7 @@ public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
     // TODO: change path to something more permanent
-    private static final String dbPath = "/tmp/enchilada/";
+    private static final String dbPath = "sqlitedata/";
 
     /**
      * Connect to the database using default settings, or overriding them with
