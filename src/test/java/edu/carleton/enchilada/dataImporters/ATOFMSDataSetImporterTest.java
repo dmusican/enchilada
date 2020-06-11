@@ -458,14 +458,44 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				expected.add(new String[]{"4", "2004-08-04 15:40:10", "9.84E-7", "0.0", "2948",
 						rootPath.resolve("testRow").resolve("b").resolve("b-040804154010-00004.amz").toString()
 				});
-				
-				int x = 0;
-				for (; x < expected.size(); ++x) {
-					assertTrue(rs.next());
-					for (int i = 0; i < expected.get(x).length; ++i)
-						assertEquals(expected.get(x)[i], rs.getString(i + 1));
-				}
-				
+
+				assertTrue(rs.next());
+				assertEquals(1,                     rs.getInt(1));
+				assertEquals("2004-08-04 15:39:13", rs.getString(2));
+				assertEquals(1.031E-6,              rs.getDouble(3), 1e-10);
+				assertEquals(0,                     rs.getInt(4));
+				assertEquals(3129,                  rs.getInt(5));
+				assertEquals(rootPath.resolve("testRow").resolve("b").resolve("b-040804153913-00001.amz").toString(),
+							 rs.getString(6));
+
+				assertTrue(rs.next());
+				assertEquals(2,                     rs.getInt(1));
+				assertEquals("2004-08-04 15:39:17", rs.getString(2));
+				assertEquals(9.96E-7,               rs.getDouble(3), 1e-10);
+				assertEquals(0,                     rs.getInt(4));
+				assertEquals(2763,                  rs.getInt(5));
+				assertEquals(rootPath.resolve("testRow").resolve("b").resolve("b-040804153917-00002.amz").toString(),
+						rs.getString(6));
+
+				assertTrue(rs.next());
+				assertEquals(3,                     rs.getInt(1));
+				assertEquals("2004-08-04 15:39:40", rs.getString(2));
+				assertEquals(1.002E-6,              rs.getDouble(3), 1e-10);
+				assertEquals(0,                     rs.getInt(4));
+				assertEquals(2482,                  rs.getInt(5));
+				assertEquals(rootPath.resolve("testRow").resolve("b").resolve("b-040804153940-00003.amz").toString(),
+						rs.getString(6));
+
+				assertTrue(rs.next());
+				assertEquals(4,                     rs.getInt(1));
+				assertEquals("2004-08-04 15:40:10", rs.getString(2));
+				assertEquals(9.84e-7,               rs.getDouble(3), 1e-10);
+				assertEquals(0,                     rs.getInt(4));
+				assertEquals(2948,                  rs.getInt(5));
+				assertEquals(rootPath.resolve("testRow").resolve("b").resolve("b-040804154010-00004.amz").toString(),
+						rs.getString(6));
+
+				int x = 4;
 				for (; x < 10; ++x)
 					assertTrue(rs.next());
 				assertFalse(rs.next());
@@ -485,12 +515,12 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				expected.add(new String[]{"3"});
 				
 				rs = con.createStatement().executeQuery(
-						"SELECT * FROM ATOFMSAtomInfoSparse");
+						"SELECT * FROM ATOFMSAtomInfoSparse ORDER BY AtomID, PeakLocation");
 				x = 0;
 				for (; x < expected.size(); ++x) {
 					assertTrue(rs.next());
 					for (int i = 0; i < expected.get(x).length; ++i)
-						assertEquals(rs.getString(i + 1), expected.get(x)[i]);
+						assertEquals(expected.get(x)[i], rs.getString(i + 1));
 				}
 				
 				for (; x < 27; ++x)
