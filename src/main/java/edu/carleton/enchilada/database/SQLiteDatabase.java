@@ -6,6 +6,7 @@ import edu.carleton.enchilada.gui.MainFrame;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
@@ -222,11 +223,8 @@ public class SQLiteDatabase extends Database {
                               Collection collection,
                               int datasetID, int nextID, boolean importing) {
 
-        //System.out.println("next AtomID: "+nextID);
         try {
             Statement stmt = con.createStatement();
-            //System.out.println("Adding batches");
-//            BatchExecuter sql = getBatchExecuter(stmt);
             stmt.execute("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + " VALUES (" +
                     nextID + ", " + dense + ");");
             stmt.execute("INSERT INTO AtomMembership " +
@@ -239,21 +237,20 @@ public class SQLiteDatabase extends Database {
                     "VALUES (" +
                     datasetID + ", " +
                     nextID + ");");
+            stmt.close();
 
             String tableName = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
 
-
-//            Inserter bi = getBulkInserter(sql, tableName);
+            String queryTemplate = "INSERT INTO " + tableName + " VALUES (?)";
+            PreparedStatement pstmt = con.prepareStatement(queryTemplate);
+            pstmt.setString(1, tableName);
             for (int j = 0; j < sparse.size(); ++j) {
-                String insertQuery = "INSERT INTO " + tableName + " VALUES (" + nextID + ", " + sparse.get(j) + ");\n";
-                stmt.execute(insertQuery);
-//                        bi.append(nextID + "," + sparse.get(j));
+                pstmt.setString(2, nextID + ", " + sparse.get(j) );
+//                String insertQuery = "INSERT INTO " + tableName + " VALUES (" + nextID + ", " + sparse.get(j) + ");\n";
+//                stmt.execute(insertQuery);
             }
-//            bi.close();
+            pstmt.executeUpdate();
 
-
-            stmt.close();
-//            bi.cleanUp();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");
             System.err.println("Exception inserting particle.");

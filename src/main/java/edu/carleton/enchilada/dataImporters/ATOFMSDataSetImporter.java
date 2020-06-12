@@ -139,55 +139,6 @@ public class ATOFMSDataSetImporter {
 		this.db = db;
 	}
 	
-	
-/*	*//**
-	 * Loops through each row, collects the information, and processes the
-	 * datasets row by row.
-	 *//*
-	public void collectTableInfo() throws InterruptedException, DisplayException{
-		
-		numCollections = table.getRowCount()-1;
-		collections = new Collection[numCollections];
-		try {
-			numParticles = getNumParticles();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		progressBar.setMaximum(numParticles[numCollections]);
-		//Loops through each dataset and creates each collection.
-		for (collectionIndex=0;collectionIndex<numCollections;collectionIndex++) {
-			if(progressBar.wasTerminated()){
-				throw new InterruptedException();
-			}
-				progressBar.setTitle(title+": "+(collectionIndex+1)+" of "+numCollections);
-				// Table values for this row.
-				setVariablesFromTable(collectionIndex);
-				// Call relevant methods
-				try {
-					processDataSet();
-					readParFileAndCreateEmptyCollection();
-					readSpectraAndCreateParticle();
-					
-					// update the internal atom order table;
-					db.updateAncestors(db.getCollection(id[0]));
-				} catch (IOException e) {
-					//e.printStackTrace();
-					ErrorLogger.writeExceptionToLog("Importing","File "+name+
-							" failed to import: \n\tMessage : "+e.toString()+","+e.getMessage());
-					throw new DisplayException("Error importing data: Import aborted.  Check Error Log.");
-				}catch (DataFormatException e) {
-					//e.printStackTrace();
-					ErrorLogger.writeExceptionToLog("Importing","File "+name+
-							" failed to import: \n\tMessage : "+e.toString()+","+e.getMessage()); 
-					throw new DisplayException("Error importing data: Import aborted.  Check Error Log.");
-				}
-		}
-		
-		
-	}
-*/	
-	
 	/**
 	 * Collects table-wide information
 	 */
@@ -440,174 +391,76 @@ public class ATOFMSDataSetImporter {
 			
 			progressBar.setMaximum(numParticles[collectionIndex]);
 			progressBar.reset();
-			
+
 			int particleNum = 0;
 			Collection destination = db.getCollection(id[0]);
 			collections[collectionIndex] = destination;
 			ATOFMSParticle currentParticle;
 			Date d;
 			DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-				Scanner readSet = new Scanner(new File(name));
-				readSet.useDelimiter("\r\n");
-		        
-					StringTokenizer token;
-					String particleFileName;
-					//int doDisplay = 4;
-					int nextID = db.getNextID();
-					Collection curCollection = db.getCollection(id[0]);
-					while (readSet.hasNextLine()) { // repeat until end of file.
+			Scanner readSet = new Scanner(new File(name));
+			readSet.useDelimiter("\r\n");
 
-						if(progressBar.wasTerminated()){
-							throw new InterruptedException();
-						}
-						
-						token = new StringTokenizer(readSet.nextLine(), ",");
-						// .set files are sometimes made with really strange line delims,
-						// so we ignore empty lines.
-						if (! token.hasMoreTokens()) {
-							continue;
-						}
+			StringTokenizer token;
+			String particleFileName;
+			//int doDisplay = 4;
+			int nextID = db.getNextID();
+			Collection curCollection = db.getCollection(id[0]);
+			while (readSet.hasNextLine()) { // repeat until end of file.
 
-						token.nextToken();
-						String particleName = token.nextToken().replace('\\', File.separatorChar);
-						particleFileName = grandParent.toString() + File.separator + particleName;
-						
-						for(int i = 0; i < 3; i++){
-							token.nextToken();
-						}
-						
-						String time = token.nextToken();						
-						d = df.parse(time);
+				if (progressBar.wasTerminated()) {
+					throw new InterruptedException();
+				}
 
-						ReadSpec read = new ReadSpec(particleFileName, d);
-						
-						currentParticle = read.getParticle();
+				token = new StringTokenizer(readSet.nextLine(), ",");
+				// .set files are sometimes made with really strange line delims,
+				// so we ignore empty lines.
+				if (!token.hasMoreTokens()) {
+					continue;
+				}
 
-						((Database)db).insertParticle(
-								currentParticle.particleInfoDenseString(db.getDateFormat()),
-								currentParticle.particleInfoSparseString(),
-								destination,id[1],nextID, true);
-						//***SLH
-						// BULK INSERT CODE, GONE
-//						((Database)db).saveDataParticle(														// daves  do I need a try/catch around here?
-//								currentParticle.particleInfoDenseStr(db.getDateFormat()),
-//								currentParticle.particleInfoSparseString(),
-//								destination,id[1],nextID, ATOFMS_buckets);
-//						//***SLH
-					
-						nextID++;
-						particleNum++;
-						//doDisplay++;
-						//if((int)(100.0*particleNum/tParticles)>(int)(100.0*(particleNum-1)/tParticles)){
-						if(particleNum%10 == 0 && particleNum > 0){
-							//progressBar.increment("Importing Particle # "+particleNum+" out of "+tParticles);
-							//progressBar.setValue((int)(100.0*particleNum/tParticles));
-							progressBar.setValue(particleNum);
-							progressBar.setText("Importing Particle # "+particleNum+" out of "+numParticles[collectionIndex]);
-							
-						}
-					} //***SLH
-//					((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
-					//Percolate new atoms upward
-					db.propagateNewCollection(curCollection);
-					readSet.close();
+				token.nextToken();
+				String particleName = token.nextToken().replace('\\', File.separatorChar);
+				particleFileName = grandParent.toString() + File.separator + particleName;
+
+				for (int i = 0; i < 3; i++) {
+					token.nextToken();
+				}
+
+				String time = token.nextToken();
+				d = df.parse(time);
+
+				ReadSpec read = new ReadSpec(particleFileName, d);
+
+				currentParticle = read.getParticle();
+
+				((Database) db).insertParticle(
+						currentParticle.particleInfoDenseString(db.getDateFormat()),
+						currentParticle.particleInfoSparseString(),
+						destination, id[1], nextID, true);
+
+				nextID++;
+				particleNum++;
+				//doDisplay++;
+				//if((int)(100.0*particleNum/tParticles)>(int)(100.0*(particleNum-1)/tParticles)){
+				if (particleNum % 10 == 0 && particleNum > 0) {
+					//progressBar.increment("Importing Particle # "+particleNum+" out of "+tParticles);
+					//progressBar.setValue((int)(100.0*particleNum/tParticles));
+					progressBar.setValue(particleNum);
+					progressBar.setText("Importing Particle # " + particleNum + " out of " + numParticles[collectionIndex]);
+
+				}
+			} //***SLH
+			//Percolate new atoms upward
+			db.propagateNewCollection(curCollection);
+			readSet.close();
 		} else {
 			ErrorLogger.displayException(progressBar, 
 					"Dataset has no hits because " +name+" does not exist.");
 		}
 
 	}
-	
-	/**
-	 * @author Jamie Olson
-	 * @throws IOException
-	 * @throws NumberFormatException
-	 * @throws InterruptedException
-	 *//*
-	public void readSpectraAndCreateParticleThreaded() 
-	throws IOException, NumberFormatException, InterruptedException{
-		//Read spectra & create particle.
-		File canonical = parFile.getAbsoluteFile();
-		File parent = canonical.getParentFile();
-		File grandParent = parent.getParentFile();
-		//System.out.println("Data set: " + parent.toString());
-		final ATOFMSDataSetImporter thisref = this;
 
-		String name = parent.getName();
-		name = parent.toString()+ File.separator + name + ".set";
-		if (new File(name).isFile()) {
-			
-			final Collection destination = db.getCollection(id[0]);
-				BufferedReader readSet = new BufferedReader(new FileReader(name));
-
-					StringTokenizer token;
-					//int doDisplay = 4;
-					while (readSet.ready()) { // repeat until end of file.
-
-						if(progressBar.wasTerminated()){
-							throw new InterruptedException();
-						}
-
-						token = new StringTokenizer(readSet.readLine(), ",");
-
-						// .set files are sometimes made with really strange line delims,
-						// so we ignore empty lines.
-						if (! token.hasMoreTokens()) {
-							continue;
-						}
-
-						token.nextToken();
-						String particleName = token.nextToken().replace('\\', File.separatorChar);
-						final String particleFileName = grandParent.toString() + File.separator + particleName;
-						final SwingWorker worker = new SwingWorker(){
-							public Object construct(){
-
-								ReadSpec read = null;
-								try {
-									read = new ReadSpec(particleFileName);
-								} catch (ZipException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-
-								ATOFMSParticle currentParticle = read.getParticle();
-								Integer atomID;
-								synchronized (nextAtomID){
-									atomID = getNextAtomID();
-									System.out.println("Atom ID: "+atomID+"\tParticle Number: "+particleNumber);
-									db.insertParticle(
-											currentParticle.particleInfoDenseString(),
-											currentParticle.particleInfoSparseString(),
-											destination,id[1],atomID, true);
-									particleNumber++;
-									//doDisplay++;
-									//if((int)(100.0*particleNum/tParticles)>(int)(100.0*(particleNum-1)/tParticles)){
-									if(particleNumber%10 == 0 && particleNumber > 0){
-										//progressBar.increment("Importing Particle # "+particleNum+" out of "+tParticles);
-										//progressBar.setValue((int)(100.0*particleNum/tParticles));
-										progressBar.setValue(particleNumber);
-										progressBar.setText("Importing Particle # "+particleNumber+" out of "+numParticles[numCollections]);
-									}
-								}
-								return atomID;
-							}
-							public void finish(){
-								thisRef.notify();
-							}
-						};
-						worker.start();
-					}
-					readSet.close();
-		} else {
-			ErrorLogger.displayException(progressBar, 
-					"Dataset has no hits because "+name+" does not exist.");
-		}
-
-	}
-	*/
 	// tests for .par version (.ams,.amz)
 	// String[] returned is Name, Comment, and Description.
 	public String[] parVersion() throws IOException, DataFormatException {

@@ -440,25 +440,38 @@ public class ATOFMSParticle {
 	}
 	
 	public ArrayList<String> particleInfoSparseString() {
-		ArrayList<String> peaks = new ArrayList<String>();
-		getPeakList();
-		Map<Integer, Peak> map = new LinkedHashMap<Integer, Peak>();
+		Map<Integer, ATOFMSPeak> map = getSparsePeakMap();
+
+		ArrayList<String> peaks = new ArrayList<>();
+		for(ATOFMSPeak peak : map.values()){
+			peaks.add(peak.massToCharge +
+					", " + peak.area +
+					", " + peak.relArea +
+					", " + peak.height);
+		}
 		
+		return peaks;
+	}
+
+	public Map<Integer, ATOFMSPeak> getSparsePeakMap() {
+		getPeakList();
+		Map<Integer, ATOFMSPeak> map = new LinkedHashMap<>();
+
 
 		for (Peak p : peakList) {
 			// see BinnedPeakList.java for source of this routine
 			int mzInt; double mz = p.massToCharge;
-			
+
 			if (mz >= 0.0)
 				mzInt = (int) (mz + 0.5);
 			else
 				mzInt = (int) (mz - 0.5);
-			
+
 			//new Peak(int height, int area, double masstocharge)
 			if (map.containsKey(mzInt))
 			{
-				ATOFMSPeak soFar = (ATOFMSPeak)map.get(mzInt);
-				map.put(mzInt, 
+				ATOFMSPeak soFar = map.get(mzInt);
+				map.put(mzInt,
 						new ATOFMSPeak(soFar.height + ((ATOFMSPeak)p).height,
 								soFar.area + ((ATOFMSPeak)p).area,
 								soFar.relArea + ((ATOFMSPeak)p).relArea,
@@ -467,20 +480,10 @@ public class ATOFMSParticle {
 				map.put(mzInt, new ATOFMSPeak(((ATOFMSPeak)p).height, ((ATOFMSPeak)p).area, ((ATOFMSPeak)p).relArea, mzInt));
 			}
 		}
-		for(Peak peak : map.values()){
-			peaks.add(((ATOFMSPeak)peak).massToCharge + ", "
-					+ ((ATOFMSPeak)peak).area + ", " + ((ATOFMSPeak)peak).relArea
-					+ ", " + ((ATOFMSPeak)peak).height);
-		}
-		
-		/*for(Peak peak : peakList){
-			peaks.add(peak.massToCharge + ", "
-					+ peak.area + ", " + peak.relArea
-					+ ", " + peak.height);
-		}*/
-		return peaks;	
+		return map;
 	}
-//	***SLH 	 
+
+	//	***SLH
     public String particleInfoDenseStr(DateFormat d) { 	 
             return  d.format(time) + ", " + laserPower + ", " + size + ", " + scatDelay + "," + filename.trim(); 	 
     }
