@@ -585,12 +585,11 @@ public class DatabaseTest extends TestCase {
 		int negPeakLocation2 = -101;
 		int peak2Height = 100;
 		
-		ArrayList<String> sparseData = new ArrayList<String>();
-		sparseData.add(posPeakLocation1 + ", " +  peak1Height + ", 0.1, " + peak1Height);
-		sparseData.add(negPeakLocation1 + ", " +  peak1Height + ", 0.1, " + peak1Height);
-		sparseData.add(posPeakLocation2 + ", " +  peak2Height + ", 0.1, " + peak2Height);
-		sparseData.add(negPeakLocation2 + ", " +  peak2Height + ", 0.1, " + peak2Height);
-		
+		ArrayList<ATOFMSPeak> sparseData = new ArrayList<>();
+		sparseData.add(new ATOFMSPeak(peak1Height,  peak1Height, 0.1f, posPeakLocation1));
+		sparseData.add(new ATOFMSPeak(peak1Height,  peak1Height, 0.1f, negPeakLocation1));
+		sparseData.add(new ATOFMSPeak(peak2Height,  peak2Height, 0.1f, posPeakLocation2));
+		sparseData.add(new ATOFMSPeak(peak2Height,  peak2Height, 0.1f, negPeakLocation2));
 
 		int collectionID, datasetID;
 		collectionID = 2;
@@ -985,7 +984,7 @@ public class DatabaseTest extends TestCase {
 		final float size = (float)5;
 		final float digitRate = (float)0.1;
 		final int scatterDelay = 10;
-		ArrayList<String> sparseData = new ArrayList<String>();
+		ArrayList<ATOFMSPeak> sparseData = new ArrayList<>();
 		int collectionID = 2;
 		int datasetID = 1;
 		System.out.println(db.getCollectionSize(collectionID));

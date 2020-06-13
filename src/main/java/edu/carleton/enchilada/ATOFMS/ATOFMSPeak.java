@@ -45,4 +45,11 @@ public class ATOFMSPeak extends Peak {
 			" Rel. Area: " + relArea;
 		return returnThis;
 	}
+
+	public String toCommaDelimitedString() {
+		return massToCharge +
+				", " + area +
+				", " + relArea +
+				", " + height;
+	}
 }

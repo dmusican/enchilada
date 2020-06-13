@@ -51,6 +51,7 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.DynamicTable;
 import edu.carleton.enchilada.database.InfoWarehouse;
@@ -800,7 +801,7 @@ public abstract class Cluster extends CollectionDivider {
 			// don't want posNegNormalize here, we've already normalized the individual peaks,
 			// doing pos/neg separately would create incorrect data
 			relAreaPeakList.normalize(distanceMetric);
-			ArrayList<String> sparse = new ArrayList<String>();
+			ArrayList<ATOFMSPeak> sparse = new ArrayList<>();
 			//put the sparse info into appropriate format
 			Iterator<BinnedPeak> i = center.peaks.iterator();
 			BinnedPeak p;
@@ -815,18 +816,13 @@ public abstract class Cluster extends CollectionDivider {
 				//TODO: waaaaaaaaay too type-specific
 				
 				area = p.getValue();
-				
-				s = intersperse(
-							Integer.toString(area.intValue()), Integer.toString(p.getKey()));
-			
+
 				// relative area is the normalized peak height.
 				relArea = relAreaPeakList.getAreaAt(p.getKey());
-				s = intersperse(relArea.toString(), s);
 
 				// hard-code peakheight to 1.  Height is not meaningful
 				// for cluster centers.
-				s = intersperse("1", s);
-				sparse.add(s);
+				sparse.add(new ATOFMSPeak(1, area.intValue(), relArea, p.getKey()));
 			}
 			
 			centerAtomID = db.insertParticle(dense, sparse, db.getCollection(centerCollID),

@@ -44,6 +44,7 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import edu.carleton.enchilada.gui.LabelingIon;
 import java.sql.*;
@@ -344,9 +345,9 @@ public interface InfoWarehouse {
 	public ArrayList<ArrayList<String>> getColNamesAndTypes(String datatype, DynamicTable table);
 	public int getNextID();
 	public int[] createEmptyCollectionAndDataset(String datatype, int parent, String datasetName, String comment, String params);
-	public int insertParticle(String dense, ArrayList<String> sparse,Collection collection,int datasetID, int nextID);
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse, Collection collection,int datasetID, int nextID);
 	public boolean isDirty();
-	public int insertParticle(String dense, ArrayList<String> sparse,Collection collection, int nextID);
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse, Collection collection, int nextID);
 	public int getParentCollectionID(int collectionID);
 	public void updateAncestors(Collection collection);
 	public void updateInternalAtomOrder(Collection collection);
@@ -418,7 +419,7 @@ public interface InfoWarehouse {
 	public void createDatabaseCommands(String dbName) throws SQLException;
 	public String getRebuildScriptFilename();
 
-	public int insertParticle(String dense, ArrayList<String> sparse,
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
 							  Collection collection,
 							  int datasetID, int nextID, boolean importing);
 

@@ -436,7 +436,7 @@ public class ATOFMSDataSetImporter {
 
 				((Database) db).insertParticle(
 						currentParticle.particleInfoDenseString(db.getDateFormat()),
-						currentParticle.particleInfoSparseString(),
+						currentParticle.getSparsePeakMap().values(),
 						destination, id[1], nextID, true);
 
 				nextID++;

@@ -445,19 +445,6 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				//Compare to expected dense info
 				String root = System.getProperty("user.dir");
 				Path rootPath = Paths.get(root);
-				ArrayList<String[]> expected = new ArrayList<String[]>();
-				expected.add(new String[]{"1", "2004-08-04 15:39:13", "1.031E-6", "0.0", "3129",
-						rootPath.resolve("testRow").resolve("b").resolve("b-040804153913-00001.amz").toString()
-				});
-				expected.add(new String[]{"2", "2004-08-04 15:39:17", "9.96E-7", "0.0", "2763",
-						rootPath.resolve("testRow").resolve("b").resolve("b-040804153917-00002.amz").toString()
-				});
-				expected.add(new String[]{"3", "2004-08-04 15:39:40", "1.002E-6", "0.0", "2482",
-						rootPath.resolve("testRow").resolve("b").resolve("b-040804153940-00003.amz").toString()
-				});
-				expected.add(new String[]{"4", "2004-08-04 15:40:10", "9.84E-7", "0.0", "2948",
-						rootPath.resolve("testRow").resolve("b").resolve("b-040804154010-00004.amz").toString()
-				});
 
 				assertTrue(rs.next());
 				assertEquals(1,                     rs.getInt(1));
@@ -503,27 +490,55 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				rs.close();
 				
 				//Compare to expected sparse info
-				expected = new ArrayList<String[]>();
-				expected.add(new String[]{"1", "-98.0", "10842", "0.48205948", "875"});
-				expected.add(new String[]{"1", "39.0", "26017", "0.607363", "3525"});
-				expected.add(new String[]{"2", "-96.0", "722", "0.6283725", "112"});
-				expected.add(new String[]{"2", "12.0", "5673"});
-				expected.add(new String[]{"2"});
-				expected.add(new String[]{"2"});
-				expected.add(new String[]{"3", "-80.0", "10074"});
-				expected.add(new String[]{"3"});
-				expected.add(new String[]{"3"});
-				
+//				expected = new ArrayList<String[]>();
+
 				rs = con.createStatement().executeQuery(
 						"SELECT * FROM ATOFMSAtomInfoSparse ORDER BY AtomID, PeakLocation");
-				x = 0;
-				for (; x < expected.size(); ++x) {
-					assertTrue(rs.next());
-					for (int i = 0; i < expected.get(x).length; ++i)
-						assertEquals(expected.get(x)[i], rs.getString(i + 1));
-				}
-				
-				for (; x < 27; ++x)
+
+				assertTrue(rs.next());
+				assertEquals(1,           rs.getInt(1));
+				assertEquals(-98.0,       rs.getDouble(2), 1e-10);
+				assertEquals(10842,       rs.getInt(3));
+				assertEquals(0.48205948,  rs.getDouble(4), 1e-5);
+				assertEquals(875,         rs.getInt(5));
+
+				assertTrue(rs.next());
+				assertEquals(1,         rs.getInt(1));
+				assertEquals(39.0,      rs.getDouble(2), 1e-10);
+				assertEquals(26017,     rs.getInt(3));
+				assertEquals(0.607363,  rs.getDouble(4), 1e-5);
+				assertEquals(3525,      rs.getInt(5));
+
+				assertTrue(rs.next());
+				assertEquals(2,         rs.getInt(1));
+				assertEquals(-96.0,      rs.getDouble(2), 1e-10);
+				assertEquals(722,     rs.getInt(3));
+				assertEquals(0.6283725,  rs.getDouble(4), 1e-5);
+				assertEquals(112,      rs.getInt(5));
+
+				assertTrue(rs.next());
+				assertEquals(2,         rs.getInt(1));
+				assertEquals(12.0,      rs.getDouble(2), 1e-10);
+				assertEquals(5673,     rs.getInt(3));
+
+				assertTrue(rs.next());
+				assertEquals(2,         rs.getInt(1));
+
+				assertTrue(rs.next());
+				assertEquals(2,         rs.getInt(1));
+
+				assertTrue(rs.next());
+				assertEquals(3,         rs.getInt(1));
+				assertEquals(-80.0,      rs.getDouble(2), 1e-10);
+				assertEquals(10074,     rs.getInt(3));
+
+				assertTrue(rs.next());
+				assertEquals(3,         rs.getInt(1));
+
+				assertTrue(rs.next());
+				assertEquals(3,         rs.getInt(1));
+
+				for (x =0; x < 18; ++x)
 					assertTrue(rs.next());
 				assertFalse(rs.next());	
 				

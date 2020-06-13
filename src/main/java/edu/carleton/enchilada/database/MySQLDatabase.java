@@ -40,6 +40,7 @@
 
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.gui.MainFrame;
 
@@ -186,7 +187,7 @@ public class MySQLDatabase extends Database {
 	 * @param importing - true if importing, false if inserting for other reason
 	 * @return nextID if successful
 	 */
-	public int insertParticle(String dense, ArrayList<String> sparse,
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
 							  Collection collection,
 							  int datasetID, int nextID, boolean importing) {
 		throw new UnsupportedOperationException();

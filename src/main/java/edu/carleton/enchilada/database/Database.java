@@ -1531,7 +1531,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @param nextID
 	 * @return
 	 */
-	public int insertParticle(String dense, ArrayList<String> sparse,
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
 			Collection collection, int nextID){
 		return insertParticle(dense, sparse, collection, -1, nextID);
 	}
@@ -1539,7 +1539,7 @@ public abstract class Database implements InfoWarehouse {
 	/**
 	 * For backward compatibility - assumes NOT an import if not given boolean.
 	 */
-	public int insertParticle(String dense, ArrayList<String> sparse,
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
 			Collection collection,
 			int datasetID, int nextID){
 		return insertParticle(dense, sparse, collection, datasetID, nextID, false);

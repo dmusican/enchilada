@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.database.*;
@@ -454,7 +455,7 @@ public class BIRCH extends CompressData{
 		CFNode leaf = curTree.getFirstLeaf();
 		ArrayList<ClusterFeature> curCF;
 		ArrayList<Integer> curIDs;
-		ArrayList<String> sparseArray = new ArrayList<String>();
+		ArrayList<ATOFMSPeak> sparseArray = new ArrayList<>();
 		ArrayList<Integer> cfAtomIDs;
 		// Enter the CFS of each leaf
 		while (leaf != null) {
@@ -478,14 +479,12 @@ public class BIRCH extends CompressData{
 				denseStr+=curCF.get(i).getCount();
 				
 				// create sparseAtomInfo string arraylist.
-				sparseArray = new ArrayList<String>();
+				sparseArray = new ArrayList<>();
 				Iterator iter = curCF.get(i).getSums().iterator();
 				while (iter.hasNext()) {
 					BinnedPeak p=(BinnedPeak) iter.next();
-					sparseArray.add(p.getKey() + "," + 
-							p.getValue() + "," + p.getValue() + 
-							"," + 0);
-				}				
+					sparseArray.add(new ATOFMSPeak(0, Math.round(p.getValue()), p.getValue(), p.getKey()));
+				}
 				
 				//insert particle
 				db.insertParticle(denseStr,sparseArray,collection,newDatasetID,atomID);

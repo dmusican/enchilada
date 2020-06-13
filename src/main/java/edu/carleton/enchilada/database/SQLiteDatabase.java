@@ -1,5 +1,6 @@
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
@@ -219,7 +220,7 @@ public class SQLiteDatabase extends Database {
      * @param importing - true if importing, false if inserting for other reason
      * @return nextID if successful
      */
-    public int insertParticle(String dense, ArrayList<String> sparse,
+    public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
                               Collection collection,
                               int datasetID, int nextID, boolean importing) {
 
@@ -241,15 +242,18 @@ public class SQLiteDatabase extends Database {
 
             String tableName = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
 
-            String queryTemplate = "INSERT INTO " + tableName + " VALUES (?)";
+            String queryTemplate = "INSERT INTO " + tableName + " VALUES (?, ?, ?, ?, ?)";
             PreparedStatement pstmt = con.prepareStatement(queryTemplate);
             pstmt.setString(1, tableName);
-            for (int j = 0; j < sparse.size(); ++j) {
-                pstmt.setString(2, nextID + ", " + sparse.get(j) );
-//                String insertQuery = "INSERT INTO " + tableName + " VALUES (" + nextID + ", " + sparse.get(j) + ");\n";
-//                stmt.execute(insertQuery);
+            for (ATOFMSPeak peak : sparse) {
+                pstmt.setInt(1, nextID);
+                pstmt.setDouble(2, peak.massToCharge);
+                pstmt.setInt(3, peak.area);
+                pstmt.setFloat(4, peak.relArea);
+                pstmt.setInt(5, peak.height);
+                pstmt.addBatch();
             }
-            pstmt.executeUpdate();
+            pstmt.executeBatch();
 
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");

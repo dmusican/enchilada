@@ -444,10 +444,7 @@ public class ATOFMSParticle {
 
 		ArrayList<String> peaks = new ArrayList<>();
 		for(ATOFMSPeak peak : map.values()){
-			peaks.add(peak.massToCharge +
-					", " + peak.area +
-					", " + peak.relArea +
-					", " + peak.height);
+			peaks.add(peak.toCommaDelimitedString());
 		}
 		
 		return peaks;

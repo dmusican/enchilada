@@ -46,6 +46,7 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
@@ -193,7 +194,7 @@ public class SQLServerDatabase extends Database
 	 * @param importing - true if importing, false if inserting for other reason
 	 * @return nextID if successful
 	 */
-	public int insertParticle(String dense, ArrayList<String> sparse,
+	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
 							  Collection collection,
 							  int datasetID, int nextID, boolean importing)
 	{
@@ -218,8 +219,9 @@ public class SQLServerDatabase extends Database
 			String tableName = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
 
 			Inserter bi = getBulkInserter(sql, tableName);
-			for (int j = 0; j < sparse.size(); ++j) {
-				bi.append(nextID + "," + sparse.get(j));
+			for (ATOFMSPeak peak : sparse) {
+				bi.append(nextID + "," + peak.toCommaDelimitedString());
+
 			}
 			bi.close();
 
