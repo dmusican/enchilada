@@ -6324,11 +6324,14 @@ public abstract class Database implements InfoWarehouse {
 			ResultSet rs = stmt.executeQuery(query);
 			
 			// Only bulk insert if client and server are on the same machine...
+			String queryTemplate = "INSERT INTO InternalAtomOrder VALUES(?, ?)";
+			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
 			while (rs.next()) {
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES("+rs.getInt(1)+","+cID+")");
+				pstmt.setInt(1, rs.getInt(1));
+				pstmt.setInt(2, cID);
+				pstmt.addBatch();
 			}
 
-			//System.out.println("inserted " + (order-1) + " atoms into cID " + 4);
 			stmt.executeBatch();
 			stmt.close();
 			if (tempFile != null && tempFile.exists()) {
@@ -6337,7 +6340,7 @@ public abstract class Database implements InfoWarehouse {
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");
 			System.err.println("Exception inserting particle.");
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 	}
 	
