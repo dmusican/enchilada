@@ -65,6 +65,7 @@ import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
 
 import edu.carleton.enchilada.gui.ParTableModel;
@@ -94,12 +95,14 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		//TODO: commented this out AR
 		try {
 			Database.rebuildDatabase("TestDB");
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
+		} catch (ExceptionAdapter ea) {
+			if (ea.originalException instanceof SQLException) {
+				JOptionPane.showMessageDialog(null,
+						"Could not rebuild the database." +
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+				throw ea;
+			}
 		}
 		db = Database.getDatabase("TestDB");
 		assertEquals(true, db.openConnection("TestDB"));

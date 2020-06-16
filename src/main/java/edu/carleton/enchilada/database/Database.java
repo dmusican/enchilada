@@ -53,6 +53,7 @@ import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
 import edu.carleton.enchilada.collection.AggregationOptions;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.LabelingIon;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import org.dbunit.database.DatabaseConnection;
@@ -118,10 +119,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @return an InfoWarehouse backed by a relational database
 	 */
 	public static InfoWarehouse getDatabase(String dbName) {
-		//TODO-POSTGRES
-		//return new SQLServerDatabase(dbName);
-		return  new SQLiteDatabase(dbName);
-		//TODO-POSTGRES
+		return new SQLiteDatabase(dbName);
 	}
 	public String getDatabaseName(){
 		return database;
@@ -637,12 +635,11 @@ public abstract class Database implements InfoWarehouse {
 	 * @param dbName
 	 * @return true if successful
 	 */
-	public static boolean rebuildDatabase(String dbName) throws SQLException{
+	public static boolean rebuildDatabase(String dbName) {
 		boolean success = dropDatabase(dbName);
 		if (!success) {
 			ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");
-			System.err.println("Error in rebuilding database.");
-			throw new SQLException();
+			throw new RuntimeException("Error in rebuilding database.");
 		}
 		InfoWarehouse blankDb = Database.getDatabase("");
 		blankDb.createDatabaseCommands(dbName);
@@ -678,14 +675,8 @@ public abstract class Database implements InfoWarehouse {
 				con.createStatement().executeUpdate(query);
 			}
 			
-		} catch (IOException e) {
-			System.err.println("IOException occurred when rebuilding the database.");
-			return true;
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(db.getName(),"Error rebuilding database.");
-			System.err.println("Error in adding tables to database.");
-			e.printStackTrace();
-			return false;
+		} catch (IOException | SQLException e) {
+			throw new ExceptionAdapter(e);
 		} finally {
 			if (db != null)
 				db.closeConnection();
@@ -696,7 +687,7 @@ public abstract class Database implements InfoWarehouse {
 		return true;
 	}
 
-	public void createDatabaseCommands(String dbName) throws SQLException {
+	public void createDatabaseCommands(String dbName) {
 		// Connect to SQL Server independent of a particular database,
 		// and drop and add the database.
 		// This code works under the assumption that a user called SpASMS has
@@ -717,8 +708,7 @@ public abstract class Database implements InfoWarehouse {
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(blankDb.getName(),"Error rebuilding database.");
 			System.err.println("Error in rebuilding database.");
-			e.printStackTrace();
-			throw new SQLException();
+			throw new ExceptionAdapter(e);
 		} finally {
 			blankDb.closeConnection();
 		}

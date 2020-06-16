@@ -68,6 +68,7 @@ import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.SQLServerDatabase;
 import edu.carleton.enchilada.database.InfoWarehouse;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
 
@@ -101,12 +102,16 @@ public class DBUnitDialog extends JFrame implements ActionListener{
 					+ "since this will remove any pre-existing Enchilada database.") ==
 						JOptionPane.YES_OPTION) {
 				
-				try{
+				try {
 					Database.rebuildDatabase(databaseName);
-				}catch(SQLException s){
-					JOptionPane.showMessageDialog(this,
-							"Could not rebuild the database." +
-							"  Close any other programs that may be accessing the database and try again.");
+				} catch (ExceptionAdapter ea) {
+					if (ea.originalException instanceof SQLException) {
+						JOptionPane.showMessageDialog(this,
+								"Could not rebuild the database." +
+										"  Close any other programs that may be accessing the database and try again.");
+					} else {
+						throw ea;
+					}
 				}
 			} else {
 				return; // no database?  we shouldn't do anything at all.

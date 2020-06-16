@@ -10,6 +10,7 @@ import edu.carleton.enchilada.analysis.DistanceMetric;
 
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
 /**
  * Tester class for BIRCH.  Creates and manipulates BIRCHdb.
@@ -29,12 +30,14 @@ public class Tester {
         
         try {
 			Database.rebuildDatabase("BIRCHdb");
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
+		} catch (ExceptionAdapter ea) {
+        	if (ea.originalException instanceof SQLException) {
+				JOptionPane.showMessageDialog(null,
+						"Could not rebuild the database." +
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+        		throw ea;
+			}
 		}
 				
 		try {

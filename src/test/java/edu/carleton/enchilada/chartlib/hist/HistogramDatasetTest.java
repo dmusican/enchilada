@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.experiments.Tuple;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import junit.framework.TestCase;
@@ -39,12 +40,14 @@ public class HistogramDatasetTest extends TestCase {
 		try {
 			Database.rebuildDatabase("TestDB");
 			Database.rebuildDatabase("TestDB2");
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-			JOptionPane.showMessageDialog(null,
+		} catch (ExceptionAdapter ea) {
+			if (ea.originalException instanceof SQLException) {
+				JOptionPane.showMessageDialog(null,
 						"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+				throw ea;
+			}
 		}
 			
 		//Open database connection:

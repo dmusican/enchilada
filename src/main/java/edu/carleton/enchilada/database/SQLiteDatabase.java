@@ -41,7 +41,7 @@ public class SQLiteDatabase extends Database {
     }
 
     /**
-     * @see InfoWarehouse.java#isPresent()
+     * @see InfoWarehouse#isPresent()
      */
     public boolean isPresent() {
         return isPresentImpl(
@@ -153,7 +153,7 @@ public class SQLiteDatabase extends Database {
         }
     }
 
-    public void createDatabaseCommands(String dbName) throws SQLException {
+    public void createDatabaseCommands(String dbName)  {
         // For SQLite, there is no create necesary: it happens automatically as
         // soon as you use it.
     }

@@ -79,6 +79,7 @@ import edu.carleton.enchilada.database.VersionChecker;
 import edu.carleton.enchilada.database.DynamicTable;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
 /**
@@ -920,13 +921,8 @@ public class MainFrame extends JFrame implements ActionListener
 				UIWorker worker = new UIWorker() {
 					public Object construct() {
 						db.closeConnection();
-						try {
-							Database.rebuildDatabase(dbname);
-							return true;
-						}
-						catch (SQLException ex) {
-							return false;
-						}
+						Database.rebuildDatabase(dbname);
+						return true;
 					}
 					public void finished() {
 						super.finished();
@@ -1819,17 +1815,20 @@ public class MainFrame extends JFrame implements ActionListener
 						JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
 						null, options, options[1]);
 				if (action == 0){
-					try{
+					try {
 						db.closeConnection();
 						Database.rebuildDatabase(dbname);
 						db.openConnection();
-					}
-					catch(SQLException e){
-						JOptionPane.showMessageDialog(null, 
-								"Your database is an old version", 
-								"Error: Could not connect",
-								JOptionPane.PLAIN_MESSAGE);
-						System.exit(0);
+					} catch(ExceptionAdapter ea) {
+						if (ea.originalException instanceof  SQLException) {
+							JOptionPane.showMessageDialog(null,
+									"Your database is an old version",
+									"Error: Could not connect",
+									JOptionPane.PLAIN_MESSAGE);
+							System.exit(0);
+						} else {
+							throw ea;
+						}
 					}
 				} else
 					System.exit(0);
@@ -1861,11 +1860,15 @@ public class MainFrame extends JFrame implements ActionListener
 						JOptionPane.YES_OPTION) {
 				try{
 					Database.rebuildDatabase(dbName);
-				}catch(SQLException s){
-					JOptionPane.showMessageDialog(null,
-							"Could not rebuild the database." +
-							"  Close any other programs that may be accessing the database and try again.");
-					return false;
+				} catch (ExceptionAdapter ea) {
+					if (ea.originalException instanceof SQLException) {
+						JOptionPane.showMessageDialog(null,
+								"Could not rebuild the database." +
+										"  Close any other programs that may be accessing the database and try again.");
+						return false;
+					} else {
+						throw ea;
+					}
 				}
 			} else {
 				return false; // no database?  we shouldn't do anything at all.

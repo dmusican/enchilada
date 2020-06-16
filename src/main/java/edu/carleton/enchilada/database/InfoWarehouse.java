@@ -416,7 +416,7 @@ public interface InfoWarehouse {
 	public ArrayCursor getArrayCursor(ArrayCursor other);
 
 	public void dropDatabaseCommands() throws SQLException;
-	public void createDatabaseCommands(String dbName) throws SQLException;
+	public void createDatabaseCommands(String dbName);
 	public String getRebuildScriptFilename();
 
 	public int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,

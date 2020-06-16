@@ -15,6 +15,7 @@ import javax.swing.JOptionPane;
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.ATOFMS.*;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
 /**
  * @author ritza
@@ -29,26 +30,28 @@ public class ImportExperimentParticles {
 		particles = new ArrayList<ATOFMSParticle>();
 		ArrayList<Integer>  indices = new ArrayList<Integer>(2000);
 		DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		
 
-	   try {
-				Database.rebuildDatabase("TestDB");
-			} catch (SQLException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
+
+		try {
+			Database.rebuildDatabase("TestDB");
+		} catch (ExceptionAdapter ea) {
+			if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,
 						"Could not rebuild the database." +
-						"  Close any other programs that may be accessing the database and try again.");
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+				throw ea;
 			}
-		
+		}
+
 		//Open database connection:
-        db = Database.getDatabase("TestDB");
-        db.openConnection("TestDB");
-        Connection con = db.getCon();
-        
-    		
-		
-		
+		db = Database.getDatabase("TestDB");
+		db.openConnection("TestDB");
+		Connection con = db.getCon();
+
+
+
+
 		ATOFMSParticle.currPeakParams = new PeakParams(30,30,0.01f,.50f);
 		try {
 			ATOFMSParticle.currCalInfo = 

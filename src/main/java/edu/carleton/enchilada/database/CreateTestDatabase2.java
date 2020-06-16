@@ -43,6 +43,8 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -68,12 +70,14 @@ public class CreateTestDatabase2 {
         con = tempDB.getCon();
         try {
 			Database.rebuildDatabase("TestDB2");
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
+		} catch (ExceptionAdapter ea) {
+        	if (ea.originalException instanceof  SQLException) {
+				JOptionPane.showMessageDialog(null,
+						"Could not rebuild the database." +
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+        		throw ea;
+			}
 		}
     		
 		try {

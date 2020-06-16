@@ -51,6 +51,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.InfoWarehouse;
@@ -92,12 +93,14 @@ public class AMSDataSetImporterTest extends TestCase {
 	protected void setUp() {
 		try {
 			Database.rebuildDatabase("TestDB");
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
+		} catch (ExceptionAdapter ea) {
+			if (ea.originalException instanceof SQLException) {
+				JOptionPane.showMessageDialog(null,
+						"Could not rebuild the database." +
+								"  Close any other programs that may be accessing the database and try again.");
+			} else {
+				throw ea;
+			}
 		}
 		db = Database.getDatabase("TestDB");
 		assertTrue(db.openConnection("TestDB"));

@@ -43,6 +43,8 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -55,36 +57,33 @@ import javax.swing.JOptionPane;
  * @author ritza
  */
 public class CreateTestDatabase {
-	public InfoWarehouse tempDB;
-	Connection con;
+	private Connection con;
 	private static final char quote = '"';
+	private static final String dbname = "TestDB";
 	
 	public CreateTestDatabase() {
-        tempDB = Database.getDatabase();
-        tempDB.openConnection();
-        con = tempDB.getCon();
+//        tempDB = Database.getDatabase();
+//        tempDB.openConnection();
+//        con = tempDB.getCon();
         
-        try {
-			Database.rebuildDatabase("TestDB");
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"Could not rebuild the database." +
-					"  Close any other programs that may be accessing the database and try again.");
-		}
-    		
-		try {
-			if (con.createStatement() == null)
-				System.err.println("con should not be null");
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
+		Database.rebuildDatabase(dbname);
+
+//		try {
+//			if (con.createStatement() == null)
+//				System.err.println("con should not be null");
+//		} catch (SQLException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+
+		InfoWarehouse db = Database.getDatabase(dbname);
+		db.openConnection(dbname);
+		con = db.getCon();
+
 		generateDynamicTables();
     		
 	    try {
+
 			Statement stmt = con.createStatement();
 			// Create a database with tables mirroring those in the 
 			// real one so we can test on that one and make sure we
@@ -102,143 +101,125 @@ public class CreateTestDatabase {
 			}
 			pstmt.executeUpdate();
 
-			stmt.executeUpdate(
-					"USE TestDB\n" +		
-			"INSERT INTO Datatype2AtomInfoDense VALUES (12, 1, 2)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (13, 1, 2)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (14, 1, 1)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (15, 3, 21)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (16, .5, 1)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (17, .4, 5)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (18, 10, 1)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (19, .75, 50)\n" +
-					"INSERT INTO Datatype2AtomInfoDense VALUES (20, 1, 2)\n" + 
-					"INSERT INTO Datatype2AtomInfoDense VALUES (21, 5, 2)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (12, 1, 2)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (13, 1, 2)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (14, 1, 1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (15, 3, 21)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (16, .5, 1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (17, .4, 5)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (18, 10, 1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (19, .75, 50)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (20, 1, 2)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (21, 5, 2)\n");
 		
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n" +
-					"INSERT INTO Collections VALUES (3,'Two', 'two', 'twodescrip', 'ATOFMS')\n" +
-					"INSERT INTO Collections VALUES (4,'Three', 'three', 'threedescrip', 'Datatype2')\n" +
-					"INSERT INTO Collections VALUES (5,'Four', 'four', 'fourdescrip', 'Datatype2')\n" +
-					"INSERT INTO Collections VALUES (6, 'Five', 'five', 'fivedescrip', 'Datatype2')\n");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (3,'Two', 'two', 'twodescrip', 'ATOFMS')\n");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (4,'Three', 'three', 'threedescrip', 'Datatype2')\n");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (5,'Four', 'four', 'fourdescrip', 'Datatype2')\n");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (6, 'Five', 'five', 'fivedescrip', 'Datatype2')\n");
 					
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO AtomMembership VALUES(2,1)\n" +
-					"INSERT INTO AtomMembership VALUES(2,2)\n" +
-					"INSERT INTO AtomMembership VALUES(2,3)\n" +
-					"INSERT INTO AtomMembership VALUES(2,4)\n" +
-					"INSERT INTO AtomMembership VALUES(2,5)\n" +
-					"INSERT INTO AtomMembership VALUES(3,6)\n" +
-					"INSERT INTO AtomMembership VALUES(3,7)\n" +
-					"INSERT INTO AtomMembership VALUES(3,8)\n" +
-					"INSERT INTO AtomMembership VALUES(3,9)\n" +
-					"INSERT INTO AtomMembership VALUES(3,10)\n" +
-					"INSERT INTO AtomMembership VALUES(4,11)\n" +
-					"INSERT INTO AtomMembership VALUES(4,12)\n" +
-					"INSERT INTO AtomMembership VALUES(4,13)\n" +
-					"INSERT INTO AtomMembership VALUES(4,14)\n" +
-					"INSERT INTO AtomMembership VALUES(4,15)\n" +
-					"INSERT INTO AtomMembership VALUES(5,16)\n" +
-					"INSERT INTO AtomMembership VALUES(5,17)\n" +
-					"INSERT INTO AtomMembership VALUES(5,18)\n" +
-					"INSERT INTO AtomMembership VALUES(5,19)\n" +
-					"INSERT INTO AtomMembership VALUES(5,20)\n" +
-					"INSERT INTO AtomMembership VALUES(6,21)\n" );
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,1)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,3)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,4)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,5)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(3,6)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(3,7)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(3,8)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(3,9)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(3,10)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(4,11)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(4,12)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(4,13)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(4,14)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(4,15)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(5,16)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(5,17)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(5,18)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(5,19)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(5,20)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(6,21)\n" );
 
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO CollectionRelationships VALUES(0,2)\n" +
-					"INSERT INTO CollectionRelationships VALUES(0,3)\n" +
-					"INSERT INTO CollectionRelationships VALUES(0,4)\n" +
-					"INSERT INTO CollectionRelationships VALUES(0,5)\n" +
-					"INSERT INTO CollectionRelationships VALUES(5,6)");
+			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(0,2)\n");
+			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(0,3)\n");
+			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(0,4)\n");
+			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(0,5)\n");
+			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(5,6)");
 
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO ATOFMSDataSetInfo VALUES(1,'One','aFile','anotherFile',12,20,0.005,1)");
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO Datatype2DataSetInfo VALUES(1,'9/2/2003 5:30:38 PM',100)");	
+			stmt.executeUpdate("INSERT INTO ATOFMSDataSetInfo VALUES(1,'One','aFile','anotherFile',12,20,0.005,1)");
+			stmt.executeUpdate("INSERT INTO Datatype2DataSetInfo VALUES(1,'9/2/2003 5:30:38 PM',100)");
 
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO DataSetMembers VALUES(1,1)\n" +
-					"INSERT INTO DataSetMembers VALUES(1,2)\n" +
-					"INSERT INTO DataSetMembers VALUES(1,3)\n" +
-					"INSERT INTO DataSetMembers VALUES(1,4)\n" +
-					"INSERT INTO DataSetMembers VALUES(1,5)\n" +
-					"INSERT INTO DataSetMembers VALUES(1,6)\n");
-		 
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(2,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(2,30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(3,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(3,30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(3,45,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-20,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-10,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(4,20,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-300,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-20,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(5,6,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(5,30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-306,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-300,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,300,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(6,306,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-307,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-300,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-15,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,30,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,230,15,0.006,12)\n" +
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(7,300,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-430,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-308,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-300,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,70,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,80,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(8,800,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(9,-30,15,0.006,12)\n" + 
-					"INSERT INTO ATOFMSAtomInfoSparse VALUES(10,-30,15,0.006,12)\n");
-					
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-			"INSERT INTO Datatype2AtomInfoSparse VALUES(11,1,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(11,2,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(12,1,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(12,2,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(12,3,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(13,1,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(13,2,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(13,3,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(14,1,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(15,2,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(15,3,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(16,1,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(16,2,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(17,1,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(18,1,0)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(19,1,1)\n" + 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(20,2,1)\n"+ 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(21,1,0)\n"+ 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(21,2,0)\n"+ 
-					"INSERT INTO Datatype2AtomInfoSparse VALUES(21,3,0)\n"); 
-		
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,1)\n");
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,2)\n");
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,3)\n");
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,4)\n");
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,5)\n");
+			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,6)\n");
+
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(2,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(2,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(3,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(3,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(3,45,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-20,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(4,-10,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(4,20,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(5,-20,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(5,6,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(5,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-306,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(6,306,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-307,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,-15,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,230,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(7,300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-430,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-308,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-300,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,70,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,80,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(8,800,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(9,-30,15,0.006,12)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(10,-30,15,0.006,12)\n");
+
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(11,1,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(11,2,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(12,1,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(12,2,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(12,3,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(13,1,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(13,2,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(13,3,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(14,1,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(15,2,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(15,3,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(16,1,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(16,2,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(17,1,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(18,1,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(19,1,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(20,2,1)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(21,1,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(21,2,0)\n");
+			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoSparse VALUES(21,3,0)\n");
+
 			updateInternalAtomOrderTestTable();
 	    } catch (SQLException e) {
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
-		tempDB.closeConnection();
+		db.closeConnection();
 	}
 	
 	/**
@@ -249,6 +230,7 @@ public class CreateTestDatabase {
 	public void generateDynamicTables() {
 		try {
 			Statement stmt = con.createStatement();
+
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[DataSetID]','INT',1,0,1)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Time]','DATETIME',0,0,2)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Number]','INT',0,0,3)\n");
@@ -273,9 +255,9 @@ public class CreateTestDatabase {
 			stmt.executeUpdate("CREATE TABLE SimpleParticleDataSetInfo ([DataSetID] INT, [DataSet] VARCHAR(8000), [Number] INT, PRIMARY KEY([DataSetID]))\n" );
 			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoDense ([AtomID] INT, [Size] REAL, [Magnitude] REAL, PRIMARY KEY([AtomID]))\n" );
 			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoSparse ([AtomID] INT, [Delay] INT, [Valid] BIT, PRIMARY KEY ([AtomID], [Delay]))");
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 
 	}
@@ -491,34 +473,34 @@ public class CreateTestDatabase {
 		try {
 			Statement stmt = con.createStatement();
 			// updateInternalAtomOrderTable for CID=2
-			ResultSet rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+			ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 2");
 			while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
 			stmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=3
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 3");
 			while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
 			stmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=4
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 4");
 			while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
 			stmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=5
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 5 OR CollectionID = 6");
 			while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
 			stmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=6
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 6");
 			while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",6)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",6)");
 			stmt.executeBatch();
 			rs.close();
 			stmt.close();

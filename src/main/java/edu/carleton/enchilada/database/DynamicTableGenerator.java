@@ -17,6 +17,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -392,13 +393,14 @@ public class DynamicTableGenerator extends DefaultHandler {
 			
 			try {
 				Database.rebuildDatabase("TestDB");
-				
-			} catch (SQLException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-				JOptionPane.showMessageDialog(null,
-						"Could not rebuild the database." +
-						"  Close any other programs that may be accessing the database and try again.");
+			} catch (ExceptionAdapter ea) {
+				if (ea.originalException instanceof SQLException) {
+					JOptionPane.showMessageDialog(null,
+							"Could not rebuild the database." +
+									"  Close any other programs that may be accessing the database and try again.");
+				} else {
+					throw ea;
+				}
 			}
 	    	InfoWarehouse db = Database.getDatabase();
 			db.openConnection();

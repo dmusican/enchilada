@@ -85,7 +85,7 @@ import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
  */
 public class DatabaseTest extends TestCase {
 	private Database db;
-	private String dbName = "testDB";
+	private String dbName = "TestDB";
 	private DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
 
 	public DatabaseTest(String aString)
@@ -100,20 +100,12 @@ public class DatabaseTest extends TestCase {
 		db = (Database) Database.getDatabase(dbName);
 	}
 	
-	protected void tearDown()
+	protected void tearDown() throws Exception
 	{
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			db = (Database) Database.getDatabase("");
-			db.openConnection();
-			Connection con = db.getCon();
-			con.createStatement().executeUpdate("DROP DATABASE TestDB");
-			con.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		System.runFinalization();
+		System.gc();
+//		db.dropDatabaseCommands();
 	}
 
 	/**
@@ -1038,24 +1030,18 @@ public class DatabaseTest extends TestCase {
 	*/
 	
 	public void testRebuildDatabase() {
+		db.closeConnection();
+		assertTrue(Database.rebuildDatabase(dbName));
+		db.openConnection();
 
-		try {
-			db.closeConnection();
-			assertTrue(Database.rebuildDatabase(dbName));			
-			db.openConnection();
-			
-			InfoWarehouse mainDB = Database.getDatabase();
-			mainDB.openConnection();
-			assertTrue(mainDB.isPresent());
-			mainDB.closeConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			fail();
-		}
+		InfoWarehouse mainDB = Database.getDatabase();
+		mainDB.openConnection();
+		assertTrue(mainDB.isPresent());
+		mainDB.closeConnection();
 	}
 
 
-	
+
 	public void testIsPresent() {
 		db.openConnection();
 		InfoWarehouse db = Database.getDatabase(dbName);
