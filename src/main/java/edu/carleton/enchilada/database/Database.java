@@ -4216,6 +4216,7 @@ public abstract class Database implements InfoWarehouse {
 	 */
 	private class RandomizedCursor extends BinnedCursor {
 		protected Statement stmt = null;
+		private double randMultiplier;
 		private Collection collection;
 		/**
 		 * @param collectionID
@@ -4223,73 +4224,42 @@ public abstract class Database implements InfoWarehouse {
 		public RandomizedCursor(Collection col) {
 			super(col);
 			collection = col;
+			randMultiplier = Math.random();
 			//Statement stmt = null;
 			try {
 				stmt = con.createStatement();
-				
-				// Drop table if it already exists.
-				stmt.execute("IF (OBJECT_ID('tempdb..#TempRand') " +
-						"IS NOT NULL)\n" +
-				"	DROP TABLE #TempRand\n");
-				//These strings constitute the entire SQL query for randomization.
-				String createTable = "CREATE TABLE #TempRand (AtomID int NOT NULL,RandNum float NULL)";
-				String insertAtoms = "INSERT #TempRand (AtomID) SELECT AtomID " 
-					+ "FROM InternalAtomOrder WHERE CollectionID = " + col.getCollectionID()+ " ORDER BY AtomID";
-				String randomize = "DECLARE Randomizer CURSOR" +
-				" FOR SELECT RandNum FROM #TempRand" +
-				" OPEN Randomizer"+
-				" FETCH NEXT FROM Randomizer" +
-				" WHILE @@Fetch_Status != -1" +
-				" BEGIN UPDATE #TempRand SET RandNum = rand()" +
-				" WHERE CURRENT OF Randomizer"+
-				" FETCH NEXT FROM Randomizer" +
-				" END"+
-				" CLOSE Randomizer"+
-				" DEALLOCATE Randomizer";
-				String cursorQuery = "SELECT "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID, OrigFilename, ScatDelay," +
-				" LaserPower, [Time] FROM "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+", #TempRand WHERE " +
-				getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID = #TempRand.AtomID"+
-				" ORDER BY RandNum";
-				//System.out.println(createTable);
-				stmt.execute(createTable);
-				//System.out.println(insertAtoms);
-				stmt.execute(insertAtoms);
-				//System.out.println(randomize);
-				stmt.execute(randomize);
-				//System.out.println(cursorQuery);
-				partInfRS = stmt.executeQuery(cursorQuery);
-				//System.out.println("got result set");
+				executeRandomizedCursorQuery();
 			} catch (SQLException e) {
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception retrieving data through a Randomized cursor.");
 				System.err.println("Could not randomize atoms.");
 				e.printStackTrace();
 			}
 		}
+
 		public void close() {
-			try {
-				con.createStatement().executeUpdate(
-				"DROP Table #TempRand");
-				super.close();
-			} catch (SQLException e) {
-				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception retrieving data through a Randomized cursor.");
-				e.printStackTrace();
-			}
+			super.close();
 		}
 		public void reset()
 		{
-			
 			try {
 				partInfRS.close();
-				String cursorQuery = "SELECT "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID, OrigFilename, ScatDelay," +
-				" LaserPower, [Time] FROM "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+", #TempRand WHERE " +
-				getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID = #TempRand.AtomID"+
-				" ORDER BY RandNum";
-				partInfRS = stmt.executeQuery(cursorQuery);
+				executeRandomizedCursorQuery();
 			} catch (SQLException e) {
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception retrieving data through a Randomized cursor.");
 				System.err.println("SQL Error resetting cursor: ");
 				e.printStackTrace();
 			}
+		}
+
+		private void executeRandomizedCursorQuery() throws SQLException {
+			// Cheap way of getting seedable, repeatable random ordering
+			// https://stackoverflow.com/a/24511461/490329
+			String q = "SELECT " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID, OrigFilename, ScatDelay," +
+					" LaserPower, [Time], Size FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ", InternalAtomOrder WHERE" +
+					" InternalAtomOrder.CollectionID = " + collection.getCollectionID() +
+					" AND " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID = InternalAtomOrder.AtomID" +
+					" ORDER BY substr(ATOFMSAtomInfoDense.AtomId * " + randMultiplier + ", length(ATOFMSAtomInfoDense.AtomId) + 2)";
+			partInfRS = stmt.executeQuery(q);
 		}
 	}
 	
