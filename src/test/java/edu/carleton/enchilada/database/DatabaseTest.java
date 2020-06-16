@@ -165,7 +165,6 @@ public class DatabaseTest extends TestCase {
 			Connection con = db.getCon();
 			Statement stmt = con.createStatement();
 			ResultSet rs = con.createStatement().executeQuery(
-					"USE TestDB\n" +
 					"SELECT *\n" +
 					"FROM ATOFMSDataSetInfo\n" +
 					"WHERE DataSetID = " + ids[1]);
@@ -178,7 +177,6 @@ public class DatabaseTest extends TestCase {
 			assertTrue(Math.abs(rs.getFloat(7) - (float)0.005) <= 0.00001);
 			assertFalse(rs.next());
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT * FROM Collections\n" +
 					"WHERE CollectionID = " + ids[0]);
 			rs.next();
@@ -186,7 +184,6 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getString("Comment").equals("comment"));
 			assertFalse(rs.next());
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT ParentID FROM CollectionRelationships\n" +
 					"WHERE ChildID = " + ids[0]);
 			assertTrue(rs.next());
@@ -207,7 +204,6 @@ public class DatabaseTest extends TestCase {
 			Connection con = db.getCon();
 			Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
@@ -217,7 +213,6 @@ public class DatabaseTest extends TestCase {
 			assertFalse(rs.next());
 			
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT ParentID\n" +
 					"FROM CollectionRelationships\n" +
 					"WHERE ChildID = " + collectionID);
@@ -241,7 +236,6 @@ public class DatabaseTest extends TestCase {
 			Connection con = db.getCon();
 			Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
@@ -253,7 +247,6 @@ public class DatabaseTest extends TestCase {
 			db.renameCollection(db.getCollection(collectionID), "Collection2");
 			//Checks to see if the sql database has the right name after renaming.
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
@@ -277,16 +270,16 @@ public class DatabaseTest extends TestCase {
 	 * @throws SQLException 
 	 */
 	public void testUpdateInternalAtomOrder() throws SQLException{
-		String manual = "USE TestDB INSERT INTO Collections VALUES "+
+		String manual = "INSERT INTO Collections VALUES "+
 			"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
 		db.openConnection();
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
 		stmt.addBatch(manual);
-		manual = "USE TestDB DELETE FROM CollectionRelationships WHERE "
+		manual = "DELETE FROM CollectionRelationships WHERE "
 			+ "ChildID = 2 OR ChildID = 3";
 		stmt.addBatch(manual);
-		manual = "USE TestDB INSERT INTO CollectionRelationships VALUES(7,2)"
+		manual = "INSERT INTO CollectionRelationships VALUES(7,2)"
 			+ "INSERT INTO CollectionRelationships VALUES(7,3)";
 		stmt.addBatch(manual);
 		stmt.executeBatch();
@@ -318,7 +311,7 @@ public class DatabaseTest extends TestCase {
 		 * as children of 2
 		 */
 		db.openConnection();
-		String sqlstring = "USE TestDB"
+		String sqlstring = ""
 			+ " INSERT INTO AtomMembership VALUES (7, 22)"
 			+ " INSERT INTO AtomMembership VALUES (7, 23)"
 			+ " INSERT INTO AtomMembership VALUES (7, 24)"
@@ -329,7 +322,7 @@ public class DatabaseTest extends TestCase {
 		Statement stmt = con.createStatement();
 		stmt.executeUpdate(sqlstring);
 		
-		sqlstring = "USE TestDB"
+		sqlstring = ""
 			+ " INSERT INTO InternalAtomOrder VALUES (22, 7)"
 			+ " INSERT INTO InternalAtomOrder VALUES (23, 7)"
 			+ " INSERT INTO InternalAtomOrder VALUES (24, 7)"
@@ -339,7 +332,7 @@ public class DatabaseTest extends TestCase {
 		stmt.executeUpdate(sqlstring);
 			
 		
-		sqlstring = "USE TestDB"
+		sqlstring = ""
 			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (22,'9/2/2003 5:30:38 PM',22,0.22,22,'tweTwo')"
 			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (23,'9/2/2003 5:30:38 PM',23,0.23,23,'tweThree')"
 			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (24,'9/2/2003 5:30:38 PM',24,0.24,24,'tweFour')"
@@ -348,12 +341,12 @@ public class DatabaseTest extends TestCase {
 			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (27,'9/2/2003 5:30:38 PM',27,0.27,27,'tweSeven')";
 		stmt.executeUpdate(sqlstring);
 		
-		sqlstring = "USE TestDB"
+		sqlstring = ""
 			+ " INSERT INTO Collections VALUES (7,'Seven', 'seven', 'sevdescrip', 'ATOFMS')"
 			+ " INSERT INTO Collections VALUES (8,'Eight', 'eight', 'eightdescrip', 'ATOFMS')";
 		stmt.executeUpdate(sqlstring);
 		
-		sqlstring = "USE TestDB"
+		sqlstring = ""
 			+ " INSERT INTO CollectionRelationships VALUES (2, 7)"
 			+ " INSERT INTO CollectionRelationships VALUES (2, 8)";
 		stmt.executeUpdate(sqlstring);
@@ -395,13 +388,13 @@ public class DatabaseTest extends TestCase {
 			Statement stmt = con.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = 3");
 			Statement stmt2 = con.createStatement();
 			ResultSet rs2 = stmt2.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + newLocation);
@@ -415,7 +408,7 @@ public class DatabaseTest extends TestCase {
 			rs2.close();
 			
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT ParentID\n" +
 					"FROM CollectionRelationships\n" +
 					"WHERE ChildID = " + newLocation);
@@ -424,13 +417,13 @@ public class DatabaseTest extends TestCase {
 			assertFalse(rs.next());
 			rs.close();
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT AtomID\n" +
 					"FROM AtomMembership\n" +
 					"WHERE CollectionID = 3\n" +
 					"ORDER BY AtomID");
 			rs2 = stmt2.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT AtomID\n" +
 					"FROM AtomMembership\n" +
 					"WHERE CollectionID = " + newLocation +
@@ -441,9 +434,9 @@ public class DatabaseTest extends TestCase {
 				assertTrue(rs.getInt(1) == rs2.getInt(1));
 			}
 			assertFalse(rs2.next());
-			rs = stmt.executeQuery("USE TestDB SELECT DISTINCT AtomID FROM AtomMembership WHERE " +
+			rs = stmt.executeQuery(" SELECT DISTINCT AtomID FROM AtomMembership WHERE " +
 					"CollectionID = "+newLocation+" OR CollectionID = 2 ORDER BY AtomID");
-			rs2 = stmt2.executeQuery("USE TestDB SELECT AtomID FROM InternalAtomOrder WHERE " +
+			rs2 = stmt2.executeQuery(" SELECT AtomID FROM InternalAtomOrder WHERE " +
 					"CollectionID = 2 ORDER BY AtomID");
 			while (rs.next())
 			{
@@ -479,7 +472,7 @@ public class DatabaseTest extends TestCase {
 			Statement stmt2 = con.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT ParentID\n" +
 					"FROM CollectionRelationships\n" +
 					"WHERE ChildID = 3");
@@ -488,9 +481,9 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getInt(1) == 2);
 			assertFalse(rs.next());
 
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership " +
+			rs = stmt.executeQuery(" SELECT AtomID FROM AtomMembership " +
 					"WHERE CollectionID = 2 OR CollectionID = 3 ORDER BY AtomID");
-			ResultSet rs2 = stmt2.executeQuery("USE TestDB SELECT AtomID FROM InternalAtomOrder" +
+			ResultSet rs2 = stmt2.executeQuery(" SELECT AtomID FROM InternalAtomOrder" +
 					" WHERE CollectionID = 2 ORDER BY AtomID");
 			while (rs.next())
 			{
@@ -523,7 +516,6 @@ public class DatabaseTest extends TestCase {
 			Statement stmt2 = con.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
 					"SELECT ParentID\n" +
 					"FROM CollectionRelationships\n" +
 					"WHERE ChildID in (3,4) " +
@@ -535,9 +527,9 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getInt(1) == 3);
 			assertFalse(rs.next());
 
-			rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership " +
+			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership " +
 					"WHERE CollectionID in (2, 3, 4) ORDER BY AtomID");
-			ResultSet rs2 = stmt2.executeQuery("USE TestDB SELECT AtomID FROM InternalAtomOrder" +
+			ResultSet rs2 = stmt2.executeQuery(" SELECT AtomID FROM InternalAtomOrder" +
 					" WHERE CollectionID = 2 ORDER BY AtomID");
 			while (rs.next())
 			{
@@ -594,7 +586,7 @@ public class DatabaseTest extends TestCase {
 			Statement stmt = con.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT PeakLocation, PeakArea, RelPeakArea," +
 					" PeakHeight\n" +
 					"FROM ATOFMSAtomInfoSparse \n" +
@@ -630,7 +622,7 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getInt(4) == peak2Height);
 			
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT [Time], LaserPower, [Size], ScatDelay, " +
 					"OrigFilename\n" +
 					"FROM ATOFMSAtomInfoDense \n" +
@@ -643,7 +635,7 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getString(5).equals(filename.substring(1,filename.length()-1)));
 			
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT CollectionID\n" +
 					"FROM AtomMembership\n" +
 					"WHERE AtomID = " + particleID);
@@ -652,7 +644,7 @@ public class DatabaseTest extends TestCase {
 			assertTrue(rs.getInt(1) == collectionID);
 			
 			rs = stmt.executeQuery(
-					"USE TestDB\n" +
+					"\n" +
 					"SELECT OrigDataSetID\n" +
 					"FROM DataSetMembers \n" +
 					"WHERE AtomID = " + particleID);
@@ -683,7 +675,7 @@ public class DatabaseTest extends TestCase {
 		try {
 			Connection con1 = db.getCon();
 			Statement stmt1 = con1.createStatement();
-			String query = "USE TestDB\n" +
+			String query = "\n" +
 				"INSERT INTO AtomMembership VALUES(5,21)\n";
 			System.out.println(query);
 			stmt1.executeUpdate(query);
@@ -701,16 +693,16 @@ public class DatabaseTest extends TestCase {
 			Statement stmt = con.createStatement();
 			Statement stmt2 = con.createStatement();
 			
-			ResultSet rs = stmt.executeQuery("USE TestDB SELECT * FROM InternalAtomOrder WHERE" +
+			ResultSet rs = stmt.executeQuery(" SELECT * FROM InternalAtomOrder WHERE" +
 			" CollectionID = 6");
 			assertFalse(rs.next());
 	
-			rs = stmt.executeQuery("USE TestDB\n" +
+			rs = stmt.executeQuery("\n" +
 			"SELECT AtomID\n" +
 			"FROM AtomMembership\n" +
 			"WHERE CollectionID = 5 ORDER BY AtomID");
 
-			ResultSet rs2 = stmt2.executeQuery("USE TestDB SELECT AtomID" +
+			ResultSet rs2 = stmt2.executeQuery(" SELECT AtomID" +
 					" FROM InternalAtomOrder WHERE CollectionID = 5 ORDER BY AtomID");
 			
 			int count = 0;
@@ -749,7 +741,7 @@ public class DatabaseTest extends TestCase {
 			Connection con = db.getCon();
 			stmt = con.createStatement();
 			StringBuilder sql = new StringBuilder();
-			sql.append("USE TestDB;\n ");
+			sql.append(";\n ");
 			
 			//Store a copy of all the relevant tables with just the things that should be left after deletion
 			// AKA Figure out what the database should look like after deletion
@@ -1238,7 +1230,7 @@ public class DatabaseTest extends TestCase {
 		{
 			stmt = con.createStatement();
 			stmt.executeUpdate(
-					"USE TestDB\n " +
+					"\n " +
 					"INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
 					"INSERT INTO AtomMembership VALUES (7,1)\n" +
 					"INSERT INTO AtomMembership VALUES (7,3)\n" +
@@ -1511,7 +1503,7 @@ public class DatabaseTest extends TestCase {
 			
 			stmt = con.createStatement();
 			rs = stmt.executeQuery(
-					"USE TestDB;\n" +
+					";\n" +
 					"SELECT * FROM " + name);
 			java.sql.ResultSetMetaData rsmd = rs.getMetaData();
 			
@@ -1889,7 +1881,7 @@ public class DatabaseTest extends TestCase {
 					Connection con = db.getCon();
 					Statement stmt = con.createStatement();
 					ResultSet rs = stmt.executeQuery(
-							"USE TestDB;\n" +
+							";\n" +
 							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
 					
@@ -1936,7 +1928,7 @@ public class DatabaseTest extends TestCase {
 					Connection con = db.getCon();
 					Statement stmt = con.createStatement();
 					ResultSet rs = stmt.executeQuery(
-							"USE TestDB;\n" +
+							";\n" +
 							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
 
@@ -2497,7 +2489,7 @@ public class DatabaseTest extends TestCase {
 		try {
 			
 			Statement stmt = db.getCon().createStatement();
-			ResultSet rs = stmt.executeQuery("USE TestDB;\n" + "SELECT * FROM ATOFMSAtomInfoDense where AtomID = 100" );
+			ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoDense where AtomID = 100" );
 			assertTrue(rs.next());
 			assertEquals(rs.getInt(1), 100);
 			// Date are the same but different format. 
@@ -2578,7 +2570,7 @@ public class DatabaseTest extends TestCase {
 		try {
 			
 			Statement stmt = db.getCon().createStatement();
-			ResultSet rs = stmt.executeQuery("USE TestDB;\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
+			ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
 			assertTrue(rs.next());
 			assertEquals(100, rs.getInt(1));
 			// Date are the same but different format. 
@@ -2663,7 +2655,7 @@ public class DatabaseTest extends TestCase {
 		Connection con;
 		Statement stmt;
 
-		String manual = "USE TestDB INSERT INTO Collections VALUES "+
+		String manual = " INSERT INTO Collections VALUES "+
 		"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
 
 		db.openConnection(dbName);
@@ -2672,7 +2664,7 @@ public class DatabaseTest extends TestCase {
 		{
 			stmt = con.createStatement();
 			stmt.executeUpdate(
-					"USE TestDB\n " +
+					"\n " +
 					"INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
 					"INSERT INTO AtomMembership VALUES (7,1)\n" +
 					"INSERT INTO AtomMembership VALUES (7,3)\n" +

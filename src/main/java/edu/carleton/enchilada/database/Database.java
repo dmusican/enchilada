@@ -6452,11 +6452,9 @@ public abstract class Database implements InfoWarehouse {
 				 * of the children collection and the CollectionID of the 
 				 * current collection.  Then we'll copy that info into IAO. - steinbel
 				 */
-				stmt.executeUpdate("IF (OBJECT_ID('tempdb..#children') " +
-					"IS NOT NULL)\n" +
-					"	DROP TABLE #children\n");
-				stmt.executeUpdate("CREATE TABLE #children (AtomID int, CollectionID int)");
-				query = "INSERT INTO #children (AtomID)" +
+				stmt.executeUpdate("DROP TABLE IF EXISTS temp.children\n");
+				stmt.executeUpdate("CREATE temporary TABLE children (AtomID int, CollectionID int)");
+				query = "INSERT INTO temp.children (AtomID)" +
 				" SELECT AtomID FROM InternalAtomOrder WHERE (CollectionID = ";
 				for (int i=0; i<subCollections.size(); i++){
 					query += subCollections.get(i) + ")";
@@ -6466,14 +6464,14 @@ public abstract class Database implements InfoWarehouse {
 				}
 				System.out.println(query);//TESTING
 				stmt.executeUpdate(query);
-				stmt.executeUpdate("UPDATE #children SET CollectionID = " + cID);
+				stmt.executeUpdate("UPDATE temp.children SET CollectionID = " + cID);
 				stmt.executeUpdate("INSERT INTO InternalAtomOrder " +
-						" (AtomID, CollectionID) SELECT * FROM #children " +
+						" (AtomID, CollectionID) SELECT * FROM temp.children " +
 						" WHERE NOT EXISTS (SELECT * FROM InternalAtomOrder" +
 						" WHERE InternalAtomOrder.CollectionID = " + cID +
-						" AND InternalAtomOrder.AtomID = #children.AtomID)");
+						" AND InternalAtomOrder.AtomID = temp.children.AtomID)");
 				System.out.println("Going to drop #children now");//TESTING
-				stmt.executeUpdate("DROP TABLE #children");
+				stmt.executeUpdate("DROP TABLE temp.children");
 			}
 
 
