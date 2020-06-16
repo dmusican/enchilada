@@ -134,9 +134,8 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-		//Database.dropDatabase("TestDB");
+		Database.dropDatabase("TestDB");
 		table = null;
-		
 	}
 	
 	

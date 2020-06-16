@@ -46,10 +46,7 @@ package edu.carleton.enchilada.database;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Connection;
+import java.sql.*;
 import java.util.ArrayList;
 
 import javax.swing.JOptionPane;
@@ -93,20 +90,18 @@ public class CreateTestDatabase {
 			// real one so we can test on that one and make sure we
 			// know what the results should be.
 			//stmt.executeUpdate("CREATE DATABASE TestDB");
-			stmt.executeUpdate(
-					"USE TestDB\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (1,'9/2/2003 5:30:38 PM',1,0.1,1,'One') " +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (2,'9/2/2003 5:30:38 PM',2,0.2,2,'Two') " +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (3,'9/2/2003 5:30:38 PM',3,0.3,3,'Three') " +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (4,'9/2/2003 5:30:38 PM',4,0.4,4,'Four')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (5,'9/2/2003 5:30:38 PM',5,0.5,5,'Five')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (6,'9/2/2003 5:30:38 PM',6,0.6,6,'Six')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (7,'9/2/2003 5:30:38 PM',7,0.7,7,'Seven')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (8,'9/2/2003 5:30:38 PM',8,0.8,8,'Eight')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (9,'9/2/2003 5:30:38 PM',9,0.9,9,'Nine')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (10,'9/2/2003 5:30:38 PM',10,0.01,10,'Ten')\n" +
-					"INSERT INTO ATOFMSAtomInfoDense VALUES (11,'9/2/2003 5:30:38 PM',11,0.11,11,'Eleven')\n");
-					
+			String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '9/2/2003 5:30:38 PM', ?, ?, ?, ?)";
+			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
+			for (int i=1; i < 12; i++) {
+				pstmt.setInt(1, i);
+				pstmt.setInt(2, i);
+				pstmt.setDouble(3, i/100.);
+				pstmt.setInt(4, i);
+				pstmt.setString(5, "particle"+i);
+				pstmt.addBatch();
+			}
+			pstmt.executeUpdate();
+
 			stmt.executeUpdate(
 					"USE TestDB\n" +		
 			"INSERT INTO Datatype2AtomInfoDense VALUES (12, 1, 2)\n" +
@@ -254,9 +249,7 @@ public class CreateTestDatabase {
 	public void generateDynamicTables() {
 		try {
 			Statement stmt = con.createStatement();
-			stmt.executeUpdate(
-					"Use TestDB "+
-			"INSERT INTO MetaData VALUES ('Datatype2','[DataSetID]','INT',1,0,1)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[DataSetID]','INT',1,0,1)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Time]','DATETIME',0,0,2)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Number]','INT',0,0,3)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[AtomID]','INT',1,1,1)\n" );
@@ -268,9 +261,7 @@ public class CreateTestDatabase {
 			stmt.executeUpdate("CREATE TABLE Datatype2DataSetInfo ([DataSetID] INT, [Time] DATETIME, [Number] INT,  PRIMARY KEY ([DataSetID]))\n" );
 			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoDense ([AtomID] INT, [Size] REAL, [Magnitude] REAL,  PRIMARY KEY ([AtomID]))\n" );
 			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoSparse ([AtomID] INT, [Delay] INT, [Valid] BIT, PRIMARY KEY ([AtomID], [Delay]))");
-			stmt.executeUpdate(
-					"Use TestDB " + 
-			"INSERT INTO MetaData VALUES ('SimpleParticle','[DataSetID]','INT',1,0,0)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[DataSetID]','INT',1,0,0)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[DataSet]','VARCHAR(8000)',0,0,1)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Number]','INT',0,0,2)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[AtomID]','INT',1,1,0)\n" );
