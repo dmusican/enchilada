@@ -6324,30 +6324,10 @@ public abstract class Database implements InfoWarehouse {
 			ResultSet rs = stmt.executeQuery(query);
 			
 			// Only bulk insert if client and server are on the same machine...
-			if (url.equals("localhost")) {
-				PrintWriter bulkFile = null;
-				try {
-					//tempFile = File.createTempFile("bulkfile", ".txt");
-					tempFile = new File("TEMP"+File.separator+"bulkfile"+".txt");
-					tempFile.deleteOnExit();
-					bulkFile = new PrintWriter(new FileWriter(tempFile));
-				} catch (IOException e) {
-					System.err.println("Trouble creating " + tempFile.getAbsolutePath());
-					e.printStackTrace();
-				}
-				while (rs.next()) {
-					//System.out.println(rs.getInt(1) + "," + cID);//TESTING
-					bulkFile.println(rs.getInt(1) + "," + cID);
-				}
-				bulkFile.close();
-				stmt.addBatch("BULK INSERT InternalAtomOrder\n" +
-						"FROM '" + tempFile.getAbsolutePath() + "'\n" +
-				"WITH (FIELDTERMINATOR=',')");
-			} else {
-				while (rs.next()) {			
-					stmt.addBatch("INSERT INTO InternalAtomOrder VALUES("+rs.getInt(1)+","+cID+")");
-				}
-			}		
+			while (rs.next()) {
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES("+rs.getInt(1)+","+cID+")");
+			}
+
 			//System.out.println("inserted " + (order-1) + " atoms into cID " + 4);
 			stmt.executeBatch();
 			stmt.close();

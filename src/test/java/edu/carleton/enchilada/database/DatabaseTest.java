@@ -2665,7 +2665,7 @@ public class DatabaseTest extends TestCase {
 			stmt = con.createStatement();
 			stmt.executeUpdate(
 					"\n " +
-					"INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
+					"INSERT prINTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
 					"INSERT INTO AtomMembership VALUES (7,1)\n" +
 					"INSERT INTO AtomMembership VALUES (7,3)\n" +
 					"INSERT INTO AtomMembership VALUES (7,5)\n" +
