@@ -3860,6 +3860,7 @@ public abstract class Database implements InfoWarehouse {
 		 * @see java.util.Iterator#next()
 		 */
 		public ParticleInfo getCurrent() {
+			SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
 			try {
 				ParticleInfo particleInfo = new ParticleInfo();
 				particleInfo.setParticleInfo(
@@ -3867,18 +3868,18 @@ public abstract class Database implements InfoWarehouse {
 								partInfRS.getInt(1),
 								partInfRS.getString(2),
 								partInfRS.getInt(3),
-								partInfRS.getFloat(4), 
-								new Date(partInfRS.getTimestamp(5).
-										getTime()),
+								partInfRS.getFloat(4),
+								df.parse(partInfRS.getString(5)),
 								partInfRS.getFloat(6)));
 				particleInfo.setID(particleInfo.getATOFMSParticleInfo().getAtomID());
 				return particleInfo; 
 			} catch (SQLException e) {
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception retrieving data through a AtomInfoOnly cursor.");
-				System.err.println("Error retrieving the " +
-				"next row");
+				System.err.println("Error retrieving the next row");
 				e.printStackTrace();
 				return null;
+			} catch (Exception e) {
+				throw new ExceptionAdapter(e);
 			}
 		}
 		
