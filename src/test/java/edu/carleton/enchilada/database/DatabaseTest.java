@@ -105,7 +105,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-//		db.dropDatabaseCommands();
+		db.dropDatabaseCommands();
 	}
 
 	/**
@@ -1409,7 +1409,7 @@ public class DatabaseTest extends TestCase {
 		temp.setID(1);
 
 		partInfo.add(temp);
-		
+
 		int[] ids = new int[5];
 		for (int i = 0; i < 5; i++)
 		{

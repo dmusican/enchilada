@@ -99,7 +99,7 @@ public class CreateTestDatabase {
 				pstmt.setString(5, "particle"+i);
 				pstmt.addBatch();
 			}
-			pstmt.executeUpdate();
+			pstmt.executeBatch();
 
 			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (12, 1, 2)\n");
 			stmt.executeUpdate("INSERT INTO Datatype2AtomInfoDense VALUES (13, 1, 2)\n");
@@ -471,45 +471,45 @@ public class CreateTestDatabase {
 	 */
 	private void updateInternalAtomOrderTestTable() {
 		try {
-			Statement stmt = con.createStatement();
+			Statement queryStmt = con.createStatement();
+			Statement insertStmt = con.createStatement();
 			// updateInternalAtomOrderTable for CID=2
-			ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+			ResultSet rs = queryStmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 2");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
-			stmt.executeBatch();
+				insertStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
+			insertStmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=3
-			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+			rs = queryStmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 3");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
-			stmt.executeBatch();
+				insertStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
+			insertStmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=4
-			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+			rs = queryStmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 4");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
-			stmt.executeBatch();
+				insertStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
+			insertStmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=5
-			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+			rs = queryStmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 5 OR CollectionID = 6");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
-			stmt.executeBatch();
+				insertStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
+			insertStmt.executeBatch();
 			// updateInternalAtomOrderTable for CID=6
-			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+			rs = queryStmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 					" CollectionID = 6");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",6)");
-			stmt.executeBatch();
+				insertStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",6)");
+			insertStmt.executeBatch();
 			rs.close();
-			stmt.close();
+			queryStmt.close();
+			insertStmt.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-			
 	}
 	
 	public static void main(String[] args) {
