@@ -81,6 +81,7 @@ import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
 import junit.runner.Version;
 import org.junit.Test;
+import org.sqlite.SQLiteException;
 
 /**
  * @author andersbe
@@ -108,7 +109,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-		db.dropDatabaseCommands();
+//		db.dropDatabaseCommands();
 	}
 
 	/**
@@ -144,9 +145,9 @@ public class DatabaseTest extends TestCase {
 		assertEquals(4, test.get(2).intValue());
 		assertEquals(5, test.get(3).intValue());
 		
-		ArrayList<Integer> collections = new ArrayList<Integer>();
-		collections.add(new Integer(0));
-		collections.add(new Integer(3));
+		ArrayList<Integer> collections = new ArrayList<>();
+		collections.add(0);
+		collections.add(3);
 		test = db.getImmediateSubCollections(collections);
 		assertEquals(4, test.size());
 		assertEquals(2, test.get(0).intValue());
@@ -161,7 +162,7 @@ public class DatabaseTest extends TestCase {
 	public void testCreateEmptyCollectionAndDataset() {
 		db.openConnection(dbName);
 		
-		int ids[] = db.createEmptyCollectionAndDataset("ATOFMS", 0,
+		int[] ids = db.createEmptyCollectionAndDataset("ATOFMS", 0,
 				"dataset",  "comment", "'mCalFile', 'sCalFile', 12, 20, 0.005, 0");
 		
 		try {
@@ -1232,14 +1233,12 @@ public class DatabaseTest extends TestCase {
 		try
 		{
 			stmt = con.createStatement();
-			stmt.executeUpdate(
-					"\n " +
-					"INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
-					"INSERT INTO AtomMembership VALUES (7,1)\n" +
-					"INSERT INTO AtomMembership VALUES (7,3)\n" +
-					"INSERT INTO AtomMembership VALUES (7,5)\n" +
-					"INSERT INTO AtomMembership VALUES (7,7)\n" +
-					"INSERT INTO InternalAtomOrder (AtomID, CollectionID) (SELECT AtomID, CollectionID FROM AtomMembership WHERE CollectionID = 7)");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,1)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,3)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,5)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,7)\n");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder (AtomID, CollectionID) SELECT AtomID, CollectionID FROM AtomMembership WHERE CollectionID = 7");
 		}
 		catch (SQLException e)
 		{
@@ -1710,15 +1709,26 @@ public class DatabaseTest extends TestCase {
 		
 		assertTrue(db.createIndex("ATOFMS", "Size, LaserPower"));
 		assertTrue(db.createIndex("ATOFMS", "Size, Time"));
-		System.out.println("Two exceptions to follow - there are already indices.");
-		assertFalse(db.createIndex("ATOFMS", "Size, LaserPower"));
-		assertFalse(db.createIndex("ATOFMS", "size, time"));
-		
+
+		try {
+			db.createIndex("ATOFMS", "Size, LaserPower");
+			fail("Should have been an exception, there are already indices.");
+		} catch (ExceptionAdapter e) {
+			// test succeeds if no
+		}
+
+		try {
+			db.createIndex("ATOFMS", "size, time");
+			fail("Should have been an exception, there are already indices.");
+		} catch (ExceptionAdapter e) {
+			// test succeeds if no
+		}
+
 		try {
 			Connection con = db.getCon();
 			Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(
-					"SELECT * FROM ATOFMSAtomInfoDense WHERE Size = 0.2");
+					"SELECT * FROM ATOFMSAtomInfoDense WHERE Size = 0.02");
 			
 			assertTrue(rs.next());
 			assertTrue(rs.getFloat("LaserPower") < 2.0001 && rs.getFloat("LaserPower") > 1.9999);

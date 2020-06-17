@@ -789,8 +789,7 @@ public abstract class Database implements InfoWarehouse {
 			stmt.close();
 			return true;
 		} catch (SQLException e) {
-			System.err.println(e.toString());
-			return false;
+			throw new ExceptionAdapter(e);
 		}
 	}
 	
@@ -3959,24 +3958,24 @@ public abstract class Database implements InfoWarehouse {
 			String[] splitwhere = where.split(";", -1);
 			if (splitwhere[0].length() > 0)
 				densewhere += "WHERE " + splitwhere[0];
-			if (splitwhere[1].length() > 0)
+			if (splitwhere.length > 1 && splitwhere[1].length() > 0)
 				sparsewhere += "AND " + splitwhere[1];
 			String densename = getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype());
 			String sparsename = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
 			// MM: This query allows Enchilada to filter for criteria from both the dense and sparse datatables
-			query = "SELECT DISTINCT AtomID FROM (" + // DISTINCT should be redundant here...
-					"	SELECT DISTINCT d.*, ROW_NUMBER() OVER (ORDER BY InternalAtomOrder.AtomID) AS rownum" +
-					"		FROM " + densename + " AS d, InternalAtomOrder" +
-					"		WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND d.AtomID = InternalAtomOrder.AtomID " +
-					"		AND d.AtomID IN (" +
-					"			SELECT DISTINCT AtomID FROM (" +
-					"				SELECT s.*" +
-					"				FROM " + sparsename + " AS s, InternalAtomOrder" +
-					"					WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND s.AtomID = InternalAtomOrder.AtomID " + sparsewhere +
-					"				) AS subtable" +
-					"			)" +
-					"		) AS temptable " + densewhere;
-			
+			query = "SELECT DISTINCT AtomID FROM (\n" + // DISTINCT should be redundant here...
+					"    SELECT DISTINCT d.*, ROW_NUMBER() OVER (ORDER BY InternalAtomOrder.AtomID) AS rownum\n" +
+					"        FROM " + densename + " AS d, InternalAtomOrder\n" +
+					"        WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND d.AtomID = InternalAtomOrder.AtomID\n" +
+					"        AND d.AtomID IN (\n" +
+					"            SELECT DISTINCT AtomID FROM (\n" +
+					"                SELECT s.*\n" +
+					"                FROM " + sparsename + " AS s, InternalAtomOrder\n" +
+					"                    WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND s.AtomID = InternalAtomOrder.AtomID " + sparsewhere + "\n" +
+					"            ) AS subtable\n" +
+					"        )\n" +
+					") AS temptable " + densewhere;
+			System.out.println(query);
 			try {
 				stmt = getCon().createStatement();
 				rs = stmt.executeQuery(query);
