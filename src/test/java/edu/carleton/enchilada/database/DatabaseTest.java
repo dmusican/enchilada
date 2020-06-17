@@ -722,13 +722,16 @@ public class DatabaseTest extends TestCase {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Error message to follow:");
-		// removed an assert false here - changed the code to give an error 
+		// removed an assert false here - changed the code to give an error
 		// if a collectionID is passed that isn't really a collection in the db.
-		assertFalse(db.orphanAndAdopt(db.getCollection(2))); //is not a subcollection (prints this)
+		try {
+			db.orphanAndAdopt(db.getCollection(2));
+			fail("Is not a subcollection");
+		} catch (RuntimeException e) {
+			// test should throw an exception
+		}
 		
 		//Make sure orphan and adopt can't be performed on either root
-		//these should print error messages
 		assertFalse(db.orphanAndAdopt(db.getCollection(0)));
 		assertFalse(db.orphanAndAdopt(db.getCollection(1)));
 		

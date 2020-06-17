@@ -1676,9 +1676,7 @@ public abstract class Database implements InfoWarehouse {
 			else if (parentID < 2)
 			{
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Cannot perform the Orphan And Adopt operation on root level collections.");
-				System.err.println("Cannot perform this operation " +
-				"on root level collections.");
-				return false;
+				throw new RuntimeException("Cannot perform this operation on root level collections.");
 			}
 			
 			Statement stmt = con.createStatement();
@@ -1726,8 +1724,7 @@ public abstract class Database implements InfoWarehouse {
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error executing Orphan and Adopt.");
 			System.err.println("Error executing orphan and Adopt");
-			e.printStackTrace();
-			return false;
+			throw new ExceptionAdapter(e);
 		}
 		
 		return true;
@@ -1747,75 +1744,47 @@ public abstract class Database implements InfoWarehouse {
 		Collection parent = collection.getParentCollection();
 		String datatype = collection.getDatatype();
 		System.out.println("Deleting " + collection.getCollectionID());
-		File tempFile = null;
 		try {
 			Statement stmt = con.createStatement();
-			StringBuilder sql = new StringBuilder();
-			sql.append("IF object_id('tempdb..#collections') IS NOT NULL\n"+
-					"BEGIN\n" +
-					"DROP TABLE #collections;\n"+
-					"END\n");
-			sql.append("CREATE TABLE #collections (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
+			stmt.executeUpdate("DROP TABLE IF EXISTS temp.collections;");
+			stmt.executeUpdate("CREATE TEMPORARY TABLE collections " +
+					                  "(CollectionID int, PRIMARY KEY([CollectionID]));");
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
 			// clear InternalAtomOrder table of the deleted collection and all subcollections.
 			HashMap<Integer,ArrayList<Integer>> hierarchy =  getSubCollectionsHierarchy(collection);
 			
 			Iterator<Integer> allsubcollections = hierarchy.keySet().iterator();
-			if (url.equals("localhost")) {
-				PrintWriter bulkFile = null;
-				try {
-					//tempFile = File.createTempFile("bulkfile", ".txt");
-					tempFile = new File("TEMP"+File.separator+"bulkfile"+".txt");
-					tempFile.deleteOnExit();
-					bulkFile = new PrintWriter(new FileWriter(tempFile));
-				} catch (IOException e) {
-					System.err.println("Trouble creating " + tempFile.getAbsolutePath() + "");
-					e.printStackTrace();
-				}
-				bulkFile.println(collection.getCollectionID());
-				while(allsubcollections.hasNext()){
-					Integer nextParent = allsubcollections.next();
-					for(Integer childID : hierarchy.get(nextParent)){
-						assert(this.getCollection(childID).getDatatype().equals(datatype));
-						bulkFile.println(childID);
-					}
-				}
-				bulkFile.close();
-				sql.append("BULK INSERT #collections\n" +
-						"FROM '" + tempFile.getAbsolutePath() + "'\n" +
-				"WITH (FIELDTERMINATOR=',');\n");
-				
-			} else {
-				sql.append("INSERT INTO #collections VALUES("+collection.getCollectionID()+");\n");
-				while(allsubcollections.hasNext()){
-					Integer nextParent = allsubcollections.next();
-					for(Integer childID : hierarchy.get(nextParent)){
-						assert(this.getCollection(childID).getDatatype().equals(datatype));
-						sql.append("INSERT INTO #collections VALUES("+childID+");\n");
-					}
+
+			String queryTemplate = "INSERT INTO temp.collections VALUES(?)";
+			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
+
+			pstmt.setInt(1, collection.getCollectionID());
+			pstmt.addBatch();
+			while(allsubcollections.hasNext()){
+				Integer nextParent = allsubcollections.next();
+				for(Integer childID : hierarchy.get(nextParent)){
+					assert(this.getCollection(childID).getDatatype().equals(datatype));
+					pstmt.setInt(1, childID);
+					pstmt.addBatch();
 				}
 			}
-			
-			sql.append("DELETE FROM InternalAtomOrder\n"
-					+ "WHERE CollectionID IN (SELECT * FROM #collections);\n");
-			sql.append("DELETE FROM CollectionRelationships\n"
-					+ "WHERE ParentID IN (SELECT * FROM #collections)\n"
-					+ "OR ChildID IN (SELECT * FROM #collections);\n");
-			sql.append("DELETE FROM CenterAtoms\n"
-					+ "WHERE CollectionID IN (SELECT * FROM #collections);\n");
-			sql.append("DELETE FROM Collections\n"
-					+ "WHERE CollectionID IN (SELECT * FROM #collections);\n");
-			
-			sql.append("DROP TABLE #collections;\n");
-			System.out.println("Statement: "+sql.toString());
-			stmt.execute(sql.toString());
+			pstmt.executeBatch();
+
+			stmt.executeUpdate("DELETE FROM InternalAtomOrder\n"
+					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+			stmt.executeUpdate("DELETE FROM CollectionRelationships\n"
+					+ "WHERE ParentID IN (SELECT * FROM temp.collections)\n"
+					+ "OR ChildID IN (SELECT * FROM temp.collections);\n");
+			stmt.executeUpdate("DELETE FROM CenterAtoms\n"
+					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+			stmt.executeUpdate("DELETE FROM Collections\n"
+					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+
+			stmt.executeUpdate("DROP TABLE temp.collections;\n");
 			isDirty = true;
 			stmt.close();
 
-			if (tempFile != null && tempFile.exists()) {
-				tempFile.delete();
-			}
 		} catch (Exception e){
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Exception deleting collection.");
 			System.err.println("Exception deleting collection: ");
