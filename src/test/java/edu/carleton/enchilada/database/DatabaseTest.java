@@ -1245,7 +1245,7 @@ public class DatabaseTest extends TestCase {
 			e.printStackTrace();
 			fail("Failed to insert new collection to test getSQLAtomIDCursor");
 		}
-		curs = db.getSQLAtomIDCursor(db.getCollection(7), "rownum >= 2 and rownum <= 4");
+		curs = db.getSQLAtomIDCursor(db.getCollection(7), "rownum >= 1 and rownum <= 3");
 		for (int i = 3; i < 8; i = i + 2)
 		{
 			assertTrue(curs.next());
