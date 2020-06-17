@@ -1749,6 +1749,7 @@ public abstract class Database implements InfoWarehouse {
 			stmt.executeUpdate("DROP TABLE IF EXISTS temp.collections;");
 			stmt.executeUpdate("CREATE TEMPORARY TABLE collections " +
 					                  "(CollectionID int, PRIMARY KEY([CollectionID]));");
+
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
 			// clear InternalAtomOrder table of the deleted collection and all subcollections.
@@ -1761,15 +1762,18 @@ public abstract class Database implements InfoWarehouse {
 
 			pstmt.setInt(1, collection.getCollectionID());
 			pstmt.addBatch();
+			pstmt.executeBatch();
 			while(allsubcollections.hasNext()){
 				Integer nextParent = allsubcollections.next();
 				for(Integer childID : hierarchy.get(nextParent)){
+					System.out.println(childID);
 					assert(this.getCollection(childID).getDatatype().equals(datatype));
 					pstmt.setInt(1, childID);
 					pstmt.addBatch();
+					pstmt.executeBatch();
 				}
 			}
-			pstmt.executeBatch();
+//			pstmt.executeBatch();
 
 			stmt.executeUpdate("DELETE FROM InternalAtomOrder\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
@@ -2192,7 +2196,9 @@ public abstract class Database implements InfoWarehouse {
 		Statement stmt;
 		try {
 			stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT CollectionID \nFROM Collections \nWHERE CollectionID = "+collectionID);
+			String query = "SELECT CollectionID \nFROM Collections \nWHERE CollectionID = "+collectionID;
+			System.out.println(query);
+			ResultSet rs = stmt.executeQuery(query);
 			while (rs.next()) {
 				if (rs.getInt(1) == collectionID) {
 					isPresent = true;
@@ -2207,8 +2213,7 @@ public abstract class Database implements InfoWarehouse {
 			}
 			else {
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error retrieving collection for collectionID "+collectionID);
-				System.err.println("collectionID not created yet!!");
-				return null;
+				throw new RuntimeException("collectionID not created yet!! " + collectionID);
 			}
 			stmt.close();
 			
