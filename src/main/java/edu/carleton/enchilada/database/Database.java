@@ -5975,7 +5975,7 @@ public abstract class Database implements InfoWarehouse {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			System.err.println("Could not retrieve filename");
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 
 				

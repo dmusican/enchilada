@@ -46,6 +46,7 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
@@ -78,6 +79,8 @@ import edu.carleton.enchilada.ATOFMS.Peak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
+import junit.runner.Version;
+import org.junit.Test;
 
 /**
  * @author andersbe
@@ -134,22 +137,22 @@ public class DatabaseTest extends TestCase {
 		db.openConnection(dbName);
 		
 		ArrayList<Integer> test = db.getImmediateSubCollections(db.getCollection(0));
-		
-		assertTrue(test.size() == 4);
-		assertTrue(test.get(0).intValue() == 2);
-		assertTrue(test.get(1).intValue() == 3);
-		assertTrue(test.get(2).intValue() == 4);
-		assertTrue(test.get(3).intValue() == 5);
+
+		assertEquals(4, test.size());
+		assertEquals(2, test.get(0).intValue());
+		assertEquals(3, test.get(1).intValue());
+		assertEquals(4, test.get(2).intValue());
+		assertEquals(5, test.get(3).intValue());
 		
 		ArrayList<Integer> collections = new ArrayList<Integer>();
 		collections.add(new Integer(0));
 		collections.add(new Integer(3));
 		test = db.getImmediateSubCollections(collections);
-		assertTrue(test.size() == 4);
-		assertTrue(test.get(0).intValue() == 2);
-		assertTrue(test.get(1).intValue() == 3);
-		assertTrue(test.get(2).intValue() == 4);
-		assertTrue(test.get(3).intValue() == 5);
+		assertEquals(4, test.size());
+		assertEquals(2, test.get(0).intValue());
+		assertEquals(3, test.get(1).intValue());
+		assertEquals(4, test.get(2).intValue());
+		assertEquals(5, test.get(3).intValue());
 		
 		db.closeConnection();
 	}
@@ -169,25 +172,25 @@ public class DatabaseTest extends TestCase {
 					"FROM ATOFMSDataSetInfo\n" +
 					"WHERE DataSetID = " + ids[1]);
 			assertTrue(rs.next());
-			assertTrue(rs.getString(2).equals("dataset"));
-			assertTrue(rs.getString(3).equals("mCalFile"));
-			assertTrue(rs.getString(4).equals("sCalFile"));
-			assertTrue(rs.getInt(5) == 12);
-			assertTrue(rs.getInt(6) == 20);
+			assertEquals("dataset", rs.getString(2));
+			assertEquals("mCalFile", rs.getString(3));
+			assertEquals("sCalFile", rs.getString(4));
+			assertEquals(12, rs.getInt(5));
+			assertEquals(20, rs.getInt(6));
 			assertTrue(Math.abs(rs.getFloat(7) - (float)0.005) <= 0.00001);
 			assertFalse(rs.next());
 			rs = stmt.executeQuery(
 					"SELECT * FROM Collections\n" +
 					"WHERE CollectionID = " + ids[0]);
 			rs.next();
-			assertTrue(rs.getString("Name").equals("dataset"));
-			assertTrue(rs.getString("Comment").equals("comment"));
+			assertEquals("dataset", rs.getString("Name"));
+			assertEquals("comment", rs.getString("Comment"));
 			assertFalse(rs.next());
 			rs = stmt.executeQuery(
 					"SELECT ParentID FROM CollectionRelationships\n" +
 					"WHERE ChildID = " + ids[0]);
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 0);
+			assertEquals(0, rs.getInt(1));
 			assertFalse(rs.next());
 			rs.close();
 			stmt.close();
@@ -208,8 +211,8 @@ public class DatabaseTest extends TestCase {
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
 			assertTrue(rs.next());
-			assertTrue(rs.getString(1).equals("Collection"));
-			assertTrue(rs.getString(2).equals("collection"));
+			assertEquals("Collection", rs.getString(1));
+			assertEquals("collection", rs.getString(2));
 			assertFalse(rs.next());
 			
 			rs = stmt.executeQuery(
@@ -218,7 +221,7 @@ public class DatabaseTest extends TestCase {
 					"WHERE ChildID = " + collectionID);
 			
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 0);
+			assertEquals(0, rs.getInt(1));
 			assertFalse(rs.next());
 			rs.close();
 			stmt.close();
@@ -239,10 +242,10 @@ public class DatabaseTest extends TestCase {
 					"SELECT Name, Comment\n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
-			assertTrue(rs.next());			
-			assertTrue(rs.getString(1).equals("Collection"));
+			assertTrue(rs.next());
+			assertEquals("Collection", rs.getString(1));
 			//Checks to see if the internal collection object has the right name initially.			
-			assertTrue(db.getCollection(collectionID).getName().equals("Collection"));
+			assertEquals("Collection", db.getCollection(collectionID).getName());
 			//Call the change method
 			db.renameCollection(db.getCollection(collectionID), "Collection2");
 			//Checks to see if the sql database has the right name after renaming.
@@ -251,9 +254,9 @@ public class DatabaseTest extends TestCase {
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collectionID);
 			assertTrue(rs.next());
-			assertTrue(rs.getString(1).equals("Collection2"));
+			assertEquals("Collection2", rs.getString(1));
 			//Checks to see if the internal collection object has the right name after renaming.
-			assertTrue(db.getCollection(collectionID).getName().equals("Collection2"));
+			assertEquals("Collection2", db.getCollection(collectionID).getName());
 			rs.close();
 			stmt.close();
 		}
@@ -400,8 +403,8 @@ public class DatabaseTest extends TestCase {
 					"WHERE CollectionID = " + newLocation);
 			assertTrue(rs.next());
 			assertTrue(rs2.next());
-			assertTrue(rs.getString(1).equals(rs2.getString(1)));
-			assertTrue(rs.getString(2).equals(rs2.getString(2)));
+			assertEquals(rs.getString(1), rs2.getString(1));
+			assertEquals(rs.getString(2), rs2.getString(2));
 			assertFalse(rs.next());
 			assertFalse(rs2.next());
 			rs.close();
@@ -413,7 +416,7 @@ public class DatabaseTest extends TestCase {
 					"FROM CollectionRelationships\n" +
 					"WHERE ChildID = " + newLocation);
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 2);
+			assertEquals(2, rs.getInt(1));
 			assertFalse(rs.next());
 			rs.close();
 			rs = stmt.executeQuery(
@@ -431,7 +434,7 @@ public class DatabaseTest extends TestCase {
 			while (rs.next())
 			{
 				assertTrue(rs2.next());
-				assertTrue(rs.getInt(1) == rs2.getInt(1));
+				assertEquals(rs.getInt(1), rs2.getInt(1));
 			}
 			assertFalse(rs2.next());
 			rs = stmt.executeQuery(" SELECT DISTINCT AtomID FROM AtomMembership WHERE " +
@@ -441,7 +444,7 @@ public class DatabaseTest extends TestCase {
 			while (rs.next())
 			{
 				assertTrue(rs2.next());
-				assertTrue(rs.getInt(1) == rs2.getInt(1));
+				assertEquals(rs.getInt(1), rs2.getInt(1));
 			}
 			assertFalse(rs2.next());	
 			rs.close();
@@ -478,7 +481,7 @@ public class DatabaseTest extends TestCase {
 					"WHERE ChildID = 3");
 			
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 2);
+			assertEquals(2, rs.getInt(1));
 			assertFalse(rs.next());
 
 			rs = stmt.executeQuery(" SELECT AtomID FROM AtomMembership " +
@@ -488,7 +491,7 @@ public class DatabaseTest extends TestCase {
 			while (rs.next())
 			{
 				assertTrue(rs2.next());
-				assertTrue(rs.getInt(1) == rs2.getInt(1));
+				assertEquals(rs.getInt(1), rs2.getInt(1));
 			}
 			assertFalse(rs2.next());
 			db.closeConnection();
@@ -522,9 +525,9 @@ public class DatabaseTest extends TestCase {
 					"ORDER BY ChildID");
 			
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 2);
+			assertEquals(2, rs.getInt(1));
 			assertTrue(rs.next());
-			assertTrue(rs.getInt(1) == 3);
+			assertEquals(3, rs.getInt(1));
 			assertFalse(rs.next());
 
 			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership " +
@@ -534,7 +537,7 @@ public class DatabaseTest extends TestCase {
 			while (rs.next())
 			{
 				assertTrue(rs2.next()); // if this fails, there are more rows in atom membership than InternalAtomOrder
-				assertTrue(rs.getInt(1) == rs2.getInt(1));
+				assertEquals(rs.getInt(1), rs2.getInt(1));
 			}
 			assertFalse(rs2.next());
 			db.closeConnection();
@@ -594,32 +597,32 @@ public class DatabaseTest extends TestCase {
 					"ORDER BY PeakLocation ASC");
 			
 			assertTrue(rs.next());
-			
-			assertTrue(rs.getFloat(1) == (float) negPeakLocation2);
-			assertTrue(rs.getInt(2) == peak2Height);
-			assertTrue(rs.getFloat(3) == (float) 0.1);
-			assertTrue(rs.getInt(4) == peak2Height);
-			
-			assertTrue(rs.next());
-				
-			assertTrue(rs.getFloat(1) == (float) negPeakLocation1);
-			assertTrue(rs.getInt(2) == peak1Height);
-			assertTrue(rs.getFloat(3) == (float) 0.1);
-			assertTrue(rs.getInt(4) == peak1Height);
+
+			assertEquals(rs.getFloat(1), (float) negPeakLocation2);
+			assertEquals(rs.getInt(2), peak2Height);
+			assertEquals(rs.getFloat(3), (float) 0.1);
+			assertEquals(rs.getInt(4), peak2Height);
 			
 			assertTrue(rs.next());
 
-			assertTrue(rs.getFloat(1) == (float) posPeakLocation1);
-			assertTrue(rs.getInt(2) == peak1Height);
-			assertTrue(rs.getFloat(3) == (float) 0.1);
-			assertTrue(rs.getInt(4) == peak1Height);
+			assertEquals(rs.getFloat(1), (float) negPeakLocation1);
+			assertEquals(rs.getInt(2), peak1Height);
+			assertEquals(rs.getFloat(3), (float) 0.1);
+			assertEquals(rs.getInt(4), peak1Height);
 			
 			assertTrue(rs.next());
+
+			assertEquals(rs.getFloat(1), (float) posPeakLocation1);
+			assertEquals(rs.getInt(2), peak1Height);
+			assertEquals(rs.getFloat(3), (float) 0.1);
+			assertEquals(rs.getInt(4), peak1Height);
 			
-			assertTrue(rs.getFloat(1) == (float) posPeakLocation2);
-			assertTrue(rs.getInt(2) == peak2Height);
-			assertTrue(rs.getFloat(3) == (float) 0.1);
-			assertTrue(rs.getInt(4) == peak2Height);
+			assertTrue(rs.next());
+
+			assertEquals(rs.getFloat(1), (float) posPeakLocation2);
+			assertEquals(rs.getInt(2), peak2Height);
+			assertEquals(rs.getFloat(3), (float) 0.1);
+			assertEquals(rs.getInt(4), peak2Height);
 			
 			rs = stmt.executeQuery(
 					"\n" +
@@ -628,11 +631,11 @@ public class DatabaseTest extends TestCase {
 					"FROM ATOFMSAtomInfoDense \n" +
 					"WHERE AtomID = " + particleID);
 			rs.next();
-			assertTrue(rs.getString(1).equals(dateString.substring(1,dateString.length()-1)));
-			assertTrue(rs.getFloat(2) == laserPower);
-			assertTrue(rs.getFloat(3) == digitRate); // size
-			assertTrue(rs.getInt(4) == scatterDelay);
-			assertTrue(rs.getString(5).equals(filename.substring(1,filename.length()-1)));
+			assertEquals(rs.getString(1), dateString.substring(1, dateString.length() - 1));
+			assertEquals(rs.getFloat(2), laserPower);
+			assertEquals(rs.getFloat(3), digitRate); // size
+			assertEquals(rs.getInt(4), scatterDelay);
+			assertEquals(rs.getString(5), filename.substring(1, filename.length() - 1));
 			
 			rs = stmt.executeQuery(
 					"\n" +
@@ -640,8 +643,8 @@ public class DatabaseTest extends TestCase {
 					"FROM AtomMembership\n" +
 					"WHERE AtomID = " + particleID);
 			rs.next();
-			
-			assertTrue(rs.getInt(1) == collectionID);
+
+			assertEquals(rs.getInt(1), collectionID);
 			
 			rs = stmt.executeQuery(
 					"\n" +
@@ -650,7 +653,7 @@ public class DatabaseTest extends TestCase {
 					"WHERE AtomID = " + particleID);
 			
 			rs.next();
-			assertTrue(rs.getInt(1) == datasetID);		
+			assertEquals(rs.getInt(1), datasetID);
 			db.closeConnection();
 			rs.close();
 			stmt.close();
@@ -708,11 +711,11 @@ public class DatabaseTest extends TestCase {
 			int count = 0;
 			while (rs.next()) {
 				assertTrue(rs2.next());
-				assertTrue(rs.getInt(1) == rs2.getInt(1));
+				assertEquals(rs.getInt(1), rs2.getInt(1));
 				count++;
 			}
 			assertFalse(rs2.next());
-			assertTrue(count == 6);
+			assertEquals(6, count);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -939,22 +942,22 @@ public class DatabaseTest extends TestCase {
 	
 	public void testGetCollectionName(){
 		db.openConnection(dbName);
-		
-		assertTrue( "One".equals(db.getCollectionName(2)) );
-		assertTrue( "Two".equals(db.getCollectionName(3)) );
-		assertTrue( "Three".equals(db.getCollectionName(4)) );
-		assertTrue( "Four".equals(db.getCollectionName(5)) );
+
+		assertEquals("One", db.getCollectionName(2));
+		assertEquals("Two", db.getCollectionName(3));
+		assertEquals("Three", db.getCollectionName(4));
+		assertEquals("Four", db.getCollectionName(5));
 		
 		db.closeConnection();
 	}
 	
 	public void testGetCollectionComment(){
 		db.openConnection(dbName);
-		
-		assertTrue( "one".equals(db.getCollectionComment(2)) );
-		assertTrue( "two".equals(db.getCollectionComment(3)) );
-		assertTrue( "three".equals(db.getCollectionComment(4)) );
-		assertTrue( "four".equals(db.getCollectionComment(5)) );
+
+		assertEquals("one", db.getCollectionComment(2));
+		assertEquals("two", db.getCollectionComment(3));
+		assertEquals("three", db.getCollectionComment(4));
+		assertEquals("four", db.getCollectionComment(5));
 		
 		db.closeConnection();
 	}
@@ -972,12 +975,12 @@ public class DatabaseTest extends TestCase {
 		int collectionID = 2;
 		int datasetID = 1;
 		System.out.println(db.getCollectionSize(collectionID));
-		assertTrue(db.getCollectionSize(collectionID) == 5);
+		assertEquals(5, db.getCollectionSize(collectionID));
 		
 		db.insertParticle(dateString + "," + laserPower + "," + digitRate + ","	
 				+ scatterDelay + ", " + filename, sparseData, db.getCollection(collectionID),datasetID,db.getNextID()+1);
 		System.out.println(db.getCollectionSize(collectionID));
-		assertTrue(db.getCollectionSize(collectionID) == 6);
+		assertEquals(6, db.getCollectionSize(collectionID));
 			
 		db.closeConnection();
 	}
@@ -990,14 +993,14 @@ public class DatabaseTest extends TestCase {
 		ArrayList<Integer> actual = db.getAllDescendedAtoms(db.getCollection(5));
 		
 		for (int i=0; i<actual.size(); i++)
-			assertTrue(actual.get(i) == expected[i]);
+			assertEquals((int) actual.get(i), expected[i]);
 		
 //		case of no child collections
 		int[] expected2 = {1,2,3,4,5};
 		actual = db.getAllDescendedAtoms(db.getCollection(2));
 		
-		for (int i=0; i<actual.size(); i++) 
-			assertTrue(actual.get(i) == expected2[i]);
+		for (int i=0; i<actual.size(); i++)
+			assertEquals((int) actual.get(i), expected2[i]);
 		
 		db.closeConnection();
 	}
@@ -1058,7 +1061,7 @@ public class DatabaseTest extends TestCase {
 		progressBar.setVisible(false);
 		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2),"MSAnalyzeDB","MS-Analyze", null, progressBar);
 		db.closeConnection();
-		assertTrue(date.toString().equals("Tue Sep 02 17:30:38 CDT 2003"));
+		assertEquals("Tue Sep 02 17:30:38 CDT 2003", date.toString());
 	}
 	
 	
@@ -1139,8 +1142,8 @@ public class DatabaseTest extends TestCase {
 	public void testGetAndSetCollectionDescription() {
 		db.openConnection(dbName);
 		String description = db.getCollectionDescription(2);
-		assertTrue(db.setCollectionDescription(db.getCollection(2),"new description"));		
-		assertTrue(db.getCollectionDescription(2).equals("new description"));
+		assertTrue(db.setCollectionDescription(db.getCollection(2),"new description"));
+		assertEquals("new description", db.getCollectionDescription(2));
 		db.setCollectionDescription(db.getCollection(2),description);
 		db.closeConnection();
 	}
@@ -1155,9 +1158,9 @@ public class DatabaseTest extends TestCase {
 	public void testGetPeaks() {
 		db.openConnection(dbName);
 		Peak peak = db.getPeaks("ATOFMS",2).get(0);
-		assertTrue(((ATOFMSPeak)peak).area == 15);
-		assertTrue(((ATOFMSPeak)peak).relArea == 0.006f);
-		assertTrue(((ATOFMSPeak)peak).height == 12);
+		assertEquals(15, ((ATOFMSPeak) peak).area);
+		assertEquals(0.006f, ((ATOFMSPeak) peak).relArea);
+		assertEquals(12, ((ATOFMSPeak) peak).height);
 		db.closeConnection();
 	}
 
@@ -1179,8 +1182,8 @@ public class DatabaseTest extends TestCase {
 */
 	public void testGetAtomDatatype() {
 		db.openConnection(dbName);
-		assertTrue(db.getAtomDatatype(2).equals("ATOFMS"));
-		assertTrue(db.getAtomDatatype(18).equals("Datatype2"));
+		assertEquals("ATOFMS", db.getAtomDatatype(2));
+		assertEquals("Datatype2", db.getAtomDatatype(18));
 		db.closeConnection();
 	}
 	
@@ -1205,8 +1208,8 @@ public class DatabaseTest extends TestCase {
 	    db.getNumber();
 	    db.getNumber();
 	    db.getNumber();
-	    
-	    assertTrue(rand1==rand2);
+
+		assertEquals(rand1, rand2);
 	    db.closeConnection();
 	    
 	}
@@ -1337,7 +1340,7 @@ public class DatabaseTest extends TestCase {
 		for (int i = 0; i < 5; i++)
 		{
 			assertTrue(curs.next());
-			assertTrue(curs.getCurrent()!= null);
+			assertNotNull(curs.getCurrent());
 		}
 		assertFalse(curs.next());	
 		curs.reset();
@@ -1377,7 +1380,7 @@ public class DatabaseTest extends TestCase {
 		for (int i = 0; i < 4; i++)
 		{
 			assertTrue(curs.next());
-			assertTrue(curs.getCurrent().getID() == ids[i]);
+			assertEquals(curs.getCurrent().getID(), ids[i]);
 		}
 		
 		assertFalse(curs.next());
@@ -1406,7 +1409,7 @@ public class DatabaseTest extends TestCase {
 		for (int i = 0; i < 5; i++)
 		{
 			assertTrue(curs.next());
-			assertTrue(curs.getCurrent()!= null);
+			assertNotNull(curs.getCurrent());
 			ids[i] = curs.getCurrent().getID();
 		}
 		assertFalse(curs.next());	
@@ -1415,8 +1418,8 @@ public class DatabaseTest extends TestCase {
 		for (int i = 0; i < 5; i++)
 		{
 			assertTrue(curs.next());
-			assertTrue(curs.getCurrent() != null);
-			assertTrue(curs.getCurrent().getID() == ids[i]);
+			assertNotNull(curs.getCurrent());
+			assertEquals(curs.getCurrent().getID(), ids[i]);
 		}
 		
 		assertFalse(curs.next());
@@ -1425,8 +1428,8 @@ public class DatabaseTest extends TestCase {
 		for (int i = 0; i < 5; i++)
 		{
 			assertTrue(curs.next());
-			assertTrue(curs.getCurrent() != null);
-			assertTrue(curs.getCurrent().getID() == ids[i]);
+			assertNotNull(curs.getCurrent());
+			assertEquals(curs.getCurrent().getID(), ids[i]);
 		}
 		
 		assertFalse(curs.next());
@@ -1807,16 +1810,36 @@ public class DatabaseTest extends TestCase {
 	 */
 	public void testGetATOFMSFileName() {
 		db.openConnection(dbName);
-		
-		assertEquals(db.getATOFMSFileName(1), "One");
-		assertEquals(db.getATOFMSFileName(11), "Eleven");
+
+		assertEquals(db.getATOFMSFileName(1), "particle1");
+		assertEquals(db.getATOFMSFileName(11), "particle11");
 		
 		//for non-ATOFMS data - these assertions should print SQLExceptions.
 		System.out.println("Three exceptions about being unable to find a filename follow.");
-		assertEquals(db.getATOFMSFileName(12), "");
-		assertEquals(db.getATOFMSFileName(15), "");
-		assertEquals(db.getATOFMSFileName(22), "");
-		
+		try {
+			db.getATOFMSFileName(12);
+			fail("Should have gotten exception");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+			// Test is good
+		}
+
+		try {
+			db.getATOFMSFileName(15);
+			fail("Should have gotten exception");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+			// Test is good
+		}
+
+		try {
+			db.getATOFMSFileName(22);
+			fail("Should have gotten exception");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+			// Test is good
+		}
+
 		db.closeConnection();
 	}
 	
@@ -1848,8 +1871,8 @@ public class DatabaseTest extends TestCase {
 			colls.add(i);
 		
 		ArrayList<Integer> ids = db.getCollectionIDsWithAtoms(colls);
-		
-		assertTrue(ids.size() == 5);
+
+		assertEquals(5, ids.size());
 		assertEquals((int) ids.get(0), 2);
 		assertEquals((int) ids.get(1), 3);
 		assertEquals((int) ids.get(2), 4);
@@ -1857,10 +1880,10 @@ public class DatabaseTest extends TestCase {
 		assertEquals((int) ids.get(4), 6);
 		
 		colls = new ArrayList<Integer>();
-		assertTrue(db.getCollectionIDsWithAtoms(colls).size() == 0);
+		assertEquals(0, db.getCollectionIDsWithAtoms(colls).size());
 		
 		colls.add(-1);
-		assertTrue(db.getCollectionIDsWithAtoms(colls).size() == 0);
+		assertEquals(0, db.getCollectionIDsWithAtoms(colls).size());
 		
 		db.closeConnection();
 	}
@@ -1938,8 +1961,7 @@ public class DatabaseTest extends TestCase {
 						//		names.get(i - 1).get(1), rsmd.getColumnTypeName(i));
 						assertTrue(names.get(i - 1).get(0).equalsIgnoreCase(
 								rsmd.getColumnName(i)));
-						assertTrue(names.get(i - 1).get(1).equals(
-								typeConv.get(rsmd.getColumnType(i))));
+						assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
 					}
 				}
 				catch (SQLException ex) {
@@ -2090,8 +2112,8 @@ public class DatabaseTest extends TestCase {
 		java.util.Calendar max = java.util.Calendar.getInstance();		
 		
 		db.getMaxMinDateInCollections(colls, min, max);
-		assertTrue(min != null);
-		assertTrue(max != null);
+		assertNotNull(min);
+		assertNotNull(max);
 		assertEquals(min.getTime().toString(), max.getTime().toString());
 
 		//put in some more diverse dates
@@ -2168,29 +2190,29 @@ public class DatabaseTest extends TestCase {
 		db.openConnection(dbName);
 		
 		ArrayList<String> ret = db.getPrimaryKey("ATOFMS", DynamicTable.DataSetInfo);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 0);
 		
 		ret = db.getPrimaryKey("ATOFMS", DynamicTable.AtomInfoDense);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 0);
 		
 		ret = db.getPrimaryKey("ATOFMS", DynamicTable.AtomInfoSparse);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
 		assertTrue(ret.get(0).equalsIgnoreCase("[PeakLocation]"));
 		
 		ret = db.getPrimaryKey("AMS", DynamicTable.DataSetInfo);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 0);
 		
 		ret = db.getPrimaryKey("AMS", DynamicTable.AtomInfoSparse);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
 		assertTrue(ret.get(0).equalsIgnoreCase("[PeakLocation]"));		
 		
 		ret = db.getPrimaryKey("Datatype2", DynamicTable.AtomInfoSparse);
-		assertTrue(ret != null);
+		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
 		assertTrue(ret.get(0).equalsIgnoreCase("[Delay]"));		
 		
@@ -2236,7 +2258,7 @@ public class DatabaseTest extends TestCase {
 		
 		java.util.Set<Integer> subcolls = db.getAllDescendantCollections(2, true);		
 		assertEquals(subcolls.size(), 1);
-		assertTrue(((Integer)(subcolls.toArray()[0])).equals(new Integer(2)));
+		assertEquals(((Integer) (subcolls.toArray()[0])), new Integer(2));
 		
 		subcolls = db.getAllDescendantCollections(2, false);		
 		assertEquals(subcolls.size(), 0);	
@@ -2254,7 +2276,7 @@ public class DatabaseTest extends TestCase {
 		comparer.add(2);
 		comparer.add(7);
 		comparer.add(8);
-		assertTrue(subcolls.equals(comparer));
+		assertEquals(subcolls, comparer);
 		
 		db.createEmptyCollection("AMS", 7, "stuff", "", "");
 		db.createEmptyCollection("AMS", 8, "two", "", "");
@@ -2266,7 +2288,7 @@ public class DatabaseTest extends TestCase {
 		comparer.add(8);
 		comparer.add(9);
 		comparer.add(10);
-		assertTrue(subcolls.equals(comparer));	
+		assertEquals(subcolls, comparer);
 		
 		db.closeConnection();
 	}
