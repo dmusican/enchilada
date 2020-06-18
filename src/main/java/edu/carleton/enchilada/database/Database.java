@@ -494,6 +494,8 @@ public abstract class Database implements InfoWarehouse {
 				for(int i = 0; i<tables.length; i++)
 					if (tables[i].equals("ATOFMSAtomInfoDense"))
 						buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoDense VALUES(?,?,?,?,?,?);");
+					else if (tables[i].equals("ATOFMSAtomInfoSparse"))
+						buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoSparse VALUES(?,?,?,?,?);");
 					else if (tables[i].equals("AMSAtomInfoDense"))
 						buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoDense VALUES(?,?);");
 					else
@@ -561,24 +563,37 @@ public abstract class Database implements InfoWarehouse {
 			int datasetID, int nextID, Data_bulkBucket bigBucket)
 	{
 		int num_tables = bigBucket.tables.length;
-		String[] denseValues = dense.split("\\s*,\\s*");
+		String commaDelimitedRegex = "\\s*,\\s*";
 		try {
 			for(int i =0; i<num_tables; i++) {
 				PreparedStatement bucket = bigBucket.buckets[i];
-
 				if(bigBucket.tables[i].equals("ATOFMSAtomInfoDense")) {
+					String[] delimitedValues = dense.split(commaDelimitedRegex);
 					bucket.setInt(1, nextID);                                    // atomid
-					bucket.setString(2, denseValues[0]);                         // timestamp
-					bucket.setDouble(3, Double.parseDouble(denseValues[1]));     // laserpower
-					bucket.setDouble(4, Double.parseDouble(denseValues[2]));     // size
-					bucket.setInt(5, Integer.parseInt(denseValues[3]));          // scatdelay
-					bucket.setString(6, denseValues[4]);                         // origfilename
+					bucket.setString(2, delimitedValues[0]);                         // timestamp
+					bucket.setDouble(3, Double.parseDouble(delimitedValues[1]));     // laserpower
+					bucket.setDouble(4, Double.parseDouble(delimitedValues[2]));     // size
+					bucket.setInt(5, Integer.parseInt(delimitedValues[3]));          // scatdelay
+					bucket.setString(6, delimitedValues[4]);                         // origfilename
 					bucket.addBatch();
 				}
 
+				else if(bigBucket.tables[i].equals("ATOFMSAtomInfoSparse")) {
+					for (String row: sparse) {
+						String[] delimitedValues = row.split(commaDelimitedRegex);
+						bucket.setInt(1, nextID);                                    // atomid
+						bucket.setDouble(2, Double.parseDouble(delimitedValues[0]));                         // peaklocation
+						bucket.setInt(3, Integer.parseInt(delimitedValues[1]));     // peakarea
+						bucket.setDouble(4, Double.parseDouble(delimitedValues[2]));     // relpeakarea
+						bucket.setInt(5, Integer.parseInt(delimitedValues[3]));          // peakheight
+						bucket.addBatch();
+					}
+				}
+
 				else if(bigBucket.tables[i].equals("AMSAtomInfoDense")) {
+					String[] delimitedValues = dense.split(commaDelimitedRegex);
 					bucket.setInt(1, nextID);                // atom id
-					bucket.setString(2, denseValues[0]);     // timestamp
+					bucket.setString(2, delimitedValues[0]);     // timestamp
 					bucket.addBatch();
 				}
 

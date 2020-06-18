@@ -2470,7 +2470,7 @@ public class DatabaseTest extends TestCase {
 	
 	// ***SLH  BulkInsertDataParticles saveDataParticle
 	public void testsaveAtofmsParticle_BulkInsertAtofmsParticles() throws SQLException {
-		String[] tables= {"ATOFMSAtomInfoDense"};
+		String[] tables= {"ATOFMSAtomInfoDense", "ATOFMSAtomInfoSparse"};
 		String dense_str = "12-30-06 10:59:49, 1.89E-4, 2.4032946, 4286,E:\\Data\\12-29-2003\\h\\h-031230105949-00001.amz";
 		String[] sparse_str = {"23.0, 56673, 0.60352063, 2625", "40.0, 5289, 0.05632348, 450", "-16.0, 17893, 0.06354161, 2607"};
 
@@ -2490,7 +2490,7 @@ public class DatabaseTest extends TestCase {
 		db.BulkInsertDataParticles(bkts);
 		db.closeConnection();
 		
-		//check ATOFMS data
+		//check ATOFMS dense data
 		db.openConnection(dbName);
 		Statement stmt = db.getCon().createStatement();
 		ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoDense where AtomID = 100" );
@@ -2503,7 +2503,31 @@ public class DatabaseTest extends TestCase {
 		assertEquals(rs.getFloat(4), (float)2.4032946);
 		assertEquals(rs.getFloat(5), (float)4286.0);
 		assertEquals(rs.getString(6), "E:\\Data\\12-29-2003\\h\\h-031230105949-00001.amz");
+		rs.close();
+		stmt.close();
+		db.closeConnection();
 
+		//check ATOFMS sparsee data
+		db.openConnection(dbName);
+		// First one
+		stmt = db.getCon().createStatement();
+		rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoSparse where PeakLocation = 23.0" );
+		assertTrue(rs.next());
+		assertEquals(100, rs.getInt(1));                          // atomid
+		assertEquals(23.0, rs.getDouble(2), 1e-5);          // peakLocation
+		assertEquals(56673, rs.getInt(3));                        // peakarea
+		assertEquals(0.60352063, rs.getDouble(4), 1e-8);    // relpeakarea
+		assertEquals(2625, rs.getInt(5));                         // peakheight
+		rs.close();
+		// Third one
+		stmt = db.getCon().createStatement();
+		rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoSparse where PeakLocation = -16.0" );
+		assertTrue(rs.next());
+		assertEquals(100, rs.getInt(1));                          // atomid
+		assertEquals(-16.0, rs.getDouble(2), 1e-5);          // peakLocation
+		assertEquals(17893, rs.getInt(3));                        // peakarea
+		assertEquals(0.06354161, rs.getDouble(4), 1e-8);    // relpeakarea
+		assertEquals(2607, rs.getInt(5));                         // peakheight
 		db.closeConnection();
 	}
 	
