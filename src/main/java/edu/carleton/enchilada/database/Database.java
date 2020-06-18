@@ -202,7 +202,7 @@ public abstract class Database implements InfoWarehouse {
 			openConnectionNoDB();
 			Connection con = getCon();
 			Statement stmt = con.createStatement();
-			
+
 			// See if database exists.
 			ResultSet rs = stmt.executeQuery(command);
 			while (!foundDatabase && rs.next()) {

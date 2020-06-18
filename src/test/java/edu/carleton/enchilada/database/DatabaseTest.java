@@ -1028,7 +1028,7 @@ public class DatabaseTest extends TestCase {
 
 
 	public void testIsPresent() {
-		db.openConnection();
+		db.openConnection(dbName);
 		InfoWarehouse db = Database.getDatabase(dbName);
 		assertTrue(db.isPresent());
 		db = Database.getDatabase("shouldntexist");
