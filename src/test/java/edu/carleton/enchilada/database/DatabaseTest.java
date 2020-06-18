@@ -879,10 +879,10 @@ public class DatabaseTest extends TestCase {
 				"SELECT AtomID FROM ATOFMSAtomInfoDense\n"
 						+ " WHERE NOT AtomID IN\n"
 						+ " 	(SELECT *\n"
-						+ " 	FROM #temp1)\n;\n");
+						+ " 	FROM temp.temp1)\n;\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp1\n"
+				"SELECT * FROM temp.temp1\n"
 						+ " WHERE NOT AtomID IN\n"
 						+ "(SELECT AtomID FROM ATOFMSAtomInfoDense);\n");
 		assertFalse(rs.next());
@@ -891,11 +891,11 @@ public class DatabaseTest extends TestCase {
 		rs = stmt.executeQuery(
 				"SELECT AtomID, CollectionID FROM AtomMembership X\n"
 						+ " WHERE NOT EXISTS\n"
-						+ " 	(SELECT *\n FROM #temp2 Y\n"
+						+ " 	(SELECT *\n FROM temp.temp2 Y\n"
 						+ "		WHERE X.CollectionID = Y.CollectionID AND X.AtomID = Y.AtomID);\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp2 X\n"
+				"SELECT * FROM temp.temp2 X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ "		(SELECT AtomID, CollectionID FROM AtomMembership Y\n"
 						+ "		WHERE X.CollectionID = Y.CollectionID AND X.AtomID = Y.AtomID);\n");
@@ -906,24 +906,24 @@ public class DatabaseTest extends TestCase {
 				"SELECT AtomID, PeakLocation FROM ATOFMSAtomInfoSparse X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ " 	(SELECT *\n"
-						+ " 	FROM #temp3 Y\n"
+						+ " 	FROM temp.temp3 Y\n"
 						+ "		WHERE X.PeakLocation = Y.PeakLocation AND X.AtomID = Y.AtomID);\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp3 X\n"
+				"SELECT * FROM temp.temp3 X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ "		(SELECT * FROM ATOFMSAtomInfoSparse Y\n"
 						+ "		WHERE X.PeakLocation = Y.PeakLocation AND X.AtomID = Y.AtomID);\n");
 		assertFalse(rs.next());
 
 
-		stmt.execute("DROP TABLE #temp0;\n");
-		stmt.execute("DROP TABLE #temp1;\n");
-		stmt.execute("DROP TABLE #temp2;\n");
-		stmt.execute("DROP TABLE #temp3;\n");
-		stmt.execute("DROP TABLE #temp4;\n");
-		stmt.execute("DROP TABLE #temp5;\n");
-		stmt.execute("DROP TABLE #temp6;\n");
+		stmt.execute("DROP TABLE temp.temp0;\n");
+		stmt.execute("DROP TABLE temp.temp1;\n");
+		stmt.execute("DROP TABLE temp.temp2;\n");
+		stmt.execute("DROP TABLE temp.temp3;\n");
+		stmt.execute("DROP TABLE temp.temp4;\n");
+		stmt.execute("DROP TABLE temp.temp5;\n");
+		stmt.execute("DROP TABLE temp.temp6;\n");
 
 
 		db.closeConnection();

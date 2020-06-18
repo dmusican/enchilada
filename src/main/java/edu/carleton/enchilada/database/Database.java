@@ -1014,11 +1014,6 @@ public abstract class Database implements InfoWarehouse {
 			stmt.execute("DROP TABLE temp.CollectionsToCompact;\n");
 			stmt.execute("DROP TABLE temp.AtomsToCompact;\n");
 
-			// code to clean out transaction log file - Michael Murphy 2014
-			String cleanLogs = "DBCC ShrinkFile (N'SpASMSdb_log',target_size=0)";
-			System.out.println(cleanLogs);
-			stmt.execute(cleanLogs);
-			
 			isDirty = false;
 			stmt.close();
 			//updateAncestors(0);
