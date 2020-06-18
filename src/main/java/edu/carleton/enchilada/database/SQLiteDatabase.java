@@ -6,6 +6,8 @@ import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -44,10 +46,7 @@ public class SQLiteDatabase extends Database {
      * @see InfoWarehouse#isPresent()
      */
     public boolean isPresent() {
-        return isPresentImpl(
-                "SELECT name FROM sqlite_master\n" +
-                        "WHERE type='table'\n" +
-                        "ORDER BY name");
+        return Paths.get(dbPath, database).toFile().exists();
     }
 
     public String getRebuildScriptFilename() {
