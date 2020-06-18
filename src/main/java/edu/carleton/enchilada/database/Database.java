@@ -920,16 +920,13 @@ public abstract class Database implements InfoWarehouse {
 			Statement stmt = con.createStatement();
 			Statement typesStmt = con.createStatement();
 			StringBuilder sql = new StringBuilder();
-			sql.append("IF object_id('tempdb..#collections') IS NOT NULL\n"+
-					"BEGIN\n" +
-					"DROP TABLE #collections;\n"+
-					"END\n");
-			sql.append("CREATE TABLE #collections (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
+			sql.append("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
+			sql.append("CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
 			// clear InternalAtomOrder table of the deleted collection and all subcollections.
 			
-			sql.append("insert #collections (CollectionID) \n" +
+			sql.append("INSERT INTO temp.CollectionsToCompact (CollectionID) \n" +
 					"	SELECT DISTINCT CollectionID\n" +
 					"	FROM AtomMembership\n" +
 					"	WHERE AtomMembership.CollectionID NOT IN " +
@@ -939,10 +936,10 @@ public abstract class Database implements InfoWarehouse {
 			
 			
 			sql.append("DELETE AtomMembership\nFROM AtomMembership\n"
-					+ "INNER JOIN #collections\n ON " +
-							"(#collections.CollectionID = AtomMembership.CollectionID);\n");
+					+ "INNER JOIN temp.CollectionsToCompact\n ON " +
+							"(temp.CollectionsToCompact.CollectionID = AtomMembership.CollectionID);\n");
 			sql.append("DELETE FROM InternalAtomOrder\n"
-					+ "WHERE CollectionID IN (SELECT * FROM #collections);\n");
+					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
 			
 			ResultSet types = typesStmt.executeQuery("SELECT DISTINCT Datatype FROM MetaData");
 			
@@ -951,13 +948,10 @@ public abstract class Database implements InfoWarehouse {
 				String sparseTableName = getDynamicTableName(DynamicTable.AtomInfoSparse,datatype);
 				String denseTableName = getDynamicTableName(DynamicTable.AtomInfoDense,datatype);
 				
-				sql.append("IF object_id('tempdb..#atoms') IS NOT NULL \n"+
-						"BEGIN\n" +
-						"DROP TABLE  #atoms;\n"+
-						"END\n");
+				sql.append("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
 
-				sql.append("CREATE TABLE #atoms (AtomID int, \n PRIMARY KEY([AtomID]));\n");
-				sql.append("insert #atoms (AtomID) \n" +
+				sql.append("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
+				sql.append("INSERT INTO temp.AtomsToCompact (AtomID) \n" +
 						"	SELECT AtomID\n" +
 						"	FROM "+denseTableName+"\n" +
 						"	WHERE AtomID NOT IN " +
@@ -975,7 +969,7 @@ public abstract class Database implements InfoWarehouse {
 				// DataSetMembers table:
 				//System.out.println(1);
 				sql.append("DELETE FROM DataSetMembers\n" +
-				"WHERE AtomID IN (SELECT * FROM #atoms);\n");
+				"WHERE AtomID IN (SELECT * FROM temp.AtomsToCompact);\n");
 				// it is ok to call atominfo tables here because datatype is
 				// set from recursiveDelete() above.
 				// note: Sparse table may not necessarily exist. So check first.
@@ -985,13 +979,13 @@ public abstract class Database implements InfoWarehouse {
 				sql.append("DELETE "+denseTableName+" FROM " + denseTableName + "\n" +
 						"INNER JOIN #atoms ON (#atoms.AtomID = "+denseTableName+".AtomID);\n");
 				
-				sql.append("DROP TABLE #atoms;\n");
+				sql.append("DROP TABLE temp.AtomsToCompact;\n");
 				//This separation is necessary!!
 				// SQL Server parser is stupid and if you create, delete, and recreate a temporary table
 				// the parser thinks you're doing something wrong and will die.
 				if(progressBar.wasTerminated()){
 					sql = new StringBuilder();
-					sql.append("DROP TABLE #collections;\n");
+					sql.append("DROP TABLE temp.CollectionsToCompact;\n");
 					stmt.execute(sql.toString());
 					stmt.close();
 					return false;
@@ -1002,7 +996,7 @@ public abstract class Database implements InfoWarehouse {
 				
 			}
 			
-			sql.append("DROP TABLE #collections;\n");
+			sql.append("DROP TABLE temp.CollectionsToCompact;\n");
 			System.out.println(sql.toString());
 			stmt.execute(sql.toString());
 			
@@ -1017,8 +1011,7 @@ public abstract class Database implements InfoWarehouse {
 		} catch (Exception e){
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Exception deleting collection.");
 			System.err.println("Exception deleting collection: ");
-			e.printStackTrace();
-			return false;
+			throw new ExceptionAdapter(e);
 		}
 		return true;
 	}
