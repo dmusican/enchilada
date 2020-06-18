@@ -2686,14 +2686,12 @@ public class DatabaseTest extends TestCase {
 		try
 		{
 			stmt = con.createStatement();
-			stmt.executeUpdate(
-					"\n " +
-					"INSERT prINTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n" +
-					"INSERT INTO AtomMembership VALUES (7,1)\n" +
-					"INSERT INTO AtomMembership VALUES (7,3)\n" +
-					"INSERT INTO AtomMembership VALUES (7,5)\n" +
-					"INSERT INTO AtomMembership VALUES (7,7)\n" +
-					"INSERT INTO InternalAtomOrder (AtomID, CollectionID) (SELECT AtomID, CollectionID FROM AtomMembership WHERE CollectionID = 7)");
+			stmt.executeUpdate("INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,1)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,3)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,5)\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,7)\n");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder (AtomID, CollectionID) SELECT AtomID, CollectionID FROM AtomMembership WHERE CollectionID = 7");
 		}
 		catch (SQLException e)
 		{
@@ -2704,11 +2702,11 @@ public class DatabaseTest extends TestCase {
 		db.updateParticleTable(c, particleInfo, 1, 2);
 		assertEquals(2, particleInfo.size());
 		assertEquals(1, particleInfo.get(0).get(0));
-		assertEquals("2003-09-02 17:30:38.0", particleInfo.get(0).get(1));
+		assertEquals("9/2/2003 5:30:38 PM", particleInfo.get(0).get(1));
 		assertEquals("1.0", particleInfo.get(0).get(2));
-		assertEquals("0.1", particleInfo.get(0).get(3));
+		assertEquals("0.01", particleInfo.get(0).get(3));
 		assertEquals("1", particleInfo.get(0).get(4));
-		assertEquals("One", particleInfo.get(0).get(5));
+		assertEquals("particle1", particleInfo.get(0).get(5));
 		assertEquals(3, particleInfo.get(1).get(0));
 		// test defect 1964860 - doesn't get the right stuff when atom id's are not consecutive
 		db.updateParticleTable(c, particleInfo, 3, 4);
