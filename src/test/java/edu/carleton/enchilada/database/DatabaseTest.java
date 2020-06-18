@@ -2507,7 +2507,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	
-	public void testsaveAmsParticle_BulkInsertAmsParticles() {
+	public void testsaveAmsParticle_BulkInsertAmsParticles() throws SQLException {
 		
 		String[] tables= {"AMSAtomInfoDense"};
 		String ams_dense_str = "12-30-06 10:59:50";
@@ -2515,15 +2515,14 @@ public class DatabaseTest extends TestCase {
 		
 		int datasetid = 100;
 		int nextAtomID = 100;
+		db.openConnection(dbName);
 		Database.Data_bulkBucket bkts = db.getDatabulkBucket(tables);
-		Scanner in;
-		ArrayList<String> ams_sparse_arraylist = new ArrayList<String>();
-		
-		for(int i = 0; i<ams_sparse_str.length; i++) 
-			ams_sparse_arraylist.add(ams_sparse_str[i]);
+
+		ArrayList<String> ams_sparse_arraylist = new ArrayList<>();
+
+		Collections.addAll(ams_sparse_arraylist, ams_sparse_str);
 		
 		// AMS table insertion
-		db.openConnection(dbName);
 		Collection c = db.getCollection(0);
 		assertEquals(db.saveDataParticle(ams_dense_str, ams_sparse_arraylist, c, datasetid, nextAtomID, bkts), nextAtomID);
 		// atofms_bkt.close();
@@ -2532,51 +2531,14 @@ public class DatabaseTest extends TestCase {
 		
 		//check AMS data
 		db.openConnection(dbName);
-		try {
-			
-			Statement stmt = db.getCon().createStatement();
-			ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
-			assertTrue(rs.next());
-			assertEquals(100, rs.getInt(1));
-			// Date are the same but different format. 
-			//assertEquals(rs.getDate(2), "12-30-06");
-			assertEquals(rs.getTime(2).toString(), "10:59:50");
-		}
-		catch(SQLException e) {
-			fail("Problem inserting ATOFMS data with saveDataParticle() or BulkInsertDataParticles");
-		}
+		Statement stmt = db.getCon().createStatement();
+		ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
+		assertTrue(rs.next());
+		assertEquals(100, rs.getInt(1));
+		// Date are the same but different format.
+		//assertEquals(rs.getDate(2), "12-30-06");
+		assertEquals(rs.getString(2), "12-30-06 10:59:50");
 		db.closeConnection();
-		
-		// because we moved to more windows vista-friendly naming for temp files, we can't find our temp file anymore
-//		String tempdir = "";
-//		try {
-//			tempdir = (new File(".")).getCanonicalPath();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		tempdir = tempdir +File.separator+"TEMP";
-//		//Only checked the content of one file, others should work the same way.
-//		File dense_file = new File(tempdir + "\\AMSAtomInfoDense.txt");
-//		assertTrue(dense_file.isFile());
-//		assertTrue(dense_file.canRead());
-//		
-//		try {
-//			String line = "";
-//			String[] tokens;
-//			in = new Scanner(dense_file);
-//			while (in.hasNext()) {
-//				line = in.nextLine();
-//				tokens = line.split(",");
-//				assertEquals(tokens[0], Integer.toString(nextAtomID));
-//				assertEquals(tokens[1], "12-30-06 10:59:50");
-//				return;
-//			}
-//
-//		} catch (IOException e) {
-//			System.err.println("IOException occurs when checking the output file content");
-//		}
-		
 	}
 	
 
