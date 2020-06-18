@@ -910,7 +910,7 @@ public abstract class Database implements InfoWarehouse {
 	 * deletes all direct descendents.
 	 * This method merely selects the collections to be deleted and stores them in #deleteTemp
 	 * 
-	 * @param collectionID The id of the collection to delete
+	 * @param progressBar
 	 * @return true on success. 
 	 */
 	public boolean compactDatabase(ProgressBarWrapper progressBar)
@@ -1743,13 +1743,11 @@ public abstract class Database implements InfoWarehouse {
 	{
 		Collection parent = collection.getParentCollection();
 		String datatype = collection.getDatatype();
-		System.out.println("Deleting " + collection.getCollectionID());
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate("DROP TABLE IF EXISTS temp.CollectionsToDelete;");
 			stmt.executeUpdate("CREATE TEMPORARY TABLE CollectionsToDelete " +
 					                  "(CollectionID int, PRIMARY KEY([CollectionID]));");
-			System.out.println("Trying " + this.getCollection(6));
 
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
@@ -1766,7 +1764,6 @@ public abstract class Database implements InfoWarehouse {
 			while(allsubcollections.hasNext()){
 				Integer nextParent = allsubcollections.next();
 				for(Integer childID : hierarchy.get(nextParent)){
-					System.out.println(childID);
 					assert(this.getCollection(childID).getDatatype().equals(datatype));
 					pstmt.setInt(1, childID);
 					pstmt.addBatch();
@@ -2196,10 +2193,7 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			stmt = con.createStatement();
 			String query = "SELECT CollectionID FROM Collections WHERE CollectionID = "+collectionID;
-			System.out.println(query);
 			ResultSet rs = stmt.executeQuery(query);
-//			if (collectionID == 6)
-				System.out.println(rs.isBeforeFirst());
 			while (rs.next()) {
 				if (rs.getInt(1) == collectionID) {
 					isPresent = true;

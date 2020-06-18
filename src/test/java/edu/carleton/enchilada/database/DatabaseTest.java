@@ -826,11 +826,11 @@ public class DatabaseTest extends TestCase {
 				"SELECT AtomID, CollectionID FROM InternalAtomOrder X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ " 	(SELECT *\n"
-						+ " 	FROM #temp4 Y\n"
+						+ " 	FROM temp.temp4 Y\n"
 						+ "		WHERE X.CollectionID = Y.CollectionID AND X.AtomID = Y.AtomID);\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp4 X\n"
+				"SELECT * FROM temp.temp4 X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ "		(SELECT AtomID, CollectionID FROM InternalAtomOrder Y\n"
 						+ "		WHERE X.CollectionID = Y.CollectionID AND X.AtomID = Y.AtomID);\n");
@@ -839,11 +839,11 @@ public class DatabaseTest extends TestCase {
 		//CollectionRelationships
 		rs = stmt.executeQuery(
 				"SELECT ParentID, ChildID FROM CollectionRelationships X\n"
-						+ " WHERE NOT EXISTS (SELECT * FROM #temp5 Y\n"
+						+ " WHERE NOT EXISTS (SELECT * FROM temp.temp5 Y\n"
 						+ "						WHERE X.ParentID = Y.ParentID AND X.ChildID = Y.ChildID);\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp5 X\n"
+				"SELECT * FROM temp.temp5 X\n"
 						+ " WHERE NOT EXISTS\n"
 						+ "		(SELECT ParentID, ChildID FROM CollectionRelationships Y\n"
 						+ "						WHERE X.ParentID = Y.ParentID AND X.ChildID = Y.ChildID);\n");
@@ -854,10 +854,10 @@ public class DatabaseTest extends TestCase {
 				"SELECT * FROM Collections\n"
 						+ " WHERE NOT CollectionID IN\n"
 						+ " 	(SELECT CollectionID\n"
-						+ " 	FROM #temp6)\n;\n");
+						+ " 	FROM temp.temp6)\n;\n");
 		assertFalse(rs.next());
 		rs = stmt.executeQuery(
-				"SELECT * FROM #temp6 X\n"
+				"SELECT * FROM temp.temp6 X\n"
 						+ " WHERE NOT X.CollectionID IN\n"
 						+ "		(SELECT CollectionID FROM Collections);\n");
 		assertFalse(rs.next());
