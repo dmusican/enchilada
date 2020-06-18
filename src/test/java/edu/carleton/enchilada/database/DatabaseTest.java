@@ -741,12 +741,14 @@ public class DatabaseTest extends TestCase {
 	public void testRecursiveDelete() throws SQLException {
 		db.openConnection(dbName);
 
+
 		ArrayList<Integer> atomIDs = new ArrayList<Integer>();
 		ResultSet rs;
 		Statement stmt;
 
 		Connection con = db.getCon();
 		stmt = con.createStatement();
+
 
 		//Store a copy of all the relevant tables with just the things that should be left after deletion
 		// AKA Figure out what the database should look like after deletion

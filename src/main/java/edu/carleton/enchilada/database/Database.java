@@ -919,13 +919,13 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			Statement stmt = con.createStatement();
 			Statement typesStmt = con.createStatement();
-			stmt.addBatch("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
-			stmt.addBatch("CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
+			stmt.execute("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
+			stmt.execute("CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
 			// clear InternalAtomOrder table of the deleted collection and all subcollections.
 
-			stmt.addBatch("INSERT INTO temp.CollectionsToCompact (CollectionID) \n" +
+			stmt.execute("INSERT INTO temp.CollectionsToCompact (CollectionID) \n" +
 					"   SELECT DISTINCT CollectionID\n" +
 					"   FROM AtomMembership\n" +
 					"   WHERE AtomMembership.CollectionID NOT IN " +
@@ -934,27 +934,28 @@ public abstract class Database implements InfoWarehouse {
 					"      );\n");
 
 
-
-			stmt.addBatch("DELETE FROM AtomMembership\n"
+			stmt.execute("DELETE FROM AtomMembership\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
 
 //			stmt.addBatch("DELETE AtomMembership\nFROM AtomMembership\n"
 //					+ "INNER JOIN temp.CollectionsToCompact\n ON " +
 //							"(temp.CollectionsToCompact.CollectionID = AtomMembership.CollectionID);\n");
 
-			stmt.addBatch("DELETE FROM InternalAtomOrder\n"
+			stmt.execute("DELETE FROM InternalAtomOrder\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
-			
+
+			stmt.execute("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
+			stmt.execute("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
+
 			ResultSet types = typesStmt.executeQuery("SELECT DISTINCT Datatype FROM MetaData");
-			
+
 			while(types.next()){
+
 				String datatype = types.getString(1);
 				String sparseTableName = getDynamicTableName(DynamicTable.AtomInfoSparse,datatype);
 				String denseTableName = getDynamicTableName(DynamicTable.AtomInfoDense,datatype);
-				
-				stmt.addBatch("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
 
-				stmt.addBatch("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
+				stmt.addBatch("DELETE FROM temp.AtomsToCompact;\n");
 				stmt.addBatch("INSERT INTO temp.AtomsToCompact (AtomID) \n" +
 						"	SELECT AtomID\n" +
 						"	FROM "+denseTableName+"\n" +
@@ -962,7 +963,7 @@ public abstract class Database implements InfoWarehouse {
 						"		(SELECT AtomID\n" +
 						"		FROM AtomMembership\n" +
 						"		);\n");
-				
+
 				// Also: We could delete all the particles from the particles
 				// table IF we want to by now going through the particles 
 				// table and choosing every one that does not exist in the 
@@ -984,6 +985,7 @@ public abstract class Database implements InfoWarehouse {
 					stmt.addBatch("DELETE FROM " + sparseTableName + "\n" +
 							"WHERE " + sparseTableName + ".AtomID IN temp.AtomsToCompact");
 				}
+				sparseTablePresent.close();
 				stmt.addBatch("DELETE FROM " + denseTableName + "\n" +
 						"WHERE " + denseTableName + ".AtomID IN temp.AtomsToCompact");
 
@@ -993,24 +995,25 @@ public abstract class Database implements InfoWarehouse {
 //				stmt.addBatch("DELETE "+denseTableName+" FROM " + denseTableName + "\n" +
 //						"INNER JOIN #atoms ON (#atoms.AtomID = "+denseTableName+".AtomID);\n");
 
-				stmt.addBatch("DROP TABLE temp.AtomsToCompact;\n");
 				//This separation is necessary!!
 				// SQL Server parser is stupid and if you create, delete, and recreate a temporary table
 				// the parser thinks you're doing something wrong and will die.
 				if(progressBar.wasTerminated()){
 					stmt.clearBatch();
 					stmt.addBatch("DROP TABLE temp.CollectionsToCompact;\n");
+					typesStmt.close();
 					stmt.executeBatch();
 					stmt.close();
 					return false;
 				}
 				stmt.executeBatch();
-
+				stmt.clearBatch();
 			}
 
-			stmt.clearBatch();
+			types.close();
 			stmt.execute("DROP TABLE temp.CollectionsToCompact;\n");
-			
+			stmt.execute("DROP TABLE temp.AtomsToCompact;\n");
+
 			// code to clean out transaction log file - Michael Murphy 2014
 			String cleanLogs = "DBCC ShrinkFile (N'SpASMSdb_log',target_size=0)";
 			System.out.println(cleanLogs);
