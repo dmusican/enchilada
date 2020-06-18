@@ -919,26 +919,30 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			Statement stmt = con.createStatement();
 			Statement typesStmt = con.createStatement();
-			StringBuilder sql = new StringBuilder();
-			sql.append("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
-			sql.append("CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
+			stmt.addBatch("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
+			stmt.addBatch("CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
 			// clear InternalAtomOrder table of the deleted collection and all subcollections.
-			
-			sql.append("INSERT INTO temp.CollectionsToCompact (CollectionID) \n" +
-					"	SELECT DISTINCT CollectionID\n" +
-					"	FROM AtomMembership\n" +
-					"	WHERE AtomMembership.CollectionID NOT IN " +
-					"		(SELECT CollectionID\n" +
-					"		FROM Collections\n" +
-					"		);\n");
-			
-			
-			sql.append("DELETE AtomMembership\nFROM AtomMembership\n"
-					+ "INNER JOIN temp.CollectionsToCompact\n ON " +
-							"(temp.CollectionsToCompact.CollectionID = AtomMembership.CollectionID);\n");
-			sql.append("DELETE FROM InternalAtomOrder\n"
+
+			stmt.addBatch("INSERT INTO temp.CollectionsToCompact (CollectionID) \n" +
+					"   SELECT DISTINCT CollectionID\n" +
+					"   FROM AtomMembership\n" +
+					"   WHERE AtomMembership.CollectionID NOT IN " +
+					"      (SELECT CollectionID\n" +
+					"      FROM Collections\n" +
+					"      );\n");
+
+
+
+			stmt.addBatch("DELETE FROM AtomMembership\n"
+					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
+
+//			stmt.addBatch("DELETE AtomMembership\nFROM AtomMembership\n"
+//					+ "INNER JOIN temp.CollectionsToCompact\n ON " +
+//							"(temp.CollectionsToCompact.CollectionID = AtomMembership.CollectionID);\n");
+
+			stmt.addBatch("DELETE FROM InternalAtomOrder\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
 			
 			ResultSet types = typesStmt.executeQuery("SELECT DISTINCT Datatype FROM MetaData");
@@ -948,10 +952,10 @@ public abstract class Database implements InfoWarehouse {
 				String sparseTableName = getDynamicTableName(DynamicTable.AtomInfoSparse,datatype);
 				String denseTableName = getDynamicTableName(DynamicTable.AtomInfoDense,datatype);
 				
-				sql.append("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
+				stmt.addBatch("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
 
-				sql.append("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
-				sql.append("INSERT INTO temp.AtomsToCompact (AtomID) \n" +
+				stmt.addBatch("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
+				stmt.addBatch("INSERT INTO temp.AtomsToCompact (AtomID) \n" +
 						"	SELECT AtomID\n" +
 						"	FROM "+denseTableName+"\n" +
 						"	WHERE AtomID NOT IN " +
@@ -968,37 +972,44 @@ public abstract class Database implements InfoWarehouse {
 				// following code, which also removes all references in the 
 				// DataSetMembers table:
 				//System.out.println(1);
-				sql.append("DELETE FROM DataSetMembers\n" +
+				stmt.addBatch("DELETE FROM DataSetMembers\n" +
 				"WHERE AtomID IN (SELECT * FROM temp.AtomsToCompact);\n");
 				// it is ok to call atominfo tables here because datatype is
 				// set from recursiveDelete() above.
 				// note: Sparse table may not necessarily exist. So check first.
-				sql.append("IF EXISTS (select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME = '" + sparseTableName + "')" +
-						"DELETE "+sparseTableName+" FROM " + sparseTableName + "\n" +
-						"INNER JOIN #atoms ON (#atoms.AtomID = "+sparseTableName+".AtomID);\n");
-				sql.append("DELETE "+denseTableName+" FROM " + denseTableName + "\n" +
-						"INNER JOIN #atoms ON (#atoms.AtomID = "+denseTableName+".AtomID);\n");
-				
-				sql.append("DROP TABLE temp.AtomsToCompact;\n");
+				Statement existsStmt = con.createStatement();
+				ResultSet sparseTablePresent = existsStmt.executeQuery(
+						"SELECT * FROM sqlite_master WHERE tbl_name= '" + sparseTableName + "' AND type='table'");
+				if (sparseTablePresent.next()) {
+					stmt.addBatch("DELETE FROM " + sparseTableName + "\n" +
+							"WHERE " + sparseTableName + ".AtomID IN temp.AtomsToCompact");
+				}
+				stmt.addBatch("DELETE FROM " + denseTableName + "\n" +
+						"WHERE " + denseTableName + ".AtomID IN temp.AtomsToCompact");
+
+//				stmt.addBatch("IF EXISTS (select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME = '" + sparseTableName + "')" +
+//						"DELETE "+sparseTableName+" FROM " + sparseTableName + "\n" +
+//						"INNER JOIN #atoms ON (#atoms.AtomID = "+sparseTableName+".AtomID);\n");
+//				stmt.addBatch("DELETE "+denseTableName+" FROM " + denseTableName + "\n" +
+//						"INNER JOIN #atoms ON (#atoms.AtomID = "+denseTableName+".AtomID);\n");
+
+				stmt.addBatch("DROP TABLE temp.AtomsToCompact;\n");
 				//This separation is necessary!!
 				// SQL Server parser is stupid and if you create, delete, and recreate a temporary table
 				// the parser thinks you're doing something wrong and will die.
 				if(progressBar.wasTerminated()){
-					sql = new StringBuilder();
-					sql.append("DROP TABLE temp.CollectionsToCompact;\n");
-					stmt.execute(sql.toString());
+					stmt.clearBatch();
+					stmt.addBatch("DROP TABLE temp.CollectionsToCompact;\n");
+					stmt.executeBatch();
 					stmt.close();
 					return false;
 				}
-				System.out.println(sql.toString());
-				stmt.execute(sql.toString());
-				sql = new StringBuilder();
-				
+				stmt.executeBatch();
+
 			}
-			
-			sql.append("DROP TABLE temp.CollectionsToCompact;\n");
-			System.out.println(sql.toString());
-			stmt.execute(sql.toString());
+
+			stmt.clearBatch();
+			stmt.execute("DROP TABLE temp.CollectionsToCompact;\n");
 			
 			// code to clean out transaction log file - Michael Murphy 2014
 			String cleanLogs = "DBCC ShrinkFile (N'SpASMSdb_log',target_size=0)";
