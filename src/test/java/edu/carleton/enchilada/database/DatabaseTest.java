@@ -1680,7 +1680,7 @@ public class DatabaseTest extends TestCase {
 				DynamicTable.AtomInfoDense, 
 				"Size", 
 				ints, 
-				"ATOFMS").substring(0, 7), "1.50000");
+				"ATOFMS").substring(0, 7), "0.15000");
 		
 		ints.remove(0);
 		assertEquals(db.aggregateColumn(

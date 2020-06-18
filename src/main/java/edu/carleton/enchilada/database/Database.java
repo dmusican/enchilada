@@ -6430,7 +6430,7 @@ public abstract class Database implements InfoWarehouse {
 					query.append(",");
 			}
 			query.append(");");
-			
+			System.out.println(query);
 			ResultSet rs = stmt.executeQuery(query.toString());
 			rs.next();
 			sum=rs.getDouble(1);
