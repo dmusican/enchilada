@@ -1746,9 +1746,10 @@ public abstract class Database implements InfoWarehouse {
 		System.out.println("Deleting " + collection.getCollectionID());
 		try {
 			Statement stmt = con.createStatement();
-			stmt.executeUpdate("DROP TABLE IF EXISTS temp.collections;");
-			stmt.executeUpdate("CREATE TEMPORARY TABLE collections " +
+			stmt.executeUpdate("DROP TABLE IF EXISTS temp.CollectionsToDelete;");
+			stmt.executeUpdate("CREATE TEMPORARY TABLE CollectionsToDelete " +
 					                  "(CollectionID int, PRIMARY KEY([CollectionID]));");
+			System.out.println("Trying " + this.getCollection(6));
 
 			// Update the InternalAtomOrder table:  Assumes that subcollections
 			// are already updated for the parentCollection.
@@ -1757,12 +1758,11 @@ public abstract class Database implements InfoWarehouse {
 			
 			Iterator<Integer> allsubcollections = hierarchy.keySet().iterator();
 
-			String queryTemplate = "INSERT INTO temp.collections VALUES(?)";
+			String queryTemplate = "INSERT INTO temp.CollectionsToDelete VALUES(?)";
 			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
 
 			pstmt.setInt(1, collection.getCollectionID());
 			pstmt.addBatch();
-			pstmt.executeBatch();
 			while(allsubcollections.hasNext()){
 				Integer nextParent = allsubcollections.next();
 				for(Integer childID : hierarchy.get(nextParent)){
@@ -1770,22 +1770,21 @@ public abstract class Database implements InfoWarehouse {
 					assert(this.getCollection(childID).getDatatype().equals(datatype));
 					pstmt.setInt(1, childID);
 					pstmt.addBatch();
-					pstmt.executeBatch();
 				}
 			}
-//			pstmt.executeBatch();
+			pstmt.executeBatch();
 
 			stmt.executeUpdate("DELETE FROM InternalAtomOrder\n"
-					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 			stmt.executeUpdate("DELETE FROM CollectionRelationships\n"
-					+ "WHERE ParentID IN (SELECT * FROM temp.collections)\n"
-					+ "OR ChildID IN (SELECT * FROM temp.collections);\n");
+					+ "WHERE ParentID IN (SELECT * FROM temp.CollectionsToDelete)\n"
+					+ "OR ChildID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 			stmt.executeUpdate("DELETE FROM CenterAtoms\n"
-					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 			stmt.executeUpdate("DELETE FROM Collections\n"
-					+ "WHERE CollectionID IN (SELECT * FROM temp.collections);\n");
+					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 
-			stmt.executeUpdate("DROP TABLE temp.collections;\n");
+			stmt.executeUpdate("DROP TABLE temp.CollectionsToDelete;\n");
 			isDirty = true;
 			stmt.close();
 
@@ -2196,9 +2195,11 @@ public abstract class Database implements InfoWarehouse {
 		Statement stmt;
 		try {
 			stmt = con.createStatement();
-			String query = "SELECT CollectionID \nFROM Collections \nWHERE CollectionID = "+collectionID;
+			String query = "SELECT CollectionID FROM Collections WHERE CollectionID = "+collectionID;
 			System.out.println(query);
 			ResultSet rs = stmt.executeQuery(query);
+//			if (collectionID == 6)
+				System.out.println(rs.isBeforeFirst());
 			while (rs.next()) {
 				if (rs.getInt(1) == collectionID) {
 					isPresent = true;
