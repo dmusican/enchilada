@@ -483,39 +483,44 @@ public abstract class Database implements InfoWarehouse {
 	public class Data_bulkBucket
 	{
 		String[] tables;
-		BulkBucket[] buckets;
+		PreparedStatement[] buckets;
 
 		public Data_bulkBucket(String[] tables){
 
 			this.tables = tables;
-			buckets = new BulkBucket[tables.length];
+			buckets = new PreparedStatement[tables.length];
 
 			try {
 				for(int i = 0; i<tables.length; i++)
-					buckets[i] = new BulkBucket(tables[i]);
+					if (tables[i].equals("ATOFMSAtomInfoDense"))
+						buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoDense VALUES(?,?,?,?,?,?);");
+					else
+						throw new UnsupportedOperationException("Unknown type of data.");
 			}
 			catch(SQLException e) {
-				e.printStackTrace();
+				throw new ExceptionAdapter(e);
 			}
 		}
-		
+
+		public void executeBuckets() {
+			for (PreparedStatement bucket : buckets) {
+				try {
+					bucket.executeBatch();
+				} catch (SQLException throwables) {
+					throw new ExceptionAdapter(throwables);
+				}
+			}
+		}
 		public void close() {
-		  for(int i = 0; i<tables.length; i++)
-			  buckets[i].close();
-	  }
-
-		public void cleanUp() {
-			  for(int i = 0; i<tables.length; i++)
-				  buckets[i].cleanUp();
-		  }
-
-		public String sqlCmd() {
-			 String querys = "";
-			 for(int i = 0; i<tables.length; i++)
-				 querys += buckets[i].sqlCmd();
-			 return querys;
-	  }
+			try {
+				for(int i = 0; i<tables.length; i++)
+					buckets[i].close();
+			} catch (SQLException e) {
+				throw new ExceptionAdapter(e);
+			}
+		}
 	}
+
 
 	/**
 	 * @param the names of the database tables for different type of particle data
@@ -534,25 +539,7 @@ public abstract class Database implements InfoWarehouse {
 	 */
     public void BulkInsertDataParticles(Data_bulkBucket bigBucket)
 	{
-    	try {
-    		bigBucket.close();
-
-    		Statement stmt = con.createStatement();
-
-    		stmt.addBatch(bigBucket.sqlCmd());
-
-    		stmt.executeBatch();
-
-    		stmt.close();
-    		
-    		bigBucket.cleanUp();
-
-    	} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");
-			System.err.println("Exception inserting particle.");
-			e.printStackTrace();
-	
-		}
+		bigBucket.executeBuckets();
 	}
     
 	/**
@@ -564,42 +551,55 @@ public abstract class Database implements InfoWarehouse {
 	 * @param collection - current collection
 	 * @param datasetID - current datasetID
 	 * @param nextID - next ID
-	 * @param importing - true if importing, false if inserting for other reason
-	 * @return nextID if successful 
+	 * @return nextID if successful
 	 * @author SLH
 	 */
 	public int saveDataParticle(String dense, ArrayList<String> sparse,
 			Collection collection,
 			int datasetID, int nextID, Data_bulkBucket bigBucket)
 	{
-
 		int num_tables = bigBucket.tables.length;
 		try {
 			for(int i =0; i<num_tables; i++) {
-				if(bigBucket.tables[i].equals("AMSAtomInfoDense")) 
-					bigBucket.buckets[i].append(nextID + "," + dense );
-				
-				if(bigBucket.tables[i].equals("ATOFMSAtomInfoDense")) 
-					bigBucket.buckets[i].append(nextID + "," + dense );
-				
-				if(bigBucket.tables[i].equals("AMSAtomInfoSparse"))
-					for (int j = 0; j < sparse.size(); ++j) {
-						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
-					}
-				
-				if(bigBucket.tables[i].equals("ATOFMSAtomInfoSparse"))
-					for (int j = 0; j < sparse.size(); ++j) {
-						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
-					}
-				
-				if(bigBucket.tables[i].equals("AtomMembership"))
-					bigBucket.buckets[i].append(collection.getCollectionID() + "," + nextID );
-				
-				if(bigBucket.tables[i].equals("DataSetMembers"))
-					bigBucket.buckets[i].append(datasetID + "," + nextID );
-				
-				if(bigBucket.tables[i].equals("InternalAtomOrder"))
-					bigBucket.buckets[i].append(nextID + "," +collection.getCollectionID() );
+				PreparedStatement bucket = bigBucket.buckets[i];
+
+				if(bigBucket.tables[i].equals("ATOFMSAtomInfoDense")) {
+					String[] denseValues = dense.split("\\s*,\\s*");
+					System.out.println(dense);
+					System.out.println(Arrays.toString(denseValues));
+					bucket.setInt(1, nextID);
+					bucket.setString(2, denseValues[0]);
+					bucket.setDouble(3, Double.parseDouble(denseValues[1]));
+					bucket.setDouble(4, Double.parseDouble(denseValues[2]));
+					bucket.setInt(5, Integer.parseInt(denseValues[3]));
+					bucket.setString(6, denseValues[4]);
+					bucket.addBatch();
+				} else {
+					throw new UnsupportedOperationException();
+				}
+
+//				if(bigBucket.tables[i].equals("AMSAtomInfoDense"))
+//					bigBucket.buckets[i].append(nextID + "," + dense );
+//
+//
+//				if(bigBucket.tables[i].equals("AMSAtomInfoSparse"))
+//					for (int j = 0; j < sparse.size(); ++j) {
+//						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
+//					}
+//
+//				if(bigBucket.tables[i].equals("ATOFMSAtomInfoSparse"))
+//					for (int j = 0; j < sparse.size(); ++j) {
+//						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
+//					}
+//
+//				if(bigBucket.tables[i].equals("AtomMembership"))
+//					bigBucket.buckets[i].append(collection.getCollectionID() + "," + nextID );
+//
+//				if(bigBucket.tables[i].equals("DataSetMembers"))
+//					bigBucket.buckets[i].append(datasetID + "," + nextID );
+//
+//				if(bigBucket.tables[i].equals("InternalAtomOrder"))
+//					bigBucket.buckets[i].append(nextID + "," +collection.getCollectionID() );
 			}
 		
 		} catch (SQLException e) {
