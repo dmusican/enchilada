@@ -2141,8 +2141,8 @@ public class DatabaseTest extends TestCase {
 		java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("M/d/yyyy hh:mm:ss aa");
 		
 		db.getMaxMinDateInCollections(colls, min, max);
-		assertEquals(formatter.format(min.getTime()), "7/4/2003 08:30:38 PM");
-		assertEquals(formatter.format(max.getTime()), "9/12/2003 03:30:38 PM");
+		assertEquals("7/4/2003 08:30:38 PM", formatter.format(min.getTime()));
+		assertEquals("9/12/2003 03:30:38 PM", formatter.format(max.getTime()));
 		
 		//try on multiple collections
 		colls = new Collection[2];
@@ -2151,8 +2151,8 @@ public class DatabaseTest extends TestCase {
 		
 		db.getMaxMinDateInCollections(colls, min, max);
 		
-		assertEquals(formatter.format(min.getTime()), "7/4/2003 08:30:38 PM");
-		assertEquals(formatter.format(max.getTime()), "11/6/2003 02:30:38 PM");
+		assertEquals("7/4/2003 08:30:38 PM", formatter.format(min.getTime()));
+		assertEquals("11/6/2003 02:30:38 PM", formatter.format(max.getTime()));
 		
 		//try with nulls
 		min.setTime(new Date(0));
@@ -2174,8 +2174,8 @@ public class DatabaseTest extends TestCase {
 		
 		db.getMaxMinDateInCollections(colls, min, max);
 		
-		assertEquals(min.getTimeInMillis(), 0);
-		assertEquals(max.getTimeInMillis(), 0);
+		assertEquals(0, min.getTimeInMillis());
+		assertEquals(0, max.getTimeInMillis());
 		
 		db.closeConnection();
 	}

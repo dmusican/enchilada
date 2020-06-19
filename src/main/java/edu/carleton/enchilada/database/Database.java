@@ -4650,17 +4650,18 @@ public abstract class Database implements InfoWarehouse {
 		assert (infoDenseNames.size() > 0):"no datatypes defined.";
 		
 		try{
+			Statement stmt = con.createStatement();
+			stmt.executeUpdate("CREATE INDEX iao_index ON InternalAtomOrder (CollectionID);\n");
+
 			StringBuilder sqlStr = new StringBuilder();
-			sqlStr.append("CREATE INDEX iao_index ON InternalAtomOrder (CollectionID);\n"+
-		"SELECT MAX(Time) as MaxTime, MIN(Time) as MinTime\nFROM(\n");
+			sqlStr.append("SELECT MAX(Time) as MaxTime, MIN(Time) as MinTime\nFROM(\n");
 			sqlStr.append("SELECT AtomID, Time FROM "+ infoDenseNames.get(0)+"\n");
 			for (int i = 1; i < infoDenseNames.size(); i++)
 				sqlStr.append("UNION SELECT AtomID, Time FROM " + infoDenseNames.get(i)+"\n");
 			sqlStr.append(") AID, InternalAtomOrder IAO\n"+
 					"WHERE IAO.CollectionID in ("+cIDs+")\n" +
 							"AND AID.AtomID = IAO.AtomID;\n");
-			sqlStr.append("DROP INDEX InternalAtomOrder.iao_index;\n");
-			Statement stmt = con.createStatement();
+
 			ResultSet rs = stmt.executeQuery(sqlStr.toString());
 			if (rs.next()) {
 				Timestamp minT = rs.getTimestamp("MinTime");
@@ -4671,13 +4672,15 @@ public abstract class Database implements InfoWarehouse {
 				if (!rs.wasNull())
 					maxDate.setTime(maxT);
 			}
-			
+
+			stmt.executeUpdate("DROP INDEX iao_index;\n");
+
 			rs.close();
 			stmt.close();
 		} catch (SQLException e){
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception retrieving max time for collections.");
 			System.err.println("SQL exception retrieving max time for collections");
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 	}
 	
