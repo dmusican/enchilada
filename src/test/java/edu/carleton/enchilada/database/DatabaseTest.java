@@ -2297,13 +2297,7 @@ public class DatabaseTest extends TestCase {
 		db.openConnection(dbName);
 
 		assertTrue(db.containsDatatype("AMS"));
-		
-		//shouldn't be case sensitive
-		assertTrue(db.containsDatatype("ams"));
-		
 		assertTrue(db.containsDatatype("ATOFMS"));
-		assertTrue(db.containsDatatype("atofMS"));
-		
 		assertTrue(db.containsDatatype("Datatype2"));
 		assertTrue(db.containsDatatype("SimpleParticle"));
 		assertTrue(db.containsDatatype("TimeSeries"));
@@ -2314,7 +2308,10 @@ public class DatabaseTest extends TestCase {
 			fail();
 		}
 		catch (RuntimeException ex) {
-			System.out.println("This should be an error: " + ex.getMessage());
+			assertEquals(
+					"Invalid database reserved characters in querying name while checking for existence of datatype 'ATOFMS'",
+					ex.getMessage()
+			);
 		}
 		
 		try {
@@ -2322,7 +2319,10 @@ public class DatabaseTest extends TestCase {
 			fail();
 		}
 		catch (RuntimeException ex) {
-			System.out.println("This should be an error: " + ex.getMessage());
+			assertEquals(
+					"Invalid database reserved characters in querying name while checking for existence of datatype ' OR Datatype = 'AMS",
+					ex.getMessage()
+			);
 		}
 
 		try {
@@ -2330,7 +2330,10 @@ public class DatabaseTest extends TestCase {
 			fail();
 		}
 		catch (RuntimeException ex) {
-			System.out.println("This should be an error: " + ex.getMessage());
+			assertEquals(
+					"Invalid database reserved characters in querying name while checking for existence of datatype ''AMS''",
+					ex.getMessage()
+			);
 		}
 		
 		db.closeConnection();
