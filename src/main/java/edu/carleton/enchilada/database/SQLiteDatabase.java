@@ -83,15 +83,6 @@ public class SQLiteDatabase extends Database {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 
-    /**
-     * @return a BatchExecuter that uses StringBuilder concatenation
-     * to build queries. According to earlier documentation,  this is
-     * faster than equivalent addBatch() and executeBatch()
-     */
-    protected BatchExecuter getBatchExecuter(Statement stmt) {
-        return new SQLiteDatabase.StringBatchExecuter(stmt);
-    }
-
     protected class StringBatchExecuter extends BatchExecuter {
         private StringBuilder sb;
         public StringBatchExecuter(Statement stmt) {

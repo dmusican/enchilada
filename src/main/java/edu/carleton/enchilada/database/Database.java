@@ -273,12 +273,6 @@ public abstract class Database implements InfoWarehouse {
 	}
 	
 	/**
-	 * Implementers of this class must return a batch executer implementation
-	 * @return a subclass of BatchExecuter
-	 */
-	protected abstract BatchExecuter getBatchExecuter(Statement stmt);
-	
-	/**
 	 * Abstract representation of something that adds and executes batches.
 	 * Used since SQL Server can execute batches more quickly with StringBuilders -
 	 * 	but these are incompatible in MySQL.
@@ -316,10 +310,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @return
 	 */
 	protected Inserter getInserter(BatchExecuter stmt, String table) {
-		if (url.equals("localhost"))
-			return getBulkInserter(stmt, table);
-		else
-			return new BatchInserter(stmt, table);
+		return new BatchInserter(stmt, table);
 	}
 	
 	/**

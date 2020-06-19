@@ -198,49 +198,7 @@ public class SQLServerDatabase extends Database
 							  Collection collection,
 							  int datasetID, int nextID, boolean importing)
 	{
-		//System.out.println("next AtomID: "+nextID);
-		try {
-			Statement stmt = con.createStatement();
-			//System.out.println("Adding batches");
-			BatchExecuter sql = getBatchExecuter(stmt);
-			sql.append("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + " VALUES (" +
-					nextID + ", " + dense + ")");
-			sql.append("INSERT INTO AtomMembership " +
-					"(CollectionID, AtomID) " +
-					"VALUES (" +
-					collection.getCollectionID() + ", " +
-					nextID + ")\n");
-			sql.append("INSERT INTO DataSetMembers " +
-					"(OrigDataSetID, AtomID) " +
-					"VALUES (" +
-					datasetID + ", " +
-					nextID + ")\n");
-
-			String tableName = getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype());
-
-			Inserter bi = getBulkInserter(sql, tableName);
-			for (ATOFMSPeak peak : sparse) {
-				bi.append(nextID + "," + peak.toCommaDelimitedString());
-
-			}
-			bi.close();
-
-			sql.execute();
-
-			stmt.close();
-			bi.cleanUp();
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");
-			System.err.println("Exception inserting particle.");
-			e.printStackTrace();
-
-			return -1;
-		}
-		if (!importing)
-			updateInternalAtomOrder(collection);
-		else
-			addInternalAtom(nextID, collection.getCollectionID());
-		return nextID;
+		throw new UnsupportedOperationException("No longer inserting SQL Server");
 	}
 
 

@@ -650,7 +650,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetNextId(){
-		db.openConnection();
+		db.openConnection(dbName);
 		
 		assertTrue(db.getNextID() >= 0);
 	
@@ -2322,138 +2322,6 @@ public class DatabaseTest extends TestCase {
 					"Invalid database reserved characters in querying name while checking for existence of datatype ''AMS''",
 					ex.getMessage()
 			);
-		}
-		
-		db.closeConnection();
-	}
-	
-	/**
-	 * @author shaferia
-	 */
-	public void testBatchExecuter() {
-		db.openConnection(dbName);
-		
-		try {
-			Statement stmt = db.getCon().createStatement();
-			Database.BatchExecuter ex = db.getBatchExecuter(stmt);
-			ex.append("UPDATE DBInfo SET Value = 'fooo!' WHERE Name = 'Version'");
-			ex.execute();
-			stmt.close();
-			
-			stmt = db.getCon().createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT Value FROM DBInfo WHERE Name = 'Version'");
-			assertTrue(rs.next());
-			assertEquals(rs.getString(1), "fooo!");
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Batch executer did not complete properly");
-		}
-		
-		try {
-			Statement stmt = db.getCon().createStatement();
-			Database.BatchExecuter ex = db.getBatchExecuter(stmt);
-			ex.execute();
-			
-			fail("Batch executer should not execute empty statements.");
-		}
-		catch (SQLException ex) {
-			//success
-		}
-		
-		try {
-			int[][] values = 
-			{
-					{1,2},	
-					{2,5},
-					{3,3},
-					{4,4},
-					{5,1},
-					{6,6}
-			};
-			Statement stmt = db.getCon().createStatement();
-			Database.BatchExecuter ex = db.getBatchExecuter(stmt);
-			ex.append("DELETE FROM AtomMembership");
-			for (int i = 0; i < values.length; ++i)
-				//make sure it works for newlines and no newlines on the end.
-				ex.append("INSERT INTO AtomMembership VALUES(" + 
-						values[i][0] + "," + values[i][1] + ")" + ((i % 2 == 0) ? "" : "\n"));
-			ex.execute();
-			stmt.close();
-			
-			stmt = db.getCon().createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM AtomMembership ORDER BY CollectionID");
-			for (int i = 0; i < values.length; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), values[i][0]);
-				assertEquals(rs.getInt(2), values[i][1]);
-			}
-			assertFalse(rs.next());
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Problem with multiple BatchExecuter comparison");
-		}
-		
-		db.closeConnection();
-	}
-	
-	/**
-	 * @author shaferia
-	 */
-	public void testInserter() {
-		db.openConnection(dbName);		
-		try {
-			Statement stmt = db.getCon().createStatement();
-			Database.BatchExecuter ex = db.getBatchExecuter(stmt);
-			Database.Inserter bi = db.getInserter(ex, "Collections");
-			bi.close();
-			ex.execute();
-			bi.cleanUp();
-		}
-		catch (SQLException ex) {
-			fail("Inserting nothing into from bulk file should be okay.");
-		}
-		
-		String iname = "[Couldn't create inserter]";
-		try {
-			Object[][] values = 
-			{
-					{2, "Hi!", "Foo!", "Desck!", "ATOFMS"},
-					{3, "Baz", "Gir", "Zim", "AMS"},
-					{4, "-", "-", "-", "-"}
-			};
-			
-			Statement stmt = db.getCon().createStatement();
-			Database.BatchExecuter ex = db.getBatchExecuter(stmt);
-			Database.Inserter bi = db.getInserter(ex, "Collections");
-			iname = bi.getClass().getName();
-			
-			db.getCon().createStatement().executeUpdate("DELETE FROM Collections");
-			
-			for (int i = 0; i < values.length; ++i)
-				bi.append(values[i][0] + "," + values[i][1] + "," + 
-						values[i][2] + "," + values[i][3] + "," + values[i][4]);
-			bi.close();
-			ex.execute();
-			bi.cleanUp();
-			
-			
-			ResultSet rs = (stmt = db.getCon().createStatement()).executeQuery(
-					"SELECT * FROM Collections ORDER BY CollectionID");
-			
-			for (int i = 0; i < values.length; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), values[i][0]);
-				assertEquals(rs.getString(2), values[i][1]);
-				assertEquals(rs.getString(3), values[i][2]);
-				assertEquals(rs.getString(4), values[i][3]);
-				assertEquals(rs.getString(5), values[i][4]);
-			}
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Problem with Inserter " + iname + " execution");
 		}
 		
 		db.closeConnection();
