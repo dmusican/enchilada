@@ -270,20 +270,14 @@ public class DatabaseTest extends TestCase {
 	 * @throws SQLException 
 	 */
 	public void testUpdateInternalAtomOrder() throws SQLException{
-		String manual = "INSERT INTO Collections VALUES "+
-			"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
-		db.openConnection();
+		db.openConnection("TestDB");
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
-		stmt.addBatch(manual);
-		manual = "DELETE FROM CollectionRelationships WHERE "
-			+ "ChildID = 2 OR ChildID = 3";
-		stmt.addBatch(manual);
-		manual = "INSERT INTO CollectionRelationships VALUES(7,2)"
-			+ "INSERT INTO CollectionRelationships VALUES(7,3)";
-		stmt.addBatch(manual);
-		stmt.executeBatch();
-		
+		stmt.executeUpdate("INSERT INTO Collections VALUES  (7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')");
+		stmt.executeUpdate("DELETE FROM CollectionRelationships WHERE ChildID = 2 OR ChildID = 3");
+		stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(7,2)");
+		stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(7,3)");
+
 		//now update IAO
 		db.updateInternalAtomOrder(db.getCollection(7));
 		

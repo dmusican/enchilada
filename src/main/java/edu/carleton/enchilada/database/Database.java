@@ -6291,10 +6291,9 @@ public abstract class Database implements InfoWarehouse {
 			String query = "SELECT AtomID FROM AtomMembership WHERE CollectionID = " + cID;
 			Iterator<Integer> subCollections = getAllDescendantCollections(cID,false).iterator();
 			while (subCollections.hasNext())
-				query += " union (SELECT AtomID FROM AtomMembership WHERE CollectionID = " + subCollections.next() + ")";
+				query += " union SELECT AtomID FROM AtomMembership WHERE CollectionID = " + subCollections.next();
 			query += " ORDER BY AtomID";
 			
-			//System.out.println(query);
 			ResultSet rs = stmt.executeQuery(query);
 			
 			// Only bulk insert if client and server are on the same machine...
@@ -6306,7 +6305,7 @@ public abstract class Database implements InfoWarehouse {
 				pstmt.addBatch();
 			}
 
-			stmt.executeBatch();
+			pstmt.executeBatch();
 			stmt.close();
 			if (tempFile != null && tempFile.exists()) {
 				tempFile.delete();
