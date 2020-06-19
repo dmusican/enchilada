@@ -310,47 +310,37 @@ public class DatabaseTest extends TestCase {
 		 * setup collection 7 (atoms 22, 23, 24) and 8 (atoms 25, 26, 27)
 		 * as children of 2
 		 */
-		db.openConnection();
-		String sqlstring = ""
-			+ " INSERT INTO AtomMembership VALUES (7, 22)"
-			+ " INSERT INTO AtomMembership VALUES (7, 23)"
-			+ " INSERT INTO AtomMembership VALUES (7, 24)"
-			+ " INSERT INTO AtomMembership VALUES (8, 25)"
-			+ " INSERT INTO AtomMembership VALUES (8, 26)"
-			+ " INSERT INTO AtomMembership VALUES (8, 27)";
+		db.openConnection(dbName);
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
-		stmt.executeUpdate(sqlstring);
-		
-		sqlstring = ""
-			+ " INSERT INTO InternalAtomOrder VALUES (22, 7)"
-			+ " INSERT INTO InternalAtomOrder VALUES (23, 7)"
-			+ " INSERT INTO InternalAtomOrder VALUES (24, 7)"
-			+ " INSERT INTO InternalAtomOrder VALUES (25, 8)"
-			+ " INSERT INTO InternalAtomOrder VALUES (26, 8)"
-			+ " INSERT INTO InternalAtomOrder VALUES (27, 8)";
-		stmt.executeUpdate(sqlstring);
-			
-		
-		sqlstring = ""
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (22,'9/2/2003 5:30:38 PM',22,0.22,22,'tweTwo')"
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (23,'9/2/2003 5:30:38 PM',23,0.23,23,'tweThree')"
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (24,'9/2/2003 5:30:38 PM',24,0.24,24,'tweFour')"
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (25,'9/2/2003 5:30:38 PM',25,0.25,25,'tweFive')"
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (26,'9/2/2003 5:30:38 PM',26,0.26,26,'tweSix')"
-			+ " INSERT INTO ATOFMSAtomInfoDense VALUES (27,'9/2/2003 5:30:38 PM',27,0.27,27,'tweSeven')";
-		stmt.executeUpdate(sqlstring);
-		
-		sqlstring = ""
-			+ " INSERT INTO Collections VALUES (7,'Seven', 'seven', 'sevdescrip', 'ATOFMS')"
-			+ " INSERT INTO Collections VALUES (8,'Eight', 'eight', 'eightdescrip', 'ATOFMS')";
-		stmt.executeUpdate(sqlstring);
-		
-		sqlstring = ""
-			+ " INSERT INTO CollectionRelationships VALUES (2, 7)"
-			+ " INSERT INTO CollectionRelationships VALUES (2, 8)";
-		stmt.executeUpdate(sqlstring);
-		
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7, 22)");
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7, 23)");
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7, 24)");
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (8, 25)");
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (8, 26)");
+		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (8, 27)");
+
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (22, 7)");
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (23, 7)");
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (24, 7)");
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (25, 8)");
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (26, 8)");
+		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES (27, 8)");
+
+
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (22,'2003-09-02 17:30:38',22,0.22,22,'tweTwo')");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (23,'2003-09-02 17:30:38',23,0.23,23,'tweThree')");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (24,'2003-09-02 17:30:38',24,0.24,24,'tweFour')");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (25,'2003-09-02 17:30:38',25,0.25,25,'tweFive')");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (26,'2003-09-02 17:30:38',26,0.26,26,'tweSix')");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (27,'2003-09-02 17:30:38',27,0.27,27,'tweSeven')");
+
+		stmt.executeUpdate("INSERT INTO Collections VALUES (7,'Seven', 'seven', 'sevdescrip', 'ATOFMS')");
+		stmt.executeUpdate("INSERT INTO Collections VALUES (8,'Eight', 'eight', 'eightdescrip', 'ATOFMS')");
+
+		stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES (2, 7)");
+		 stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES (2, 8)");
+
 		/* Call updateAncestors and check results.*/
 		db.updateAncestors(db.getCollection(7));
 		
