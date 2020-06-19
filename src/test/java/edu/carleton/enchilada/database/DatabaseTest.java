@@ -80,7 +80,7 @@ import org.junit.Test;
 import org.sqlite.SQLiteException;
 
 /**
- * @author andersbe
+ * Tests database class
  *
  */
 public class DatabaseTest extends TestCase {
@@ -2119,15 +2119,15 @@ public class DatabaseTest extends TestCase {
 			Statement stmt = db.getCon().createStatement();
 
 			//CollectionID = 2
-			stmt.addBatch(sprintf(pre, "9/1/2003 4:30:38 PM", 1));
-			stmt.addBatch(sprintf(pre, "9/12/2003 3:30:38 PM", 2));
-			stmt.addBatch(sprintf(pre, "8/4/2003 2:30:38 PM", 3));
-			stmt.addBatch(sprintf(pre, "7/4/2003 8:30:38 PM", 5));
+			stmt.addBatch(sprintf(pre, "2003-09-01 16:30:38", 1));
+			stmt.addBatch(sprintf(pre, "2003-09-12 15:30:38", 2));
+			stmt.addBatch(sprintf(pre, "2003-08-04 14:30:38", 3));
+			stmt.addBatch(sprintf(pre, "2003-07-04 20:30:38", 5));
 
 			//CollectionID = 3
-			stmt.addBatch(sprintf(pre, "10/1/2003 4:30:38 PM", 6));
-			stmt.addBatch(sprintf(pre, "8/1/2003 5:30:38 PM", 7));
-			stmt.addBatch(sprintf(pre, "11/6/2003 2:30:38 PM", 10));
+			stmt.addBatch(sprintf(pre, "2003-10-01 16:30:38", 6));
+			stmt.addBatch(sprintf(pre, "2003-08-01 17:30:38", 7));
+			stmt.addBatch(sprintf(pre, "2003-11-06 14:30:38", 10));
 			
 			stmt.executeBatch();
 
@@ -2138,11 +2138,9 @@ public class DatabaseTest extends TestCase {
 			ex.printStackTrace();
 		}
 		
-		java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("M/d/yyyy hh:mm:ss aa");
-		
 		db.getMaxMinDateInCollections(colls, min, max);
-		assertEquals("7/4/2003 08:30:38 PM", formatter.format(min.getTime()));
-		assertEquals("9/12/2003 03:30:38 PM", formatter.format(max.getTime()));
+		assertEquals("2003-07-04 20:30:38", TimeUtilities.dateToIso8601(min.getTime()));
+		assertEquals("2003-09-12 15:30:38", TimeUtilities.dateToIso8601(max.getTime()));
 		
 		//try on multiple collections
 		colls = new Collection[2];
@@ -2151,8 +2149,8 @@ public class DatabaseTest extends TestCase {
 		
 		db.getMaxMinDateInCollections(colls, min, max);
 		
-		assertEquals("7/4/2003 08:30:38 PM", formatter.format(min.getTime()));
-		assertEquals("11/6/2003 02:30:38 PM", formatter.format(max.getTime()));
+		assertEquals("2003-07-04 20:30:38", TimeUtilities.dateToIso8601(min.getTime()));
+		assertEquals("2003-11-06 14:30:38", TimeUtilities.dateToIso8601(max.getTime()));
 		
 		//try with nulls
 		min.setTime(new Date(0));
@@ -2171,7 +2169,7 @@ public class DatabaseTest extends TestCase {
 			System.err.println("Couldn't update time values in database");
 			ex.printStackTrace();
 		}
-		
+
 		db.getMaxMinDateInCollections(colls, min, max);
 		
 		assertEquals(0, min.getTimeInMillis());
@@ -2677,7 +2675,7 @@ public class DatabaseTest extends TestCase {
 		db.updateParticleTable(c, particleInfo, 1, 2);
 		assertEquals(2, particleInfo.size());
 		assertEquals(1, particleInfo.get(0).get(0));
-		assertEquals("9/2/2003 5:30:38 PM", particleInfo.get(0).get(1));
+		assertEquals("2003-09-02 17:30:38", particleInfo.get(0).get(1));
 		assertEquals("1.0", particleInfo.get(0).get(2));
 		assertEquals("0.01", particleInfo.get(0).get(3));
 		assertEquals("1", particleInfo.get(0).get(4));

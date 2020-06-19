@@ -89,7 +89,7 @@ public class CreateTestDatabase {
 			// real one so we can test on that one and make sure we
 			// know what the results should be.
 			//stmt.executeUpdate("CREATE DATABASE TestDB");
-			String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '9/2/2003 5:30:38 PM', ?, ?, ?, ?)";
+			String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '2003-09-02 17:30:38', ?, ?, ?, ?)";
 			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
 			for (int i=1; i < 12; i++) {
 				pstmt.setInt(1, i);
@@ -147,7 +147,7 @@ public class CreateTestDatabase {
 			stmt.executeUpdate("INSERT INTO CollectionRelationships VALUES(5,6)");
 
 			stmt.executeUpdate("INSERT INTO ATOFMSDataSetInfo VALUES(1,'One','aFile','anotherFile',12,20,0.005,1)");
-			stmt.executeUpdate("INSERT INTO Datatype2DataSetInfo VALUES(1,'9/2/2003 5:30:38 PM',100)");
+			stmt.executeUpdate("INSERT INTO Datatype2DataSetInfo VALUES(1,'2003-09-02 17:30:38',100)");
 
 			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,1)\n");
 			stmt.executeUpdate("INSERT INTO DataSetMembers VALUES(1,2)\n");

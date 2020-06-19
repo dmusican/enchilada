@@ -3866,7 +3866,6 @@ public abstract class Database implements InfoWarehouse {
 		 * @see java.util.Iterator#next()
 		 */
 		public ParticleInfo getCurrent() {
-			SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
 			try {
 				ParticleInfo particleInfo = new ParticleInfo();
 				particleInfo.setParticleInfo(
@@ -3875,7 +3874,7 @@ public abstract class Database implements InfoWarehouse {
 								partInfRS.getString(2),
 								partInfRS.getInt(3),
 								partInfRS.getFloat(4),
-								df.parse(partInfRS.getString(5)),
+								TimeUtilities.iso8601ToDate(partInfRS.getString(5)),
 								partInfRS.getFloat(6)));
 				particleInfo.setID(particleInfo.getATOFMSParticleInfo().getAtomID());
 				return particleInfo; 
@@ -4664,22 +4663,26 @@ public abstract class Database implements InfoWarehouse {
 
 			ResultSet rs = stmt.executeQuery(sqlStr.toString());
 			if (rs.next()) {
-				Timestamp minT = rs.getTimestamp("MinTime");
-				if (!rs.wasNull())
+				String minTime = rs.getString("MinTime");
+				if (!rs.wasNull()) {
+					Date minT = TimeUtilities.iso8601ToDate(minTime);
 					minDate.setTime(minT);
-				
-				Timestamp maxT = rs.getTimestamp("MaxTime");
-				if (!rs.wasNull())
+				}
+
+				String maxTime = rs.getString("MaxTime");
+				if (!rs.wasNull()) {
+					Date maxT = TimeUtilities.iso8601ToDate(maxTime);
 					maxDate.setTime(maxT);
+				}
 			}
 
 			stmt.executeUpdate("DROP INDEX iao_index;\n");
 
 			rs.close();
 			stmt.close();
-		} catch (SQLException e){
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception retrieving max time for collections.");
-			System.err.println("SQL exception retrieving max time for collections");
+		} catch (SQLException | ParseException e) {
+			ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Exception retrieving max time for collections.");
+			System.err.println("Exception retrieving max time for collections");
 			throw new ExceptionAdapter(e);
 		}
 	}
