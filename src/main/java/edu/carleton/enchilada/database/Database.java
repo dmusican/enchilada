@@ -500,6 +500,8 @@ public abstract class Database implements InfoWarehouse {
 						buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoDense VALUES(?,?);");
 					else if (tables[i].equals("AMSAtomInfoSparse"))
 						buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoSparse VALUES(?,?,?);");
+					else if (tables[i].equals("AtomMembership"))
+						buckets[i] = con.prepareStatement("INSERT INTO AtomMembership VALUES(?,?);");
 					else
 						throw new UnsupportedOperationException("Unknown type of data.");
 			}
@@ -609,20 +611,16 @@ public abstract class Database implements InfoWarehouse {
 					}
 				}
 
+				else if(bigBucket.tables[i].equals("AtomMembership")) {
+					bucket.setInt(1, collection.getCollectionID());
+					bucket.setInt(2, nextID);
+					bucket.addBatch();
+				}
+
 				else {
 					throw new UnsupportedOperationException();
 				}
 
-//				if(bigBucket.tables[i].equals("AMSAtomInfoSparse"))
-//					for (int j = 0; j < sparse.size(); ++j) {
-//						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
-//					}
-//
-//				if(bigBucket.tables[i].equals("ATOFMSAtomInfoSparse"))
-//					for (int j = 0; j < sparse.size(); ++j) {
-//						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
-//					}
-//
 //				if(bigBucket.tables[i].equals("AtomMembership"))
 //					bigBucket.buckets[i].append(collection.getCollectionID() + "," + nextID );
 //

@@ -2470,7 +2470,7 @@ public class DatabaseTest extends TestCase {
 	
 	// ***SLH  BulkInsertDataParticles saveDataParticle
 	public void testsaveAtofmsParticle_BulkInsertAtofmsParticles() throws SQLException {
-		String[] tables= {"ATOFMSAtomInfoDense", "ATOFMSAtomInfoSparse"};
+		String[] tables= {"ATOFMSAtomInfoDense", "ATOFMSAtomInfoSparse", "AtomMembership"};
 		String dense_str = "12-30-06 10:59:49, 1.89E-4, 2.4032946, 4286,E:\\Data\\12-29-2003\\h\\h-031230105949-00001.amz";
 		String[] sparse_str = {"23.0, 56673, 0.60352063, 2625", "40.0, 5289, 0.05632348, 450", "-16.0, 17893, 0.06354161, 2607"};
 
@@ -2528,7 +2528,13 @@ public class DatabaseTest extends TestCase {
 		assertEquals(17893, rs.getInt(3));                        // peakarea
 		assertEquals(0.06354161, rs.getDouble(4), 1e-8);    // relpeakarea
 		assertEquals(2607, rs.getInt(5));                         // peakheight
-		db.closeConnection();
+
+		// check AtomMembership
+		stmt = db.getCon().createStatement();
+		rs = stmt.executeQuery(";\n" + "SELECT * FROM AtomMembership where CollectionID = 0" );
+		assertTrue(rs.next());
+		assertEquals(0, rs.getInt(1));                          // collectionID
+		assertEquals(100, rs.getInt(2));                        // atomID
 	}
 	
 	public void testsaveAmsParticle_BulkInsertAmsParticles() throws SQLException {
@@ -2584,7 +2590,8 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 
 	}
-	
+
+
 
 	/**
 	 * @author shaferia
