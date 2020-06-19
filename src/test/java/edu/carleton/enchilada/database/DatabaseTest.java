@@ -1907,7 +1907,7 @@ public class DatabaseTest extends TestCase {
 					
 					for (int i = 1; i < rsmd.getColumnCount() + 1; ++i) {
 						assertTrue(names.get(i - 1).equalsIgnoreCase(
-								"[" + rsmd.getColumnName(i) + "]"));
+								rsmd.getColumnName(i)));
 					}
 				}
 				catch (SQLException ex) {
