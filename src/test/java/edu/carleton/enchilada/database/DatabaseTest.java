@@ -2507,7 +2507,7 @@ public class DatabaseTest extends TestCase {
 		stmt.close();
 		db.closeConnection();
 
-		//check ATOFMS sparsee data
+		//check ATOFMS sparse data
 		db.openConnection(dbName);
 		// First one
 		stmt = db.getCon().createStatement();
@@ -2533,9 +2533,9 @@ public class DatabaseTest extends TestCase {
 	
 	public void testsaveAmsParticle_BulkInsertAmsParticles() throws SQLException {
 		
-		String[] tables= {"AMSAtomInfoDense"};
+		String[] tables= {"AMSAtomInfoDense", "AMSAtomInfoSparse"};
 		String ams_dense_str = "12-30-06 10:59:50";
-		String[] ams_sparse_str = {"13,14.0,0.0140019", "13,30.0,0.2438613", "13,31.0,9.876385E-4", "13,32.0,4.877227E-4"};
+		String[] ams_sparse_str = {"14.0,0.0140019", "30.0,0.2438613", "31.0,9.876385E-4", "32.0,4.877227E-4"};
 		
 		int datasetid = 100;
 		int nextAtomID = 100;
@@ -2553,7 +2553,7 @@ public class DatabaseTest extends TestCase {
 		db.BulkInsertDataParticles(bkts);
 		db.closeConnection();
 		
-		//check AMS data
+		//check AMS dense data
 		db.openConnection(dbName);
 		Statement stmt = db.getCon().createStatement();
 		ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
@@ -2563,6 +2563,26 @@ public class DatabaseTest extends TestCase {
 		//assertEquals(rs.getDate(2), "12-30-06");
 		assertEquals(rs.getString(2), "12-30-06 10:59:50");
 		db.closeConnection();
+
+		//check AMS sparse data
+		db.openConnection(dbName);
+		// First one
+		stmt = db.getCon().createStatement();
+		rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoSparse where PeakLocation = 14.0" );
+		assertTrue(rs.next());
+		assertEquals(100, rs.getInt(1));                          // atomid
+		assertEquals(14.0, rs.getDouble(2), 1e-5);          // peakLocation
+		assertEquals(0.0140019, rs.getDouble(3), 1e-8);     // peakheight
+		rs.close();
+		// Fourth one
+		stmt = db.getCon().createStatement();
+		rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoSparse where PeakLocation = 32.0" );
+		assertTrue(rs.next());
+		assertEquals(100, rs.getInt(1));                          // atomid
+		assertEquals(32.0, rs.getDouble(2), 1e-5);          // peakLocation
+		assertEquals(4.877227E-4, rs.getDouble(3), 1e-8);   // peakheight
+		db.closeConnection();
+
 	}
 	
 

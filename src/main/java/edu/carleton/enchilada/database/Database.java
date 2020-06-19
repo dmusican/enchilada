@@ -498,6 +498,8 @@ public abstract class Database implements InfoWarehouse {
 						buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoSparse VALUES(?,?,?,?,?);");
 					else if (tables[i].equals("AMSAtomInfoDense"))
 						buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoDense VALUES(?,?);");
+					else if (tables[i].equals("AMSAtomInfoSparse"))
+						buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoSparse VALUES(?,?,?);");
 					else
 						throw new UnsupportedOperationException("Unknown type of data.");
 			}
@@ -597,14 +599,20 @@ public abstract class Database implements InfoWarehouse {
 					bucket.addBatch();
 				}
 
+				else if(bigBucket.tables[i].equals("AMSAtomInfoSparse")) {
+					for (String row: sparse) {
+						String[] delimitedValues = row.split(commaDelimitedRegex);
+						bucket.setInt(1, nextID);                                       // atomid
+						bucket.setDouble(2, Double.parseDouble(delimitedValues[0]));    // peaklocation
+						bucket.setDouble(3, Double.parseDouble(delimitedValues[1]));    // relpeakarea
+						bucket.addBatch();
+					}
+				}
+
 				else {
 					throw new UnsupportedOperationException();
 				}
 
-//				if(bigBucket.tables[i].equals("AMSAtomInfoDense"))
-//					bigBucket.buckets[i].append(nextID + "," + dense );
-//
-//
 //				if(bigBucket.tables[i].equals("AMSAtomInfoSparse"))
 //					for (int j = 0; j < sparse.size(); ++j) {
 //						bigBucket.buckets[i].append(nextID + "," + sparse.get(j));
