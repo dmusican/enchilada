@@ -231,30 +231,30 @@ public class CreateTestDatabase {
 		try {
 			Statement stmt = con.createStatement();
 
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[DataSetID]','INT',1,0,1)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Time]','DATETIME',0,0,2)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Number]','INT',0,0,3)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[AtomID]','INT',1,1,1)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Size]','REAL',0,1,2)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Magnitude]','REAL',0,1,3)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[AtomID]','INT',1,2,1)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Delay]','INT',1,2,2)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','[Valid]','BIT',0,2,3)\n");
-			stmt.executeUpdate("CREATE TABLE Datatype2DataSetInfo ([DataSetID] INT, [Time] DATETIME, [Number] INT,  PRIMARY KEY ([DataSetID]))\n" );
-			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoDense ([AtomID] INT, [Size] REAL, [Magnitude] REAL,  PRIMARY KEY ([AtomID]))\n" );
-			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoSparse ([AtomID] INT, [Delay] INT, [Valid] BIT, PRIMARY KEY ([AtomID], [Delay]))");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[DataSetID]','INT',1,0,0)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[DataSet]','VARCHAR(8000)',0,0,1)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Number]','INT',0,0,2)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[AtomID]','INT',1,1,0)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Size]','REAL',0,1,1)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Magnitude]','REAL',0,1,2)\n" );
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[AtomID]','INT',1,2,0)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Delay]','INT',1,2,1)\n");
-			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','[Valid]','BIT',0,2,2)\n");
-			stmt.executeUpdate("CREATE TABLE SimpleParticleDataSetInfo ([DataSetID] INT, [DataSet] VARCHAR(8000), [Number] INT, PRIMARY KEY([DataSetID]))\n" );
-			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoDense ([AtomID] INT, [Size] REAL, [Magnitude] REAL, PRIMARY KEY([AtomID]))\n" );
-			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoSparse ([AtomID] INT, [Delay] INT, [Valid] BIT, PRIMARY KEY ([AtomID], [Delay]))");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','DataSetID','INT',1,0,1)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Time','DATETIME',0,0,2)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Number','INT',0,0,3)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','AtomID','INT',1,1,1)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Size','REAL',0,1,2)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Magnitude','REAL',0,1,3)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','AtomID','INT',1,2,1)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Delay','INT',1,2,2)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Valid','BIT',0,2,3)\n");
+			stmt.executeUpdate("CREATE TABLE Datatype2DataSetInfo (DataSetID INT, Time DATETIME, Number INT,  PRIMARY KEY (DataSetID))\n" );
+			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoDense (AtomID INT, Size REAL, Magnitude REAL,  PRIMARY KEY (AtomID))\n" );
+			stmt.executeUpdate("CREATE TABLE Datatype2AtomInfoSparse (AtomID INT, Delay INT, Valid BIT, PRIMARY KEY (AtomID, Delay))");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','DataSetID','INT',1,0,0)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','DataSet','VARCHAR(8000)',0,0,1)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','Number','INT',0,0,2)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','AtomID','INT',1,1,0)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','Size','REAL',0,1,1)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','Magnitude','REAL',0,1,2)\n" );
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','AtomID','INT',1,2,0)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','Delay','INT',1,2,1)\n");
+			stmt.executeUpdate("INSERT INTO MetaData VALUES ('SimpleParticle','Valid','BIT',0,2,2)\n");
+			stmt.executeUpdate("CREATE TABLE SimpleParticleDataSetInfo (DataSetID INT, DataSet VARCHAR(8000), Number INT, PRIMARY KEY(DataSetID))\n" );
+			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoDense (AtomID INT, Size REAL, Magnitude REAL, PRIMARY KEY(AtomID))\n" );
+			stmt.executeUpdate("CREATE TABLE SimpleParticleAtomInfoSparse (AtomID INT, Delay INT, Valid BIT, PRIMARY KEY (AtomID, Delay))");
 
 		} catch (SQLException e) {
 			throw new ExceptionAdapter(e);

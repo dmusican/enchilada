@@ -2197,7 +2197,7 @@ public class DatabaseTest extends TestCase {
 		ret = db.getPrimaryKey("ATOFMS", DynamicTable.AtomInfoSparse);
 		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
-		assertTrue(ret.get(0).equalsIgnoreCase("[PeakLocation]"));
+		assertTrue(ret.get(0).equalsIgnoreCase("PeakLocation"));
 		
 		ret = db.getPrimaryKey("AMS", DynamicTable.DataSetInfo);
 		assertNotNull(ret);
@@ -2206,12 +2206,12 @@ public class DatabaseTest extends TestCase {
 		ret = db.getPrimaryKey("AMS", DynamicTable.AtomInfoSparse);
 		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
-		assertTrue(ret.get(0).equalsIgnoreCase("[PeakLocation]"));		
+		assertTrue(ret.get(0).equalsIgnoreCase("PeakLocation"));
 		
 		ret = db.getPrimaryKey("Datatype2", DynamicTable.AtomInfoSparse);
 		assertNotNull(ret);
 		assertEquals(ret.size(), 1);
-		assertTrue(ret.get(0).equalsIgnoreCase("[Delay]"));		
+		assertTrue(ret.get(0).equalsIgnoreCase("Delay"));
 		
 		db.closeConnection();
 	}
