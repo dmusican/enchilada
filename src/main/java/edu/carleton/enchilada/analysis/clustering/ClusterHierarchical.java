@@ -41,10 +41,7 @@
 package edu.carleton.enchilada.analysis.clustering;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 import javax.swing.JFrame;
 
@@ -58,6 +55,7 @@ import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.NonZeroCursor;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
@@ -453,11 +451,7 @@ public class ClusterHierarchical extends Cluster {
 		private void addAtomsToCollection() {
 			try {
 				db.bulkInsertInit();
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-
-			try {
+				System.out.println("AtomIDList = " + atomIDList);
 				for (int atomID : atomIDList) {
 					db.bulkInsertAtom(atomID,
 							clusterCollectionID);
@@ -465,7 +459,7 @@ public class ClusterHierarchical extends Cluster {
 				db.bulkInsertExecute();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				throw new ExceptionAdapter(e);
 			}
 		}
 		

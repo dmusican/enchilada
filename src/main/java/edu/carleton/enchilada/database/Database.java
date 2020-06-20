@@ -104,10 +104,9 @@ public abstract class Database implements InfoWarehouse {
 	// for batch stuff
 	private Statement batchStatement;
 	private ArrayList<Integer> alteredCollections;
-	private PrintWriter bulkInsertFileWriter;
-	private File bulkInsertFile;
-//	private String bulkInsertFileName;
-	
+	private PreparedStatement bulkInsertStatementAtomMembership;
+	private PreparedStatement bulkInsertStatementInternalAtomOrder;
+
 	protected boolean isDirty = false;
 	public boolean isDirty(){
 		return isDirty;
@@ -159,23 +158,6 @@ public abstract class Database implements InfoWarehouse {
 	
 	public String getName() {
 		return dbType;
-	}
-	
-	/**
-	 * @author steinbel
-	 * @author turetske
-	 * Drops the temporary table #temp from the database SpASMSdb.
-	 */
-	private void dropTempTable(){
-		try {
-			Statement stmt = con.createStatement();
-			stmt.executeUpdate("IF (OBJECT_ID('tempdb..#TEMP') " +
-					"IS NOT NULL)\n" +
-					" DROP TABLE #TEMP\n");
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	public void clearCache(){
@@ -2027,33 +2009,6 @@ public abstract class Database implements InfoWarehouse {
 	}
 	
 	/**
-	 * Initializes atom batches for moving atoms and adding atoms.
-	 * @throws Exception 
-	 * @author olsonja
-	 */
-	public void bulkInsertInit() throws Exception {
-		if (url.equals("localhost")) {
-			if (bulkInsertFile != null && bulkInsertFile.exists()) {
-				bulkInsertFile.delete();
-			}
-			bulkInsertFile = null;
-			bulkInsertFileWriter = null;
-			alteredCollections = new ArrayList<Integer>();
-			try {
-				//bulkInsertFile = File.createTempFile("bulkfile", ".txt");
-				bulkInsertFile = new File("TEMP"+File.separator+"bulkfile"+".txt");
-				bulkInsertFile.deleteOnExit();
-				bulkInsertFileWriter = new PrintWriter(new FileWriter(bulkInsertFile));
-			} catch (IOException e) {
-				System.err.println("Trouble creating " + bulkInsertFile.getAbsolutePath() + "");
-				e.printStackTrace();
-			}
-		}else{
-			throw new Exception("This operation can only be done with a localhost connection");
-		}
-	}
-	
-	/**
 	 * @author steinbel - altered Oct. 2006
 	 * Executes the current batch
 	 */
@@ -2086,7 +2041,23 @@ public abstract class Database implements InfoWarehouse {
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * Initializes atom batches for moving atoms and adding atoms.
+	 * @throws Exception
+	 */
+	public void bulkInsertInit()  {
+		try {
+			bulkInsertStatementAtomMembership =
+					con.prepareStatement("INSERT INTO AtomMembership VALUES (?, ?)");
+			bulkInsertStatementInternalAtomOrder =
+					con.prepareStatement("INSERT INTO InternalAtomOrder VALUES (?, ?)");
+			alteredCollections = new ArrayList<>();
+		} catch (SQLException e) {
+			throw new ExceptionAdapter(e);
+		}
+	}
+
 	/**
 	 * Executes bulk insertion of atoms into database, from the list contained
 	 * in the bulkInsertFile.
@@ -2098,35 +2069,14 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			long time = System.currentTimeMillis();
 			
-			if(bulkInsertFileWriter==null || bulkInsertFile == null){
-				try {
-					throw new Exception("Must initialize bulk insert first!");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			if (bulkInsertStatementAtomMembership == null || bulkInsertStatementInternalAtomOrder == null) {
+				throw new RuntimeException("Must initialize bulk insert first!");
 			}
-			bulkInsertFileWriter.close();
 
-			dropTempTable();
-			Statement stmt = con.createStatement();
-			StringBuilder sql = new StringBuilder();
-			File tempFile = null;
-			sql.append("CREATE TABLE #temp (CollectionID INT, AtomID INT);\n");
-			sql.append("BULK INSERT #temp" +
-					" FROM '"+bulkInsertFile.getAbsolutePath()+"' " +
-					"WITH (FIELDTERMINATOR=',');\n");
-			sql.append("INSERT INTO AtomMembership (CollectionID, AtomID)" +
-					" SELECT CollectionID, AtomID " +
-					"FROM #temp;\n");
-			sql.append("INSERT INTO InternalAtomOrder (CollectionID, AtomID)" +
-					" SELECT CollectionID, AtomID " +
-					"FROM #temp;\n");
-			System.out.println(sql.toString());
-			stmt.execute(sql.toString());
-			stmt.close();
-			
-			System.out.println("Time: " + (System.currentTimeMillis()-time));	
+			bulkInsertStatementAtomMembership.executeBatch();
+			bulkInsertStatementInternalAtomOrder.executeBatch();
+
+			System.out.println("Time: " + (System.currentTimeMillis()-time));
 			System.out.println("done inserting now time for altering collections");
 			
 			time = System.currentTimeMillis();
@@ -2152,31 +2102,34 @@ public abstract class Database implements InfoWarehouse {
 			System.out.println("done with updating, time = " + (System.currentTimeMillis()-time));
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception executing batch atom adds and inserts.");
-			System.out.println("Exception executing batch atom adds " +
-			"and inserts");
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		
 	}
 	
 	/**
-	 * Adds an atom to the list in bulkInsertFile, which is a list of atoms to be
+	 * Adds an atom to a list of atoms to be
 	 * inserted into the database when the bulkInsertExecute() method is called.
 	 * 
 	 * @param atomID - integer
 	 * @param parentID - integer
 	 * 
-	 * @author olsonja
 	 */
 	public void bulkInsertAtom(int atomID,int parentID) throws Exception{
-		if(bulkInsertFileWriter==null || bulkInsertFile==null){
-			throw new Exception("Must initialize bulk insert first!");
+		if (bulkInsertStatementAtomMembership == null || bulkInsertStatementInternalAtomOrder == null) {
+			throw new RuntimeException("Must initialize bulk insert first!");
 		}
-		if (!alteredCollections.contains(new Integer(parentID)))
-			alteredCollections.add(new Integer(parentID));
+
+		if (!alteredCollections.contains(parentID))
+			alteredCollections.add(parentID);
 		
 		//alteredCollections.add(parentID);
-		bulkInsertFileWriter.println(parentID+","+atomID);	
+		bulkInsertStatementAtomMembership.setInt(1, parentID);
+		bulkInsertStatementAtomMembership.setInt(2, atomID);
+		bulkInsertStatementAtomMembership.addBatch();;
+		bulkInsertStatementInternalAtomOrder.setInt(1, atomID);
+		bulkInsertStatementInternalAtomOrder.setInt(2, parentID);
+		bulkInsertStatementInternalAtomOrder.addBatch();
 	}
 	/* Get functions for collections and table names */
 	
@@ -6397,7 +6350,6 @@ public abstract class Database implements InfoWarehouse {
 					" AND (AtomID NOT IN (SELECT AtomID from InternalAtomOrder" +
 					" WHERE CollectionID = " + cID + "))";
 			ArrayList<Integer> subCollections = collection.getSubCollectionIDs();
-			System.out.println(query);//TESTING
 			stmt.executeUpdate(query);
 	
 			if (subCollections.size() > 0){
@@ -6408,26 +6360,35 @@ public abstract class Database implements InfoWarehouse {
 				 * of the children collection and the CollectionID of the 
 				 * current collection.  Then we'll copy that info into IAO. - steinbel
 				 */
-				stmt.executeUpdate("DROP TABLE IF EXISTS temp.children\n");
-				stmt.executeUpdate("CREATE temporary TABLE children (AtomID int, CollectionID int)");
-				query = "INSERT INTO temp.children (AtomID)" +
-				" SELECT AtomID FROM InternalAtomOrder WHERE (CollectionID = ";
+//				stmt.executeUpdate("DROP TABLE IF EXISTS temp.children\n");
+//				stmt.executeUpdate("CREATE temporary TABLE children (AtomID int, CollectionID int)");
+				query = " SELECT AtomID FROM InternalAtomOrder WHERE (CollectionID = ";
 				for (int i=0; i<subCollections.size(); i++){
 					query += subCollections.get(i) + ")";
 					if (i<subCollections.size()-1)
 						query += "OR (CollectionID = ";
-
 				}
-				System.out.println(query);//TESTING
-				stmt.executeUpdate(query);
-				stmt.executeUpdate("UPDATE temp.children SET CollectionID = " + cID);
-				stmt.executeUpdate("INSERT INTO InternalAtomOrder " +
-						" (AtomID, CollectionID) SELECT * FROM temp.children " +
-						" WHERE NOT EXISTS (SELECT * FROM InternalAtomOrder" +
-						" WHERE InternalAtomOrder.CollectionID = " + cID +
-						" AND InternalAtomOrder.AtomID = temp.children.AtomID)");
-				System.out.println("Going to drop #children now");//TESTING
-				stmt.executeUpdate("DROP TABLE temp.children");
+				try (ResultSet atomsToAdd = stmt.executeQuery(query)) {
+					PreparedStatement pstmt = con.prepareStatement(
+							"INSERT OR IGNORE INTO InternalAtomOrder VALUES (?,?)");
+					while (atomsToAdd.next()) {
+						pstmt.setInt(1, atomsToAdd.getInt("AtomID"));
+						pstmt.setInt(2, cID);
+						pstmt.addBatch();
+					}
+					pstmt.executeBatch();
+				}
+//				System.out.println(query);
+//				stmt.executeUpdate(query);
+//				stmt.executeUpdate("UPDATE temp.children SET CollectionID = " + cID);
+//				stmt.executeUpdate("INSERT INTO InternalAtomOrder " +
+//						" (AtomID, CollectionID) SELECT * FROM temp.children " +
+//						" WHERE NOT EXISTS (SELECT * FROM InternalAtomOrder" +
+//						" WHERE InternalAtomOrder.CollectionID = " + cID +
+//						" AND InternalAtomOrder.AtomID = temp.children.AtomID)");
+//				System.out.println("Going to drop temp.children now");//TESTING
+//				stmt = con.createStatement();
+////				stmt.executeUpdate("DROP TABLE temp.children");
 			}
 
 
