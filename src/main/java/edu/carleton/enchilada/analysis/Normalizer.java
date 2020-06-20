@@ -52,11 +52,11 @@ public class Normalizer extends Normalizable {
 	}
 
 
-	public float roundDistance(BinnedPeakList peakList, BinnedPeakList 
-toList, DistanceMetric dMetric, float distance) {
-		assert distance < 2.01 : 		    "Distance should be <= 2.0, actually is " + distance +"\n" 		   + "Magnitudes: toList = " + 
-		toList.getMagnitude(dMetric) + " this = "
-		+ peakList.getMagnitude(dMetric) + "\n";
+	public float roundDistance(BinnedPeakList peakList, BinnedPeakList
+			toList, DistanceMetric dMetric, float distance) {
+		assert distance < 2.01 : 		    "Distance should be <= 2.0, actually is " + distance +"\n" 		   + "Magnitudes: toList = " +
+				toList.getMagnitude(dMetric) + " this = "
+				+ peakList.getMagnitude(dMetric) + "\n";
 
 		if (distance > 2) {
 			//System.out.println("Rounding off " + distance +
@@ -68,7 +68,7 @@ toList, DistanceMetric dMetric, float distance) {
 		//}
 		return distance;
 	}
-	
+
 	//same method as above (roundDistance), except this one deals with 
 	//float arrays instead of BinnedPeakLists
 	// - benzaids

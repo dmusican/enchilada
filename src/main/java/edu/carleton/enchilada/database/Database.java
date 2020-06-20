@@ -1631,29 +1631,28 @@ public abstract class Database implements InfoWarehouse {
 			int id = collection.getCollectionID();
 			
 			//ensure that this collection does not have subcollections or atoms
-			Statement stmt = con.createStatement();
-			StringBuilder query = new StringBuilder();
-			ResultSet rs =
-				stmt.executeQuery("SELECT " +
-						"AtomMembership.AtomID, " + 
-						"CenterAtoms.AtomID, " +
-						"CollectionRelationships.ParentID " +
-						"FROM AtomMembership, CenterAtoms, CollectionRelationships WHERE " +
-						"AtomMembership.CollectionID = " + id +
-						"AND CenterAtoms.CollectionID = " + id +
-						"AND CollectionRelationships.ParentID = " + id);
-			
+			PreparedStatement pstmt = con.prepareStatement(
+					"SELECT AtomMembership.AtomID, CenterAtoms.AtomID, CollectionRelationships.ParentID " +
+					"FROM AtomMembership, CenterAtoms, CollectionRelationships WHERE " +
+					"AtomMembership.CollectionID = ? " +
+					"AND CenterAtoms.CollectionID = ? " +
+					"AND CollectionRelationships.ParentID = ?");
+			pstmt.setInt(1, id);
+			pstmt.setInt(2, id);
+			pstmt.setInt(3, id);
+			ResultSet rs = pstmt.executeQuery();
+
 			if (rs.next()) {
 				System.err.println("Collection " + id + 
 						" is not empty; cannot remove it with removeEmptyCollection");
-				stmt.close();
+				pstmt.close();
 				return false;
 			}
 			else {
-				stmt.close();
+				pstmt.close();
 				
 				//delete the collection
-				stmt = con.createStatement();
+				Statement stmt = con.createStatement();
 				stmt.addBatch("DELETE FROM Collections WHERE CollectionID = " + id);
 				stmt.addBatch("DELETE FROM CollectionRelationships WHERE ChildID = " + id);
 				stmt.executeBatch();
