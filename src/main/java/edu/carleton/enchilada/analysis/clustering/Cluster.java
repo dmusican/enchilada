@@ -780,14 +780,14 @@ public abstract class Cluster extends CollectionDivider {
 						avgValues.add(Float.toString(temp));
 				} else if(charCols.contains(denseNames.get(i))){
 					avgValues.add("Center for cluster " + center.subCollectionNum);
-				} else if(i == 1) {
-					avgValues.add("0");
+				} else if (i == 1) {
+					// date value
+					avgValues.add("1970-01-01 00:00:00");
 				} else
 					avgValues.add("");
 
 				dense = intersperse(avgValues.get(i-1),
 						dense);
-			
 			}
 			
 			//System.out.println("DENSE " + dense);	//Debugging
