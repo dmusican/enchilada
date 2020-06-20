@@ -113,40 +113,6 @@ public class RawDataLoader {
 	}
 	
 	/**
-	 * Old, not used: does not save dates in the correct format for a BULK INSERT
-	 * @param table the table to save from
-	 * @param fname the filename to write to
-	 */
-	private void saveFileManually(String table, String fname) {
-		File file = new File(fname);
-		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-			
-			String query = "select * from " + table;
-			ResultSet rs = db.getCon().createStatement().executeQuery(query);
-			ResultSetMetaData rsmd = rs.getMetaData();
-			
-			while (rs.next()) {
-				for (int i = 0; i < rsmd.getColumnCount() - 1; ++i) {
-					bw.write(rs.getString(i + 1));
-					bw.write("\t");
-				}
-				bw.write(rs.getString(rsmd.getColumnCount()));
-				bw.newLine();
-			}
-			
-			bw.close();
-		}
-		catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	/**
 	 * Bulk write a database table to a flat-text file
 	 * @param table the table to collect data from
 	 * @param fname the filename to write to

@@ -1940,9 +1940,9 @@ public class DatabaseTest extends TestCase {
 						//System.out.printf("Name: %-20.20s - %-20.20s Type: %-20.20s - %-20.20s\n",
 						//		names.get(i - 1).get(0), rsmd.getColumnName(i),
 						//		names.get(i - 1).get(1), rsmd.getColumnTypeName(i));
-						assertTrue(names.get(i - 1).get(0).equalsIgnoreCase(
-								rsmd.getColumnName(i)));
-						assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
+						assertEquals(names.get(i - 1).get(0),
+								rsmd.getColumnName(i));
+						//assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
 					}
 				}
 				catch (SQLException ex) {

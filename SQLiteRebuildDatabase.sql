@@ -88,7 +88,7 @@ CREATE TABLE ATOFMSAtomInfoDense ("AtomID" INT, "Time" TIMESTAMP, "LaserPower" R
 CREATE TABLE ATOFMSAtomInfoSparse ("AtomID" INT, "PeakLocation" REAL, "PeakArea" INT, "RelPeakArea" REAL, "PeakHeight" INT, PRIMARY KEY ("AtomID", "PeakLocation"))
 CREATE TABLE TimeSeriesDataSetInfo("DataSetID" INT, "DataSet" VARCHAR(8000), "OrigCollectionID" INT NULL, "IsSynchronized" bit, PRIMARY KEY ("DataSetID"))
 CREATE TABLE TimeSeriesAtomInfoDense("AtomID" INT, "Time" TIMESTAMP, "Value" REAL, PRIMARY KEY ("AtomID"))
-CREATE TABLE AMSDataSetInfo ("DataSetID" INT, "DataSet" VARCHAR(8000), "OrigFileName" VARCHAR(8000), "TimeSeriesFile" VARCHAR(8000), "MassToChargeFile" VARCHAR(8000), PRIMARY KEY ("DataSetID"))
+CREATE TABLE AMSDataSetInfo ("DataSetID" INT, "DataSet" VARCHAR(8000), "OrigFilename" VARCHAR(8000), "TimeSeriesFile" VARCHAR(8000), "MassToChargeFile" VARCHAR(8000), PRIMARY KEY ("DataSetID"))
 CREATE TABLE AMSAtomInfoDense ("AtomID" INT, "Time" TIMESTAMP, PRIMARY KEY ("AtomID"))
 CREATE TABLE AMSAtomInfoSparse ("AtomID" INT, "PeakLocation" REAL, "PeakHeight" REAL, PRIMARY KEY ("AtomID","PeakLocation"))
 CREATE TABLE ValueMaps(ValueMapID INTEGER PRIMARY KEY AUTOINCREMENT, Name VARCHAR(100))

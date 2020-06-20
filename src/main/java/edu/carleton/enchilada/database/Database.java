@@ -4453,10 +4453,10 @@ public abstract class Database implements InfoWarehouse {
 			ResultSet rs = stmt.executeQuery("SELECT ColumnName, ColumnType FROM MetaData " +
 					"WHERE Datatype = '" + datatype + "' " +
 					"AND TableID = " + table.ordinal() + " ORDER BY ColumnOrder");
-			
+
 			while (rs.next()) {
 				temp = new ArrayList<String>();
-				temp.add(rs.getString(1).substring(1,rs.getString(1).length()-1));
+				temp.add(rs.getString(1));
 				temp.add(rs.getString(2));
 				colNames.add(temp);
 			}
