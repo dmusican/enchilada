@@ -996,7 +996,7 @@ public class DatabaseTest extends TestCase {
 	
 	public void testRebuildDatabase() {
 		db.closeConnection();
-		assertTrue(Database.rebuildDatabase(dbName));
+		assertTrue(Database.getDatabase(dbName).rebuildDatabase(dbName));
 		db.openConnection();
 
 		InfoWarehouse mainDB = Database.getDatabase();

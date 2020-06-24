@@ -921,7 +921,7 @@ public class MainFrame extends JFrame implements ActionListener
 				UIWorker worker = new UIWorker() {
 					public Object construct() {
 						db.closeConnection();
-						Database.rebuildDatabase(dbname);
+						Database.getDatabase(dbname).rebuildDatabase(dbname);
 						return true;
 					}
 					public void finished() {
@@ -1817,10 +1817,11 @@ public class MainFrame extends JFrame implements ActionListener
 				if (action == 0){
 					try {
 						db.closeConnection();
-						Database.rebuildDatabase(dbname);
+						Database.getDatabase(dbname).rebuildDatabase(dbname);
 						db.openConnection();
 					} catch(ExceptionAdapter ea) {
 						if (ea.originalException instanceof  SQLException) {
+							ea.printStackTrace();
 							JOptionPane.showMessageDialog(null,
 									"Your database is an old version",
 									"Error: Could not connect",
@@ -1859,7 +1860,7 @@ public class MainFrame extends JFrame implements ActionListener
 					+ "since this will remove any pre-existing Enchilada database.") ==
 						JOptionPane.YES_OPTION) {
 				try{
-					Database.rebuildDatabase(dbName);
+					Database.getDatabase(dbName).rebuildDatabase(dbName);
 				} catch (ExceptionAdapter ea) {
 					if (ea.originalException instanceof SQLException) {
 						JOptionPane.showMessageDialog(null,

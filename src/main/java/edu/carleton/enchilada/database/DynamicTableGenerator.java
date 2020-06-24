@@ -392,7 +392,7 @@ public class DynamicTableGenerator extends DefaultHandler {
 		public static void main(String[] args){
 			
 			try {
-				Database.rebuildDatabase("TestDB");
+				Database.getDatabase("TestDB").rebuildDatabase("TestDB");
 			} catch (ExceptionAdapter ea) {
 				if (ea.originalException instanceof SQLException) {
 					JOptionPane.showMessageDialog(null,

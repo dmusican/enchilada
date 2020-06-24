@@ -644,7 +644,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @param dbName
 	 * @return true if successful
 	 */
-	public static boolean rebuildDatabase(String dbName) {
+	public boolean rebuildDatabase(String dbName) {
 		boolean success = dropDatabase(dbName);
 		if (!success) {
 			ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");

@@ -278,7 +278,7 @@ public class SQLiteDatabase extends Database {
      * @param dbName
      * @return true if successful
      */
-    public static boolean rebuildDatabase(String dbName) {
+    public boolean rebuildDatabase(String dbName) {
         boolean success = dropDatabase(dbName);
         if (!success) {
             ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");
@@ -295,7 +295,6 @@ public class SQLiteDatabase extends Database {
             db.openConnection(dbName);
             con = db.getCon();
             Statement stmt = con.createStatement();
-            con.createStatement().executeUpdate("qe");
 
             stmt.executeUpdate("CREATE TABLE DBInfo (Name VARCHAR(50) PRIMARY KEY, Value VARCHAR(7500))");
             // -- %version-next% Don't change the spacing of the version number, it gets parsed by the program as well as by SQL.  Also, don't put any lines between this one and the insertion of the version.  Versions are compared by STRING equality.

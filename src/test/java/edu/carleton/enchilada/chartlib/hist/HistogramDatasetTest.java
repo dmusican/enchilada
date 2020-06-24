@@ -38,8 +38,8 @@ public class HistogramDatasetTest extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		try {
-			Database.rebuildDatabase("TestDB");
-			Database.rebuildDatabase("TestDB2");
+			Database.getDatabase("TestDB").rebuildDatabase("TestDB");
+			Database.getDatabase("TestDB2").rebuildDatabase("TestDB2");
 		} catch (ExceptionAdapter ea) {
 			if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,

@@ -423,5 +423,6 @@ public interface InfoWarehouse {
 							  Collection collection,
 							  int datasetID, int nextID, boolean importing);
 
+	public boolean rebuildDatabase(String dbName);
 
 }

@@ -33,7 +33,7 @@ public class ImportExperimentParticles {
 
 
 		try {
-			Database.rebuildDatabase("TestDB");
+			Database.getDatabase("TestDB").rebuildDatabase("TestDB");
 		} catch (ExceptionAdapter ea) {
 			if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,

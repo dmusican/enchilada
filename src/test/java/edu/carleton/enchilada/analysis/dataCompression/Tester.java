@@ -29,7 +29,7 @@ public class Tester {
         con = tempDB.getCon();
         
         try {
-			Database.rebuildDatabase("BIRCHdb");
+			Database.getDatabase("BIRCHdb").rebuildDatabase("BIRCHdb");
 		} catch (ExceptionAdapter ea) {
         	if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,

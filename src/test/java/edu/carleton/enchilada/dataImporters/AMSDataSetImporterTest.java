@@ -92,7 +92,7 @@ public class AMSDataSetImporterTest extends TestCase {
 	 */
 	protected void setUp() {
 		try {
-			Database.rebuildDatabase("TestDB");
+			Database.getDatabase("TestDB").rebuildDatabase("TestDB");
 		} catch (ExceptionAdapter ea) {
 			if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,

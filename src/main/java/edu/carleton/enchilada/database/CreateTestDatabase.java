@@ -66,7 +66,7 @@ public class CreateTestDatabase {
 //        tempDB.openConnection();
 //        con = tempDB.getCon();
         
-		Database.rebuildDatabase(dbname);
+		Database.getDatabase(dbname).rebuildDatabase(dbname);
 
 //		try {
 //			if (con.createStatement() == null)

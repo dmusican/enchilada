@@ -69,7 +69,7 @@ public class CreateTestDatabase2 {
         tempDB.openConnection();
         con = tempDB.getCon();
         try {
-			Database.rebuildDatabase("TestDB2");
+			Database.getDatabase("TestDB2").rebuildDatabase("TestDB2");
 		} catch (ExceptionAdapter ea) {
         	if (ea.originalException instanceof  SQLException) {
 				JOptionPane.showMessageDialog(null,

@@ -103,7 +103,7 @@ public class DBUnitDialog extends JFrame implements ActionListener{
 						JOptionPane.YES_OPTION) {
 				
 				try {
-					Database.rebuildDatabase(databaseName);
+					Database.getDatabase(databaseName).rebuildDatabase(databaseName);
 				} catch (ExceptionAdapter ea) {
 					if (ea.originalException instanceof SQLException) {
 						JOptionPane.showMessageDialog(this,

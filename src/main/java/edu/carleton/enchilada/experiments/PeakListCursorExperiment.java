@@ -40,7 +40,7 @@ public class PeakListCursorExperiment {
 		ArrayList<Integer>  indices = new ArrayList<Integer>(2000);
 
 		try {
-			Database.rebuildDatabase("TestDB");
+			Database.getDatabase("TestDB").rebuildDatabase("TestDB");
 		} catch (ExceptionAdapter ea) {
 			if (ea.originalException instanceof SQLException) {
 				JOptionPane.showMessageDialog(null,
