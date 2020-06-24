@@ -23,7 +23,8 @@ public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
     // TODO: change path to something more permanent
-    private static final String dbPath = "sqlitedata/";
+    private static final Path dbPath =
+        Paths.get(System.getProperty("user.home"), "enchilada", "sqlitedata");
 
     /**
      * Connect to the database using default settings, or overriding them with
@@ -31,6 +32,14 @@ public class SQLiteDatabase extends Database {
      */
     public SQLiteDatabase()
     {
+
+        // Verify that path for database exists
+        if (!dbPath.toFile().exists()) {
+            boolean success = dbPath.toFile().mkdirs();
+            if (!success)
+                throw new RuntimeException("Failed to make directory to store database.");
+        }
+
         url = "localhost";
         port = "1433";
         database = MainFrame.dbname;
@@ -46,7 +55,7 @@ public class SQLiteDatabase extends Database {
      * @see InfoWarehouse#isPresent()
      */
     public boolean isPresent() {
-        return Paths.get(dbPath, database).toFile().exists();
+        return dbPath.resolve(database).toFile().exists();
     }
 
     public String getRebuildScriptFilename() {
@@ -58,20 +67,20 @@ public class SQLiteDatabase extends Database {
      */
     public boolean openConnection() {
         return openConnectionImpl(
-                "jdbc:sqlite:" + dbPath + MainFrame.dbname,
+                "jdbc:sqlite:" + dbPath.resolve(MainFrame.dbname),
                 "SpASMS",
                 "finally");
     }
     public boolean openConnection(String s) {
         return openConnectionImpl(
-                "jdbc:sqlite:" + dbPath + s,
+                "jdbc:sqlite:" + dbPath.resolve(s),
                 "SpASMS",
                 "finally");
     }
 
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
-                "jdbc:sqlite:" + dbPath + MainFrame.dbname,
+                "jdbc:sqlite:" + dbPath.resolve(MainFrame.dbname),
                 "SpASMS",
                 "finally");
     }
@@ -124,7 +133,7 @@ public class SQLiteDatabase extends Database {
      * @throws SQLException
      */
     public void dropDatabaseCommands() throws SQLException {
-        File dbFile = new File(dbPath + getDatabaseName());
+        File dbFile = dbPath.resolve(getDatabaseName()).toFile();
         if (!dbFile.exists()) {
             // easy: wasn't there anyway
             return;

@@ -105,7 +105,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-//		db.dropDatabaseCommands();
+		db.dropDatabaseCommands();
 	}
 
 	/**
