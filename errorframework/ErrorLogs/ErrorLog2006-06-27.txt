@@ -1,2 +1,0 @@
-ErrorLog: started @ 2006-06-27
-14:25:53:968 : SQLServer Error: Exception deleting collection.

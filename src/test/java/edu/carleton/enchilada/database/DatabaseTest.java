@@ -1340,19 +1340,15 @@ public class DatabaseTest extends TestCase {
 			ParticleInfo p = curs.getCurrent();
 			ids[i] = p.getID();
 			BinnedPeakList b = p.getBinnedList();
-			System.out.println(ids[i]);
-			System.out.println(b.getPeaks());
 		}
-		assertFalse(curs.next());	
+		assertFalse(curs.next());
 		curs.reset();
-
-		
 		for (int i = 0; i < 4; i++)
 		{
 			assertTrue(curs.next());
 			assertEquals(curs.getCurrent().getID(), ids[i]);
 		}
-		
+
 		assertFalse(curs.next());
 			curs.reset();
 
@@ -1447,81 +1443,11 @@ public class DatabaseTest extends TestCase {
 	private String sprintf(String format, Object... args) {
 		return (new java.util.Formatter().format(format, args)).toString();
 	}
-	
-	/**
-	 * Print a justified text table of a database table
-	 * @param name the database table to output
-	 * @author shaferia
-	 */
-	public static void printDBSection(InfoWarehouse database, String name) {
-		printDBSection(database, name, Integer.MAX_VALUE);
-	}
-	
-	/**
-	 * Print a justified text table of a database table. Requires an open connection to db.
-	 * @param name the database table to output
-	 * @param rows a single argument giving the maximum number of rows to output
-	 * @author shaferia
-	 */
-	public static void printDBSection(InfoWarehouse database, String name, int rows) {
-		Statement stmt = null;
-		ResultSet rs = null;
-		
-		Connection con = database.getCon();
-		try	{
-			if (con == null) {
-				database.openConnection();
-				con = database.getCon();
-			}
-			
-			stmt = con.createStatement();
-			rs = stmt.executeQuery(
-					";\n" +
-					"SELECT * FROM " + name);
-			java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-			
-			ArrayList<String[]> data = new ArrayList<String[]>();
-			int colcount = rsmd.getColumnCount();
-			int[] cwidth = new int[colcount];
-			
-			data.add(new String[colcount]);
-			for (int i = 0; i < colcount; ++i) {
-				data.get(0)[i] = rsmd.getColumnName(i + 1);
-				cwidth[i] = data.get(0)[i].length();
-			}
-			
-			for (int i = 1; rs.next() && (i < rows); ++i){
-				data.add(new String[colcount]);
-				for (int j = 0; j < colcount; ++j) {
-					data.get(i)[j] = rs.getObject(j + 1).toString();
-					cwidth[j] = Math.max(cwidth[j], data.get(i)[j].length());
-				}
-			}
-
-			for (int i = 0; i < data.size(); ++i) {
-				for (int j = 0; j < data.get(i).length; ++j) {
-					System.out.printf(
-									"%-" + cwidth[j] + "." + cwidth[j] + "s | ", data.get(i)[j]);
-				}
-				System.out.println();
-			}
-
-			stmt.close();
-			rs.close();
-		}
-		catch (SQLException ex) {
-			System.err.println("Couldn't print database section.");
-			ex.printStackTrace();
-		}
-		finally {
-			database.closeConnection();
-		}
-	}
 
 	/**
 	 * @author shaferia
 	 */
-	public void testAddCenterAtom() {	
+	public void testAddCenterAtom() throws Exception {
 		db.openConnection(dbName);
 		
 		assertTrue(db.addCenterAtom(2, 3));
@@ -1559,17 +1485,28 @@ public class DatabaseTest extends TestCase {
 		catch (SQLException ex) {
 			ex.printStackTrace();
 		}
-		
-		System.out.println("Three primary key constraint errors to follow.");
-		//this should print an exception message
-		assertFalse(db.addCenterAtom(3, 4));;
-		
-		//this should print an exception message
-		assertFalse(db.addCenterAtom(2, 5));
-		
-		//this should print an exception message
-		assertFalse(db.addCenterAtom(5, 4));
-		
+
+		try {
+			db.addCenterAtom(3, 4);
+			fail("This should throw an exception.");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
+		try {
+			db.addCenterAtom(2, 5);
+			fail("This should throw an exception.");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
+		try {
+			db.addCenterAtom(5, 4);
+			fail("This should throw an exception.");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
 		db.closeConnection();
 	}
 
@@ -1714,78 +1651,7 @@ public class DatabaseTest extends TestCase {
 		
 		db.closeConnection();
 	}
-	
-	/**
-	 * @author shaferia
-	 */
-	public void testExportImportDatabase() {
-		db.openConnection(dbName);
-		
-		System.out.printf("Current working directory is %s\n", System.getProperty("user.dir"));
-		
-		try {
-			//db.exportDatabase("test1.out", 1);
-			//java.io.File f = new java.io.File("test1.out");
-			//assertTrue(f.exists());
-			
-			//TODO: Determine status of [(export)(import)]Database
-			/*
-			tearDown();
-			db = Database.getDatabase();
-	        try {
-				Database.rebuildDatabase(dbName);
-			} catch (SQLException e2) {
-				e2.printStackTrace();
-				JOptionPane.showMessageDialog(null,
-						"Could not rebuild the database." +
-						"  Close any other programs that may be accessing the database and try again.");
-			}
-			db.openConnection();
-			db.importDatabase("test1.out", 1);
-			db.exportDatabase("test2.out", 1);
-			*/
-			
-			//f.delete();
-		}
-		catch (Exception ex) {
-			System.out.println("Exception handling file.");
-			ex.printStackTrace();
-			fail();
-		}
-		
-		db.closeConnection();
-	}
 
-	/**
-	 * @author shaferia
-	 */
-// COMMENTED OUT BECAUSE WE DON'T USE getAdjacentAtomInCollection ANYWHERE AND IT DOESN'T WORK CORRECTLY ANYWAY
-//	public void testGetAdjacentAtomInCollection() {
-//		db.openConnection(dbName);
-//		
-//		int[] adj = db.getAdjacentAtomInCollection(2, 3, 1);
-//		assertEquals(adj[0], 4);
-//		assertEquals(adj[1], 4);
-//		
-//		adj = db.getAdjacentAtomInCollection(3, 7, -1);
-//		assertEquals(adj[0], 6);
-//		assertEquals(adj[1], 1);
-//		
-//		adj = db.getAdjacentAtomInCollection(4, 12, 2);
-//		assertEquals(adj[0], 13);
-//		assertEquals(adj[1], 3);
-//		
-//		//The following two assertions should print SQLExceptions.
-//		
-//		adj = db.getAdjacentAtomInCollection(2, 1, -1);
-//		assertTrue((adj[0] < 0) && (adj[1] < 0));
-//		
-//		adj = db.getAdjacentAtomInCollection(2, 5, 1);
-//		assertTrue((adj[0] < 0) && (adj[1] < 0));
-//		
-//		db.closeConnection();
-//	}
-	
 	/**
 	 * @author shaferia
 	 */
@@ -1796,7 +1662,6 @@ public class DatabaseTest extends TestCase {
 		assertEquals(db.getATOFMSFileName(11), "particle11");
 		
 		//for non-ATOFMS data - these assertions should print SQLExceptions.
-		System.out.println("Three exceptions about being unable to find a filename follow.");
 		try {
 			db.getATOFMSFileName(12);
 			fail("Should have gotten exception");
@@ -1835,9 +1700,13 @@ public class DatabaseTest extends TestCase {
 			assertEquals(db.getCollectionDatatype(i + 2), expectedDatatypes[i]);
 		
 		//Should print an SQLException
-		System.out.println("Exception getting datatype follows.");
-		assertEquals(db.getCollectionDatatype(8), "");
-		
+		try {
+			db.getCollectionDatatype(8);
+			fail("Should get SQLException.");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
 		db.closeConnection();
 	}
 	
@@ -1872,7 +1741,7 @@ public class DatabaseTest extends TestCase {
 	/**
 	 * @author shaferia
 	 */
-	public void testGetColNames() {
+	public void testGetColNames() throws SQLException {
 		db.openConnection(dbName);
 		
 		//Test Metadata given by database (from ResultSetMetaData) 
@@ -1894,10 +1763,10 @@ public class DatabaseTest extends TestCase {
 								rsmd.getColumnName(i)));
 					}
 				}
-				catch (SQLException ex) {
-					//this isn't an error.
-					System.out.printf("Couldn't test database MetaData for Table %s %s" +
-							" - table doesn't exist.\n", type, dynt);
+				catch (SQLiteException e) {
+					// a missing table is acceptable; then there are no columns to check
+					if (!e.getMessage().contains("missing database"))
+						throw e;
 				}
 			}
 		}
@@ -1908,7 +1777,7 @@ public class DatabaseTest extends TestCase {
 	/**
 	 * @author shaferia
 	 */
-	public void testGetColNamesAndTypes() {
+	public void testGetColNamesAndTypes() throws SQLException {
 		db.openConnection(dbName);
 
 		//ugh... java.sql.Type isn't an enum.
@@ -1945,10 +1814,10 @@ public class DatabaseTest extends TestCase {
 						//assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
 					}
 				}
-				catch (SQLException ex) {
-					//this isn't an error.
-					System.out.printf("Couldn't test database MetaData for Table %s %s" +
-							" - table doesn't exist.\n", type, dynt);
+				catch (SQLiteException e) {
+					// a missing table is acceptable; then there are no columns to check
+					if (!e.getMessage().contains("missing database"))
+						throw e;
 				}
 			}
 		}
@@ -2005,48 +1874,17 @@ public class DatabaseTest extends TestCase {
 			db.getVersion();
 			
 			//shouldn't get this far.
-			fail();
+			fail("Should not succeed: an error should result.");
 		}
-		catch (Exception ex) {
-			System.out.println("This should be an error: \"" + ex.getMessage() + "\"");
+		catch (IllegalStateException ex) {
+			assertEquals("Can't understand what state the DB is in. (has version field but no value)",
+					ex.getMessage());
 		}
 		
 		db.closeConnection();
 	}
 	
-	/**
-	 * @author shaferia
-	 */
-//  COMMENTED OUT BECAUSE WE DON'T USE getFirstAtomInCollection() ANYMORE - jtbigwoo
-//	public void testGetFirstAtomInCollection() {
-//		db.openConnection(dbName);
-//		
-//		assertEquals(db.getFirstAtomInCollection(db.getCollection(2)), 1);
-//		assertEquals(db.getFirstAtomInCollection(db.getCollection(3)), 6);
-//		
-//		try {
-//			db.getCon().createStatement().executeUpdate(
-//					"DELETE FROM InternalAtomOrder WHERE CollectionID = 2");
-//		}
-//		catch (SQLException ex) {
-//			ex.printStackTrace();
-//		}	
-//		
-//		assertEquals(db.getFirstAtomInCollection(db.getCollection(2)), -99);
-//		
-//		try {
-//			//rebuild the bit deleted above
-//			Statement stmt = db.getCon().createStatement();
-//			for (int i = 1; i < 6; ++i)
-//				stmt.addBatch("INSERT INTO AtomMembership VALUES (2, " + i + ")");
-//		}
-//		catch (SQLException ex) {
-//			ex.printStackTrace();
-//		}		
-//		
-//		db.closeConnection();
-//	}
-	
+
 	/**
 	 * @author shaferia
 	 */

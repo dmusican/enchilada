@@ -1942,7 +1942,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @param collID	The collectionID for the collection this center represents.
 	 * @return
 	 */
-	public boolean addCenterAtom(int atomID, int collID){
+	public boolean addCenterAtom(int atomID, int collID) {
 		boolean success = false;
 		try {
 			Statement stmt = con.createStatement();
@@ -1952,8 +1952,7 @@ public abstract class Database implements InfoWarehouse {
 			stmt.close();
 			success = true;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		return success;
 	}
@@ -2031,7 +2030,6 @@ public abstract class Database implements InfoWarehouse {
 			for (int i=0; i<parents.size(); i++)
 				updateAncestors(parents.get(i));
 			batchStatement.close();
-			System.out.println("done with updating, time = " + (System.currentTimeMillis()-time));
 
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception executing batch atom adds and inserts.");
@@ -2098,7 +2096,6 @@ public abstract class Database implements InfoWarehouse {
 			if (batchStatement != null) {
 				batchStatement.close();
 			}
-			System.out.println("done with updating, time = " + (System.currentTimeMillis()-time));
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception executing batch atom adds and inserts.");
 			throw new ExceptionAdapter(e);
@@ -2240,8 +2237,7 @@ public abstract class Database implements InfoWarehouse {
 			stmt.close();
 		} catch (SQLException e){
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Error retrieving the collection's datatype for collection " + collectionID);
-			System.err.println("Error retrieving Collection Datatype.");
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		return datatype;
 	}
@@ -3612,7 +3608,6 @@ public abstract class Database implements InfoWarehouse {
 				"(SELECT AtomID FROM InternalAtomOrder " +
 				"Where CollectionID = "+collID +") " +
 				"order by AtomID;";
-				System.out.println(q);
 				rs = stmt.executeQuery(q);
 				if (! rs.next()) {
 					throw new SQLException("Empty collection or a problem!");
@@ -3763,7 +3758,6 @@ public abstract class Database implements InfoWarehouse {
 						" LaserPower, [Time], Size FROM "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+", InternalAtomOrder WHERE" +
 						" InternalAtomOrder.CollectionID = "+collection.getCollectionID() +
 						" AND "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID = InternalAtomOrder.AtomID";
-			System.out.println(q);
 			try {
 				partInfRS = stmt.executeQuery(q);
 				/*partInfRS = stmt.executeQuery("SELECT "+getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype())+".AtomID, OrigFilename, ScatDelay," +
@@ -5926,11 +5920,8 @@ public abstract class Database implements InfoWarehouse {
 					+ " WHERE AtomID = " + atomID);
 			rs.next();
 			fileName = rs.getString(1);
-			//System.out.println("FILENAME " + fileName);		//DEBUGGING
 			stmt.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			System.err.println("Could not retrieve filename");
 			throw new ExceptionAdapter(e);
 		}
 
@@ -6422,7 +6413,6 @@ public abstract class Database implements InfoWarehouse {
 					query.append(",");
 			}
 			query.append(");");
-			System.out.println(query);
 			ResultSet rs = stmt.executeQuery(query.toString());
 			rs.next();
 			sum=rs.getDouble(1);
