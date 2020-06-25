@@ -51,14 +51,12 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.regex.MatchResult;
 
 import javax.swing.JDialog;
@@ -228,38 +226,33 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	
-	public void testRenameCollection()
+	public void testRenameCollection() throws SQLException
 	{
 		db.openConnection(dbName);
 		int collectionID = db.createEmptyCollection("ATOFMS", 0,"Collection",  "collection","");
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery(
-					"SELECT Name, Comment\n" +
-					"FROM Collections\n" +
-					"WHERE CollectionID = " + collectionID);
-			assertTrue(rs.next());
-			assertEquals("Collection", rs.getString(1));
-			//Checks to see if the internal collection object has the right name initially.			
-			assertEquals("Collection", db.getCollection(collectionID).getName());
-			//Call the change method
-			db.renameCollection(db.getCollection(collectionID), "Collection2");
-			//Checks to see if the sql database has the right name after renaming.
-			rs = stmt.executeQuery(
-					"SELECT Name, Comment\n" +
-					"FROM Collections\n" +
-					"WHERE CollectionID = " + collectionID);
-			assertTrue(rs.next());
-			assertEquals("Collection2", rs.getString(1));
-			//Checks to see if the internal collection object has the right name after renaming.
-			assertEquals("Collection2", db.getCollection(collectionID).getName());
-			rs.close();
-			stmt.close();
-		}
-		catch(SQLException e){
-		}
-		System.out.println(collectionID);
+		Connection con = db.getCon();
+		Statement stmt = con.createStatement();
+		ResultSet rs = stmt.executeQuery(
+				"SELECT Name, Comment\n" +
+						"FROM Collections\n" +
+						"WHERE CollectionID = " + collectionID);
+		assertTrue(rs.next());
+		assertEquals("Collection", rs.getString(1));
+		//Checks to see if the internal collection object has the right name initially.
+		assertEquals("Collection", db.getCollection(collectionID).getName());
+		//Call the change method
+		db.renameCollection(db.getCollection(collectionID), "Collection2");
+		//Checks to see if the sql database has the right name after renaming.
+		rs = stmt.executeQuery(
+				"SELECT Name, Comment\n" +
+						"FROM Collections\n" +
+						"WHERE CollectionID = " + collectionID);
+		assertTrue(rs.next());
+		assertEquals("Collection2", rs.getString(1));
+		//Checks to see if the internal collection object has the right name after renaming.
+		assertEquals("Collection2", db.getCollection(collectionID).getName());
+		rs.close();
+		stmt.close();
 		db.closeConnection();
 	}
 	
@@ -344,18 +337,15 @@ public class DatabaseTest extends TestCase {
 		//test for original particles in collection 2
 		for (int i=1; i<6; i++){
 			assertTrue(rs.next());
-			System.out.println(i + " was i and atomid = " + rs.getInt(1));//TESTING
 			assertEquals(rs.getInt(1), i);
 		}
 			
 		//test for particles from children collections 7 and 8
 		for (int i=22; i<28; i++){
 			assertTrue(rs.next());
-			System.out.println(i + " was i and atomid = " + rs.getInt(1));//TESTING
 			assertEquals(rs.getInt(1), i);
 		}
-			
-		
+
 		db.closeConnection();
 	}
 
@@ -400,6 +390,7 @@ public class DatabaseTest extends TestCase {
 			assertEquals(2, rs.getInt(1));
 			assertFalse(rs.next());
 			rs.close();
+			rs2.close();
 			rs = stmt.executeQuery(
 					"\n" +
 					"SELECT AtomID\n" +
@@ -410,7 +401,7 @@ public class DatabaseTest extends TestCase {
 					"\n" +
 					"SELECT AtomID\n" +
 					"FROM AtomMembership\n" +
-					"WHERE CollectionID = " + newLocation +
+					"WHERE CollectionID = " + newLocation + "\n" +
 					"ORDER BY AtomID");
 			while (rs.next())
 			{
@@ -661,7 +652,6 @@ public class DatabaseTest extends TestCase {
 			Statement stmt1 = con1.createStatement();
 			String query = "\n" +
 				"INSERT INTO AtomMembership VALUES(5,21)\n";
-			System.out.println(query);
 			stmt1.executeUpdate(query);
 			
 		} catch (SQLException e) {

@@ -190,12 +190,10 @@ public class ImportDummyParticles {
 			stmt.addBatch("INSERT INTO ATOFMSAtomInfoSparse VALUES ("+newAtomID+","+random.nextDouble()*100+","+random.nextInt(25)+",0.05,"+random.nextInt(25)+")");
 			newAtomID++;
 		}
-		System.out.println("     executing batch...");
 		stmt.executeBatch();
 
 		//		 update InternalAtomOrderTable;
-		System.out.println("updating InternalAtomOrder table...");
-		for (int i = 0; i < collectionIDs.size(); i++) 
+		for (int i = 0; i < collectionIDs.size(); i++)
 			db.updateInternalAtomOrder(db.getCollection(collectionIDs.get(i)));
 	}
 	

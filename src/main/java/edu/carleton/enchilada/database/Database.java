@@ -924,7 +924,6 @@ public abstract class Database implements InfoWarehouse {
 	 */
 	public boolean compactDatabase(ProgressBarWrapper progressBar)
 	{
-		System.out.println("Compacting database and removing unaccessible atoms..");
 		try {
 			Statement stmt = con.createStatement();
 			Statement typesStmt = con.createStatement();
@@ -2504,7 +2503,6 @@ public abstract class Database implements InfoWarehouse {
 	public Vector<Vector<Object>> updateParticleTable(Collection collection, Vector<Vector<Object>> particleInfo, int lowIndex, int highIndex) {
 		assert (highIndex - lowIndex < 1000) : "trying to collect over 1000 particles at a time!";
 		particleInfo.clear();
-		System.out.println("Low " + lowIndex + " high " + highIndex);//TESTING
 		ArrayList<String> colNames = getColNames(collection.getDatatype(),DynamicTable.AtomInfoDense);
 		// This isn't a registered datatype... oops
 		if (colNames.size() == 0)
@@ -3304,7 +3302,6 @@ public abstract class Database implements InfoWarehouse {
 				area = rs.getInt("PeakArea");
 				relArea = rs.getFloat("RelPeakArea");
 				height = rs.getInt("PeakHeight");
-				System.out.println("ATOFMS db, height: "+height);
 				returnThis.add(new ATOFMSPeak(
 						height,
 						area,
@@ -6216,7 +6213,6 @@ public abstract class Database implements InfoWarehouse {
 	 * @param collection
 	 */
 	public void updateInternalAtomOrder(Collection collection) {
-		//System.out.println("updating InternalAtomOrder for collection " + collection.getCollectionID());
 		File tempFile = null;
 		int cID = collection.getCollectionID();
 		if (cID == 0 || cID == 1) 
@@ -6323,7 +6319,6 @@ public abstract class Database implements InfoWarehouse {
 				collection.getCollectionID() == 1) 
 			return;
 		int cID = collection.getCollectionID();
-		System.out.println("updating InternalAtomOrder Table for: " + cID);
 		try {
 			Statement stmt = con.createStatement();
 			
