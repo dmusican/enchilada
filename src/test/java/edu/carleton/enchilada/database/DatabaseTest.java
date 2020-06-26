@@ -353,88 +353,96 @@ public class DatabaseTest extends TestCase {
 	 * Copies CollectionID = 3 to CollectionID = 2
 	 *
 	 */
-	public void testCopyCollection() {
+	public void testCopyCollection() throws Exception {
 		db.openConnection(dbName);
-		
+
 		int newLocation = db.copyCollection(db.getCollection(3),db.getCollection(2));
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			
-			ResultSet rs = stmt.executeQuery(
-					"\n" +
-					"SELECT Name, Comment\n" +
-					"FROM Collections\n" +
-					"WHERE CollectionID = 3");
-			Statement stmt2 = con.createStatement();
-			ResultSet rs2 = stmt2.executeQuery(
-					"\n" +
-					"SELECT Name, Comment\n" +
-					"FROM Collections\n" +
-					"WHERE CollectionID = " + newLocation);
-			assertTrue(rs.next());
+
+		Connection con = db.getCon();
+		Statement stmt = con.createStatement();
+
+		ResultSet rs = stmt.executeQuery(
+				"\n" +
+						"SELECT Name, Comment\n" +
+						"FROM Collections\n" +
+						"WHERE CollectionID = 3");
+		Statement stmt2 = con.createStatement();
+		ResultSet rs2 = stmt2.executeQuery(
+				"\n" +
+						"SELECT Name, Comment\n" +
+						"FROM Collections\n" +
+						"WHERE CollectionID = " + newLocation);
+		assertTrue(rs.next());
+		assertTrue(rs2.next());
+		assertEquals(rs.getString(1), rs2.getString(1));
+		assertEquals(rs.getString(2), rs2.getString(2));
+		assertFalse(rs.next());
+		assertFalse(rs2.next());
+		rs.close();
+		rs2.close();
+
+		rs = stmt.executeQuery(
+				"\n" +
+						"SELECT ParentID\n" +
+						"FROM CollectionRelationships\n" +
+						"WHERE ChildID = " + newLocation);
+		assertTrue(rs.next());
+		assertEquals(2, rs.getInt(1));
+		assertFalse(rs.next());
+		rs.close();
+		rs2.close();
+		rs = stmt.executeQuery(
+				"\n" +
+						"SELECT AtomID\n" +
+						"FROM AtomMembership\n" +
+						"WHERE CollectionID = 3\n" +
+						"ORDER BY AtomID");
+		rs2 = stmt2.executeQuery(
+				"\n" +
+						"SELECT AtomID\n" +
+						"FROM AtomMembership\n" +
+						"WHERE CollectionID = " + newLocation + "\n" +
+						"ORDER BY AtomID");
+		while (rs.next())
+		{
 			assertTrue(rs2.next());
-			assertEquals(rs.getString(1), rs2.getString(1));
-			assertEquals(rs.getString(2), rs2.getString(2));
-			assertFalse(rs.next());
-			assertFalse(rs2.next());
-			rs.close();
-			rs2.close();
-			
-			rs = stmt.executeQuery(
-					"\n" +
-					"SELECT ParentID\n" +
-					"FROM CollectionRelationships\n" +
-					"WHERE ChildID = " + newLocation);
-			assertTrue(rs.next());
-			assertEquals(2, rs.getInt(1));
-			assertFalse(rs.next());
-			rs.close();
-			rs2.close();
-			rs = stmt.executeQuery(
-					"\n" +
-					"SELECT AtomID\n" +
-					"FROM AtomMembership\n" +
-					"WHERE CollectionID = 3\n" +
-					"ORDER BY AtomID");
-			rs2 = stmt2.executeQuery(
-					"\n" +
-					"SELECT AtomID\n" +
-					"FROM AtomMembership\n" +
-					"WHERE CollectionID = " + newLocation + "\n" +
-					"ORDER BY AtomID");
-			while (rs.next())
-			{
-				assertTrue(rs2.next());
-				assertEquals(rs.getInt(1), rs2.getInt(1));
-			}
-			assertFalse(rs2.next());
-			rs = stmt.executeQuery(" SELECT DISTINCT AtomID FROM AtomMembership WHERE " +
-					"CollectionID = "+newLocation+" OR CollectionID = 2 ORDER BY AtomID");
-			rs2 = stmt2.executeQuery(" SELECT AtomID FROM InternalAtomOrder WHERE " +
-					"CollectionID = 2 ORDER BY AtomID");
-			while (rs.next())
-			{
-				assertTrue(rs2.next());
-				assertEquals(rs.getInt(1), rs2.getInt(1));
-			}
-			assertFalse(rs2.next());	
-			rs.close();
-			stmt.close();
-			rs2.close();
-			stmt2.close();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
+			assertEquals(rs.getInt(1), rs2.getInt(1));
 		}
-		
+		assertFalse(rs2.next());
+		rs = stmt.executeQuery(" SELECT DISTINCT AtomID FROM AtomMembership WHERE " +
+				"CollectionID = "+newLocation+" OR CollectionID = 2 ORDER BY AtomID");
+		rs2 = stmt2.executeQuery(" SELECT AtomID FROM InternalAtomOrder WHERE " +
+				"CollectionID = 2 ORDER BY AtomID");
+		while (rs.next())
+		{
+			assertTrue(rs2.next());
+			assertEquals(rs.getInt(1), rs2.getInt(1));
+		}
+		assertFalse(rs2.next());
+		rs.close();
+		stmt.close();
+		rs2.close();
+		stmt2.close();
+
 		//test to make sure that a collection can't be copied to itself
 		//this should print an exception message.
 		System.out.println("Two exceptions about copying a collection into itself" +
 				" should follow.");
-		assertEquals(-1, db.copyCollection(db.getCollection(0), db.getCollection(0)));
-		assertEquals(-1, db.copyCollection(db.getCollection(2), db.getCollection(2)));
-		
+
+		try {
+			db.copyCollection(db.getCollection(0), db.getCollection(0));
+			fail("Exception about copying a collection into itself should occur");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
+		try {
+			db.copyCollection(db.getCollection(2), db.getCollection(2));
+			fail("Exception about copying a collection into itself should occur");
+		} catch (ExceptionAdapter e) {
+			assertTrue(e.originalException instanceof SQLException);
+		}
+
 		db.closeConnection();
 	}
 
@@ -642,56 +650,49 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	
-	public void testOrphanAndAdopt(){
-		
+	public void testOrphanAndAdopt() throws Exception {
+
 		db.openConnection(dbName);
 		//Insert 5,21 into the database to tell if an error occurs when an item
 		//is present in a parent and its child
-		try {
-			Connection con1 = db.getCon();
-			Statement stmt1 = con1.createStatement();
-			String query = "\n" +
+
+		Connection con1 = db.getCon();
+		Statement stmt1 = con1.createStatement();
+		String query = "\n" +
 				"INSERT INTO AtomMembership VALUES(5,21)\n";
-			stmt1.executeUpdate(query);
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
+		stmt1.executeUpdate(query);
+
+
 		assertTrue(db.orphanAndAdopt(db.getCollection(6)));
 		//make sure that the atoms collected before are in collection 4
 		ArrayList<Integer> collection5Info = new ArrayList<Integer>();
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			Statement stmt2 = con.createStatement();
-			
-			ResultSet rs = stmt.executeQuery(" SELECT * FROM InternalAtomOrder WHERE" +
-			" CollectionID = 6");
-			assertFalse(rs.next());
-	
-			rs = stmt.executeQuery("\n" +
-			"SELECT AtomID\n" +
-			"FROM AtomMembership\n" +
-			"WHERE CollectionID = 5 ORDER BY AtomID");
 
-			ResultSet rs2 = stmt2.executeQuery(" SELECT AtomID" +
-					" FROM InternalAtomOrder WHERE CollectionID = 5 ORDER BY AtomID");
-			
-			int count = 0;
-			while (rs.next()) {
-				assertTrue(rs2.next());
-				assertEquals(rs.getInt(1), rs2.getInt(1));
-				count++;
-			}
-			assertFalse(rs2.next());
-			assertEquals(6, count);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		Connection con = db.getCon();
+		Statement stmt = con.createStatement();
+		Statement stmt2 = con.createStatement();
+
+		ResultSet rs = stmt.executeQuery(" SELECT * FROM InternalAtomOrder WHERE" +
+				" CollectionID = 6");
+		assertFalse(rs.next());
+
+		rs = stmt.executeQuery("\n" +
+				"SELECT AtomID\n" +
+				"FROM AtomMembership\n" +
+				"WHERE CollectionID = 5 ORDER BY AtomID");
+
+		ResultSet rs2 = stmt2.executeQuery(" SELECT AtomID" +
+				" FROM InternalAtomOrder WHERE CollectionID = 5 ORDER BY AtomID");
+
+		int count = 0;
+		while (rs.next()) {
+			assertTrue(rs2.next());
+			assertEquals(rs.getInt(1), rs2.getInt(1));
+			count++;
 		}
-		
+		assertFalse(rs2.next());
+		assertEquals(6, count);
+
+
 		// removed an assert false here - changed the code to give an error
 		// if a collectionID is passed that isn't really a collection in the db.
 		try {
@@ -700,11 +701,11 @@ public class DatabaseTest extends TestCase {
 		} catch (RuntimeException e) {
 			// test should throw an exception
 		}
-		
+
 		//Make sure orphan and adopt can't be performed on either root
 		assertFalse(db.orphanAndAdopt(db.getCollection(0)));
 		assertFalse(db.orphanAndAdopt(db.getCollection(1)));
-		
+
 		db.closeConnection();
 	}
 

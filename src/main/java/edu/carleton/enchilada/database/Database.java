@@ -1346,9 +1346,7 @@ public abstract class Database implements InfoWarehouse {
 			return newID;
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception copying collection "+collection.getName());
-			System.err.println("Exception copying collection: ");
-			e.printStackTrace();
-			return -1;
+			throw new ExceptionAdapter(e);
 		}
 	}
 	
