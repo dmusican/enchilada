@@ -141,11 +141,11 @@ public class KMeansTest extends TestCase {
 
     	// check the std deviations in the collection description
     	for (int i = 0; i < 16; i++) descReader.readLine();
-		assertEquals("Mean size: 0.33333334 Std dev: +/-0.12472187", descReader.readLine());
-		assertEquals("Geometric mean size: 0.31072325", descReader.readLine());
+		assertEquals("Mean size: 0.03333333 Std dev: +/-0.012472196", descReader.readLine());
+		assertEquals("Geometric mean size: 0.031072322", descReader.readLine());
 		for (int i = 0; i < 9; i++) descReader.readLine();
-		assertEquals("Mean size: 0.4 Std dev: +/-0.0", descReader.readLine());
-		assertEquals("Geometric mean size: 0.4", descReader.readLine());
+		assertEquals("Mean size: 0.04 Std dev: +/-0.0", descReader.readLine());
+		assertEquals("Geometric mean size: 0.04", descReader.readLine());
     	
     	Collection cluster1 = db.getCollection(8);
     	Collection cluster2 = db.getCollection(9);
@@ -176,10 +176,10 @@ public class KMeansTest extends TestCase {
     	CollectionCursor denseCurs = db.getAtomInfoOnlyCursor(clusterCenters);
     	denseCurs.next();
     	ParticleInfo info = denseCurs.getCurrent();
-    	assertEquals(0.33333334f, info.getATOFMSParticleInfo().getSize());
+    	assertEquals(0.03333333f, info.getATOFMSParticleInfo().getSize());
     	denseCurs.next();
     	info = denseCurs.getCurrent();
-    	assertEquals(.4f, info.getATOFMSParticleInfo().getSize());
+    	assertEquals(.04f, info.getATOFMSParticleInfo().getSize());
 
     	CollectionCursor sparseCurs = db.getBPLOnlyCursor(clusterCenters);
     	sparseCurs.next();
