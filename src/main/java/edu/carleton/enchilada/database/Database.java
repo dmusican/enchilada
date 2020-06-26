@@ -1317,23 +1317,21 @@ public abstract class Database implements InfoWarehouse {
 			String description = getCollectionDescription(collection.getCollectionID());
 			if (description  != null)
 				setCollectionDescription(newCollection, getCollectionDescription(collection.getCollectionID()));
-			
+
 			rs = stmt.executeQuery("SELECT AtomID\n" +
 					"FROM AtomMembership\n" +
 					"WHERE CollectionID = " +
 					collection.getCollectionID());
-			System.out.println("Copying: " + collection.getCollectionID());
-			System.out.println("new CollectionID: " + newID);
+			PreparedStatement pstmt = con.prepareStatement(
+					"INSERT INTO AtomMembership (CollectionID, AtomID) VALUES (?,?)");
 			while (rs.next())
 			{
-				stmt.addBatch("INSERT INTO AtomMembership " +
-						"(CollectionID, AtomID) " +
-						"VALUES (" + newID + ", " +
-						rs.getInt("AtomID") + 
-				")");
+				pstmt.setInt(1, newID);
+				pstmt.setInt(2, rs.getInt("AtomID"));
+				pstmt.addBatch();
 			}
 
-			stmt.executeBatch();
+			pstmt.executeBatch();
 			rs.close();
 			// Get Children
 			ArrayList<Integer> children = getImmediateSubCollections(collection);
