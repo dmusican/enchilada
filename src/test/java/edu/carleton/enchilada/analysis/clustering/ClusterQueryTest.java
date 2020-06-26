@@ -43,6 +43,8 @@ package edu.carleton.enchilada.analysis.clustering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 import junit.framework.TestCase;
@@ -58,7 +60,7 @@ import edu.carleton.enchilada.analysis.clustering.ClusterQuery;
  * Created August 19, 2008
  * 
  * 
- * This does not test clustering after attemption to cluster around
+ * This does not test clustering after attempt to cluster around
  * an empty particle. 
  */
 
@@ -70,8 +72,11 @@ public class ClusterQueryTest extends TestCase {
 	String dbName = "testDB";
     Float d = 0.5f;
     int cID = 2;
-	
-	
+	private Path tempDir;
+	private Path par1;
+	private Path par2;
+	private Path par3;
+
 	
     /*
      * @see TestCase#setUp()
@@ -83,36 +88,46 @@ public class ClusterQueryTest extends TestCase {
         new CreateTestDatabase();
 		db = Database.getDatabase("TestDB");
 		db.openConnection("TestDB");
-		
+
+		tempDir = Files.createTempDirectory("enchilada-testClust-q");
+		par1 = tempDir.resolve("par1.txt");
+		par2 = tempDir.resolve("par2.txt");
+		par3 = tempDir.resolve("par3.txt");
+
 		PrintWriter pw;
-		try {
-			pw = new PrintWriter("testClust"+File.separator+"q"+File.separator+"par1.txt");
-			pw.println(db.getATOFMSFileName(2));
-			ArrayList<Peak> peaks = db.getPeaks(db.getAtomDatatype(2), 2);		
+		pw = new PrintWriter(par1.toString());
+		pw.println(db.getATOFMSFileName(2));
+		ArrayList<Peak> peaks = db.getPeaks(db.getAtomDatatype(2), 2);
 
-			for(int i = 0; i<peaks.size();i++){
-				pw.println(peaks.get(i).massToCharge + "," + peaks.get(i).value);
-			}
-			pw.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		for (Peak peak : peaks) {
+			pw.println(peak.massToCharge + "," + peak.value);
 		}
-		
-		try {
-			pw = new PrintWriter("testClust"+File.separator+"q"+File.separator+"par2.txt");
-			pw.println(db.getATOFMSFileName(3));
-			ArrayList<Peak> peaks = db.getPeaks(db.getAtomDatatype(3), 3);		
+		pw.close();
 
-			for(int i = 0; i<peaks.size();i++){
-				pw.println(peaks.get(i).massToCharge + "," + peaks.get(i).value);
-			}
-			pw.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		pw = new PrintWriter(par2.toString());
+		pw.println(db.getATOFMSFileName(3));
+
+		peaks = db.getPeaks(db.getAtomDatatype(3), 3);
+
+		for (Peak peak : peaks) {
+			pw.println(peak.massToCharge + "," + peak.value);
 		}
-		
+		pw.close();
+
+		pw = new PrintWriter(par3.toString());
+		pw.println("particle11111");
+
+		pw.println("-98.0,13.0");
+		pw.println("-97.0,20709.0");
+		pw.println("-62.0,19187.0");
+		pw.println("-46.0,23734.0");
+
+		pw.println("12.0,2852.0");
+		pw.println("15.0,777.0");
+		pw.println("18.0,84.0");
+
+		pw.close();
+
 	}
 	
 	protected void tearDown() throws Exception
@@ -122,14 +137,17 @@ public class ClusterQueryTest extends TestCase {
 		System.runFinalization();
 		System.gc();
 	    Database.dropDatabase(dbName);
-		
+//	    assertTrue(par1.toFile().delete());
+//	    assertTrue(par2.toFile().delete());
+//		assertTrue(par3.toFile().delete());
+//	    assertTrue(tempDir.toFile().delete());
 	}
 		
 	public void testGoodCluster(){
 		ArrayList<String> filenamesGood = new ArrayList<String>();
 		
-		filenamesGood.add("testClust"+File.separator+"q"+File.separator+"par1.txt");
-		filenamesGood.add("testClust"+File.separator+"q"+File.separator+"par2.txt");
+		filenamesGood.add(par1.toString());
+		filenamesGood.add(par2.toString());
 
 		qc = new ClusterQuery(
 					cID,db, "Cluster Query", "GoodTest", false, filenamesGood,d);
@@ -145,7 +163,7 @@ public class ClusterQueryTest extends TestCase {
 	public void testNoCluster(){
 		ArrayList<String> filenamesNoClusters = new ArrayList<String>();
 		
-		filenamesNoClusters.add("testClust"+File.separator+"q"+File.separator+"par3.txt");
+		filenamesNoClusters.add(tempDir.resolve("par3.txt").toString());
 
 		qc = new ClusterQuery(
 				cID,db, "Cluster Query", "NoTest", false, filenamesNoClusters,d);
@@ -156,32 +174,12 @@ public class ClusterQueryTest extends TestCase {
 		qc.setCursorType(Cluster.DISK_BASED);
 		try{
 			qc.divide();
+			fail("There should be an exception about no sub collection here:");
 		}catch (NoSubCollectionException sce){
-			System.out.println("There should be an exception about no sub collection here:");
-			sce.printStackTrace();
+			// Exception expected
 		}
 	}
-	/*
-	public void testEmptyCluster(){
-		ArrayList<String> filenamesEmptyClusters = new ArrayList<String>();
-		
-		filenamesEmptyClusters.add("testClust\\q\\par4.txt");		
-		
-		try{
-		qc = new ClusterQuery(
-				cID,db, "Cluster Query", "EmptyTest", false, filenamesEmptyClusters,d);
-		
-		qc.setDistanceMetric(DistanceMetric.EUCLIDEAN_SQUARED);
-		
-		System.out.println("setting cursor type");
-		qc.setCursorType(Cluster.DISK_BASED);
-		
-		qc.divide();
-		}catch (AssertionError ae){
-			ae.printStackTrace();
-		}
-	}*/
-		
+
 }
 	
 	

@@ -2056,7 +2056,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @author olsonja
 	 */
 	
-	public void bulkInsertExecute() throws Exception{
+	public void bulkInsertExecute() {
 		try {
 			long time = System.currentTimeMillis();
 			

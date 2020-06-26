@@ -45,6 +45,9 @@
  */
 package edu.carleton.enchilada.analysis;
 
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -52,6 +55,7 @@ import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -334,14 +338,11 @@ public abstract class CollectionDivider {
 	{
 		System.out.println("About to execute INSERTs.");
 		//System.out.println((new Date()).toString());
-		try {
-			db.bulkInsertExecute();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+		db.bulkInsertExecute();
+
 		System.out.println("Done with INSERTS, about to do DELETE");
-		
+
 		//build a table for deletes
 		//drop the table in case it already (mistakenly) exists
 		System.out.println("Creating deletion table...");
@@ -349,92 +350,45 @@ public abstract class CollectionDivider {
 		Statement delStmt = null;
 		try {
 			delStmt = dbCon.createStatement();
-			delStmt.executeUpdate("IF (OBJECT_ID('stuffToDelete') IS NOT NULL)\n" +
-								  "DROP TABLE stuffToDelete");
-			delStmt.executeUpdate("CREATE TABLE stuffToDelete(atoms int)");
+			delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
+			delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
+			PreparedStatement pstmt = dbCon.prepareStatement(
+					"INSERT INTO temp.stuffToDelete VALUES (?)");
+
+			//put stuff in the tempfile
+			System.out.println("Putting stuff in tempdelete.data...");
+			String atomIDsToDel = atomIDsToDelete.toString();
+			Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
+			while (atomIDs.hasNext()) {
+				pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
+				pstmt.addBatch();
+			}
+			pstmt.executeBatch();
+
+		} catch (SQLException e) {
+			throw new ExceptionAdapter(e);
 		}
-		catch (Exception e) {
-			System.out.println("Error creating table stuffToDelete in database.");
-		}
-		
-		//create tempfile used to bulk insert to stuffToDelete
-		//tempfile goes in same place as other temp files
-		System.out.println("Creating tempdelete.data file...");
-//		String tempdir = "";
-		File temp = null;
-		PrintWriter pw = null;
-		try {
-			temp = File.createTempFile("tempdelete", "data");
-			pw = new PrintWriter(temp);
-		}
-		catch (Exception e) {
-			System.out.println("Error Creating tempDelete file.");
-		}
-		
-		//put stuff in the tempfile
-		System.out.println("Putting stuff in tempdelete.data...");
-		String atomIDsToDel = atomIDsToDelete.toString();
-		Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
-		while (atomIDs.hasNext()) {
-			pw.println(atomIDs.next());
-		}
-		pw.println();
-		pw.close();
-		
-		//execute a statement to bulk insert into stuffToDelete
-		System.out.println("Putting stuff in deletion table...");
-		try {
-			delStmt.executeUpdate("BULK INSERT stuffToDelete\n" + 
-								  "FROM '" + temp.getAbsoluteFile() + "'");
-		}
-		catch (Exception e) {
-			System.out.println("Error inserting into stuffToDelete.");
-		}
-		
-		//delete the temp file
-		System.out.println("Deleting tempdelete.data...");
-		temp.delete();
-		
+
 		//finally, delete what's in stuffToDelete from AtomMembership
 		//and drop the stuffToDelete table
 		System.out.println("Finally, deleting from AtomMembership...");
 		String deletionquery = "DELETE FROM AtomMembership\n" +
 		  					   "WHERE CollectionID = " + collection.getCollectionID() + 
 		  					   "\n" + "AND AtomID IN \n" +
-		  					   "(SELECT atoms FROM stuffToDelete)";
+		  					   "(SELECT atoms FROM temp.stuffToDelete)";
 		System.out.println("Query:");
 		System.out.println(deletionquery);
 		try {
 			delStmt.executeUpdate(deletionquery);
-			delStmt.executeUpdate("DROP TABLE stuffToDelete");
+			delStmt.executeUpdate("DROP TABLE temp.stuffToDelete");
 		}
-		catch (Exception e) {
-			System.out.println("Error deleting from AtomMembership");
+		catch (SQLException e) {
+			throw new ExceptionAdapter(e);
 		}
 		System.out.println("...and dropping deletion table.");
 		
 		System.out.println("Done with DELETEs.");
 		
-		/*
-		//System.out.println((new Date()).toString());
-		db.atomBatchInit();
-		
-		String atomIDsToDel = atomIDsToDelete.toString();
-		if (atomIDsToDel.length() > 0 &&
-				atomIDsToDel.length() < 2000) {
-			atomIDsToDel = atomIDsToDel.substring(0,atomIDsToDel.length()-1);
-			db.deleteAtomsBatch(atomIDsToDel,collection);
-		} else if (atomIDsToDel.length() > 0 &&
-				atomIDsToDelete.length() >= 2000) {
-			Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
-			while (atomIDs.hasNext()) {
-				db.deleteAtomBatch(atomIDs.nextInt(), collection);
-			}
-		}
-		db.atomBatchExecute();
-		System.out.println("Done with DELETEs.");
-		//System.out.println((new Date()).toString());
-		*/
 	}
 
 	/**

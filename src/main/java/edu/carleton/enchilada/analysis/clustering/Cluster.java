@@ -506,10 +506,12 @@ public abstract class Cluster extends CollectionDivider {
 				sums.get(i).addAnotherParticle(centroidList.get(i).peaks);
 			}
 		}
-		totalDistancePerPass.add(new Double(totalDistance));
+		totalDistancePerPass.add(totalDistance);
 		for (int i = 0; i < sums.size(); i++) {
-			sums.get(i).divideAreasBy(centroidList.get(i).numMembers);
-			centroidList.get(i).peaks = sums.get(i);
+			if (centroidList.get(i).numMembers > 0) {
+				sums.get(i).divideAreasBy(centroidList.get(i).numMembers);
+				centroidList.get(i).peaks = sums.get(i);
+			}
 		}
 		
 		// compute non-transformed centroid distances

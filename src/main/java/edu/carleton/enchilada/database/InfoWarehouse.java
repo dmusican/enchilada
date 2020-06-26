@@ -394,7 +394,7 @@ public interface InfoWarehouse {
 	public boolean openConnection(String dbName);
 	public void bulkInsertInit() throws Exception;
 	public void bulkInsertAtom(int newChildID, int newHostID) throws Exception;
-	public void bulkInsertExecute() throws Exception;
+	public void bulkInsertExecute();
 
 	public String getDatabaseName();
 
