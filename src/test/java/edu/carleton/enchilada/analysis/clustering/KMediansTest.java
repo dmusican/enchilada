@@ -40,7 +40,9 @@ public class KMediansTest extends TestCase {
 	        ArrayList<String> list = new ArrayList<String>();
 	        list.add("ATOFMSAtomInfoSparse.PeakArea");
 	    	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);
-	        kmedians = new KMedians(cID,db,k,name,comment,refine ? ClusterK.REFINED_CENTROIDS : ClusterK.FARTHEST_DIST_CENTROIDS,cInfo);
+	        kmedians = new KMedians(cID,db,k,name,comment,refine ?
+					ClusterK.CentroidsApproach.REFINED_CENTROIDS :
+					ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS,cInfo);
 	    }
 
 	    /*
@@ -174,7 +176,9 @@ Key:	Value:
 	        ArrayList<String> list = new ArrayList<String>();
 	        list.add("ATOFMSAtomInfoSparse.PeakArea");
 	    	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);
-	    	kmedians = new KMedians(cID,db,k,name,comment,refine ? ClusterK.REFINED_CENTROIDS : ClusterK.FARTHEST_DIST_CENTROIDS, cInfo);
+	    	kmedians = new KMedians(cID,db,k,name,comment,refine ?
+					ClusterK.CentroidsApproach.REFINED_CENTROIDS :
+					ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS, cInfo);
 	    	kmedians.setCursorType(CollectionDivider.STORE_ON_FIRST_PASS);
 
 	    	int collectionID = kmedians.cluster(false);

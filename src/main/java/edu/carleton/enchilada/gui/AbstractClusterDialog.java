@@ -76,7 +76,7 @@ public abstract class AbstractClusterDialog extends JDialog implements ItemListe
 	protected double sampleFraction = 1;
 	
 	protected String initialCentroidMethod = FARTHEST;
-	protected int initialCentroidsInt = ClusterK.FARTHEST_DIST_CENTROIDS;
+	protected ClusterK.CentroidsApproach initialCentroidsInt = ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS;
 	protected String dMetric = CITY_BLOCK;
 	protected String currentShowing = ART2A;
 	private String[] nameArray;
@@ -422,19 +422,19 @@ public abstract class AbstractClusterDialog extends JDialog implements ItemListe
 		}
 
 		if (initialCentroidMethod.equals(FARTHEST)) {
-			initialCentroidsInt = ClusterK.FARTHEST_DIST_CENTROIDS;
+			initialCentroidsInt = ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS;
 		}
 		else if (initialCentroidMethod.equals(RANDOM)) {
-			initialCentroidsInt = ClusterK.RANDOM_CENTROIDS;
+			initialCentroidsInt = ClusterK.CentroidsApproach.RANDOM_CENTROIDS;
 		}
 		else if (initialCentroidMethod.equals(REFINED)) {
-			initialCentroidsInt = ClusterK.REFINED_CENTROIDS;
+			initialCentroidsInt = ClusterK.CentroidsApproach.REFINED_CENTROIDS;
 		}
 		else if (initialCentroidMethod.equals(KMEANSPP)) {
-			initialCentroidsInt = ClusterK.KMEANS_PLUS_PLUS_CENTROIDS;
+			initialCentroidsInt = ClusterK.CentroidsApproach.KMEANS_PLUS_PLUS_CENTROIDS;
 		}
 		else if (initialCentroidMethod.equals(USERDEF)) {
-			initialCentroidsInt = ClusterK.USER_DEFINED_CENTROIDS;
+			initialCentroidsInt = ClusterK.CentroidsApproach.USER_DEFINED_CENTROIDS;
 		}
 		// hack to make the popup appear
 		if (source == initialCentroids) {
@@ -467,7 +467,7 @@ public abstract class AbstractClusterDialog extends JDialog implements ItemListe
 		db.clearCache();
 	}
 
-	public abstract void doOKButtonAction(DistanceMetric dMetInt, int initialCentroidsInt);
+	public abstract void doOKButtonAction(DistanceMetric dMetInt, ClusterK.CentroidsApproach initialCentroidsInt);
 
 	/**
 	 * itemStateChanged(ItemEvent evt) needs to be defined, as the 

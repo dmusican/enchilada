@@ -116,7 +116,7 @@ public class PreClusterDialog extends AbstractClusterDialog
 		
 	}
 
-	public void doOKButtonAction(DistanceMetric dMetInt, int initialCentroidsInt) {
+	public void doOKButtonAction(DistanceMetric dMetInt, ClusterK.CentroidsApproach initialCentroidsInt) {
 		// TODO: error check here to make sure something is selected.
 		// TODO: make this more graceful.
 		// Get clustering specifications and create ClusterInformation object.

@@ -41,7 +41,7 @@ public class ClusterTest extends TestCase{
         ArrayList<String> list = new ArrayList<String>();
         list.add("ATOFMSAtomInfoSparse.PeakArea");
     	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);
-    	classToTest = new KMeans(cID,db,k,name,comment,ClusterK.FARTHEST_DIST_CENTROIDS, cInfo);
+    	classToTest = new KMeans(cID,db,k,name,comment,ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS, cInfo);
 	}
 
     /*

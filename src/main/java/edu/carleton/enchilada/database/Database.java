@@ -2180,7 +2180,7 @@ public abstract class Database implements InfoWarehouse {
 			}
 			else {
 				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error retrieving collection for collectionID "+collectionID);
-				throw new RuntimeException("collectionID not created yet!! " + collectionID);
+				throw new IllegalArgumentException("collectionID not created yet!! " + collectionID);
 			}
 			stmt.close();
 			

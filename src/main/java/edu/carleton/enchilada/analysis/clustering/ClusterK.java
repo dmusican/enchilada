@@ -78,11 +78,13 @@ import edu.carleton.enchilada.externalswing.SwingWorker;
  */
 public abstract class ClusterK extends Cluster {
 
-	public static final int REFINED_CENTROIDS = 0;
-	public static final int RANDOM_CENTROIDS = 1;
-	public static final int FARTHEST_DIST_CENTROIDS = 2;
-	public static final int KMEANS_PLUS_PLUS_CENTROIDS = 3;
-	public static final int USER_DEFINED_CENTROIDS = 4;
+	public enum CentroidsApproach {
+		REFINED_CENTROIDS,
+		RANDOM_CENTROIDS,
+		FARTHEST_DIST_CENTROIDS,
+		KMEANS_PLUS_PLUS_CENTROIDS,
+		USER_DEFINED_CENTROIDS
+	}
 
 	public static final int DEFAULT_RANDOM = 90125;
 	/* Declared Class Variables */
@@ -91,7 +93,7 @@ public abstract class ClusterK extends Cluster {
 	 * REFINED_CENTROIDS to refine centroids, RANDOM_CENTROIDS for
 	 * random centroids, FARTHEST_DIST_CENTROIDS for farthest distance.
 	 */
-	private int initialCentroids; // 
+	private CentroidsApproach initialCentroids; //
 	private ArrayList<String> centroidFilenames;
 	
 	protected int k; // number of centroids desired.
@@ -129,7 +131,7 @@ public abstract class ClusterK extends Cluster {
 	 * 
 	 */
 	public ClusterK(int cID, InfoWarehouse database, int k, 
-			String name, String comment, int initialCentroids, ClusterInformation c) 
+			String name, String comment, CentroidsApproach initialCentroids, ClusterInformation c)
 	{
 		super(cID, database,name.concat(",K=" + k),comment, c.normalize);
 		this.k = k;
@@ -154,16 +156,16 @@ public abstract class ClusterK extends Cluster {
 			new ArrayList<Centroid>();
 		numParticles = db.getCollectionSize(collectionID);
 		// If refineCentroids is true, randomize the db and cluster subsamples.
-		if (initialCentroids == REFINED_CENTROIDS) {
+		if (initialCentroids == CentroidsApproach.REFINED_CENTROIDS) {
 			centroidList = chooseRefinedCentroids(interactive);
 		}
-		else if (initialCentroids == RANDOM_CENTROIDS) {
+		else if (initialCentroids == CentroidsApproach.RANDOM_CENTROIDS) {
 			centroidList = chooseRandomCentroids();
 		}
-		else if (initialCentroids == KMEANS_PLUS_PLUS_CENTROIDS) {
+		else if (initialCentroids == CentroidsApproach.KMEANS_PLUS_PLUS_CENTROIDS) {
 			centroidList = chooseKmeansPPCentroids();
 		}
-		else if (initialCentroids == USER_DEFINED_CENTROIDS) {
+		else if (initialCentroids == CentroidsApproach.USER_DEFINED_CENTROIDS) {
 			centroidList = chooseUserDefinedCentroids();
 		}
 		
@@ -187,9 +189,7 @@ public abstract class ClusterK extends Cluster {
 //		}
 		centroidList = processPart(centroidList, curs);
 
-		System.out.println("returning");
-		
-		returnThis = 
+		returnThis =
 			assignAtomsToNearestCentroid(centroidList, curs, createCentroids);
 		curs.close();
 
@@ -327,7 +327,7 @@ public abstract class ClusterK extends Cluster {
 	 * 
 	 * @param centroidList - list of centroids - enter a null list on first pass.
 	 * @param curs - cursor to loop through the particles in the db.
-	 * @return the new list of centroids.
+	 * @return the new list of centroids. Centroid list may be empty if operation is not doable.
 	 */
 	private ArrayList<Centroid> processPart(ArrayList<Centroid> centroidList,
 											  NonZeroCursor curs) {

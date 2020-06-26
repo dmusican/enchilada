@@ -407,6 +407,10 @@ public abstract class Cluster extends CollectionDivider {
 			CollectionCursor curs, double minDistance, boolean normalize, boolean changeCentroids,
 			boolean saveCentroids)
 	{
+
+		// Return invalid collection id if no centroids
+		if (centroidList.size() == 0)
+			return -1;
 		System.out.println("in assignAtoms");
 		ArrayList<BinnedPeakList> sums = new ArrayList<BinnedPeakList>();
 		if (isNormalized)

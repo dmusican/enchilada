@@ -105,7 +105,7 @@ public class KMeansTest extends TestCase {
     }
 
     public void testGetDistance() {
-    	setupStandardKmeans(ClusterK.FARTHEST_DIST_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
         BinnedPeakList list1 = new BinnedPeakList(new Normalizer());
         BinnedPeakList list2 = new BinnedPeakList(new Normalizer());
         list1.add(1,0.1f);
@@ -122,12 +122,12 @@ public class KMeansTest extends TestCase {
     }
     
     public void testName() {
-    	setupStandardKmeans(ClusterK.FARTHEST_DIST_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	assertEquals("KMeans,K=2,Test comment", kmeans.parameterString);
     }
     
     public void testKMeans() throws Exception {
-    	setupStandardKmeans(ClusterK.FARTHEST_DIST_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
     	assertEquals(7, collectionID);
@@ -258,7 +258,7 @@ public class KMeansTest extends TestCase {
     			"where atomid in (select atomid from atommembership where collectionid = 2) and " +
     			" peaklocation > 0");
     	
-    	setupStandardKmeans(ClusterK.FARTHEST_DIST_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
     	assertEquals(7, collectionID);
@@ -295,7 +295,8 @@ public class KMeansTest extends TestCase {
         ArrayList<String> list = new ArrayList<String>();
         list.add("ATOFMSAtomInfoSparse.PeakArea");
     	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);
-    	kmeans = new KMeans(2,db,1,"","Test comment",ClusterK.FARTHEST_DIST_CENTROIDS, cInfo);
+    	kmeans = new KMeans(2,db,1,"",
+				"Test comment",ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS, cInfo);
     	kmeans.setCursorType(CollectionDivider.STORE_ON_FIRST_PASS);
 
     	int collectionID = kmeans.cluster(false);
@@ -326,14 +327,18 @@ public class KMeansTest extends TestCase {
 		stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
 		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
 		
-		setupStandardKmeans(ClusterK.FARTHEST_DIST_CENTROIDS);
+		setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
-    	assertEquals(7, collectionID);
-    	
-    	Collection cluster1 = db.getCollection(8);
-    	
-    	assertFalse(cluster1.containsData());
+    	assertEquals(-1, collectionID);
+
+    	try {
+			Collection cluster1 = db.getCollection(8);
+			fail("Collection 8 should be invalid.");
+		} catch (IllegalArgumentException e) {
+    		// expected exception
+		}
+
     }
 
     /**
@@ -341,7 +346,7 @@ public class KMeansTest extends TestCase {
      * @throws Exception
      */
     public void testKMeansRandomCentroids() throws Exception {
-    	setupStandardKmeans(ClusterK.RANDOM_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.RANDOM_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
     	assertEquals(7, collectionID);
@@ -420,7 +425,7 @@ public class KMeansTest extends TestCase {
      * @throws Exception
      */
     public void testKMeansPlusPlus() throws Exception {
-    	setupStandardKmeans(ClusterK.KMEANS_PLUS_PLUS_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.KMEANS_PLUS_PLUS_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
     	assertEquals(7, collectionID);
@@ -459,7 +464,7 @@ public class KMeansTest extends TestCase {
      */
     public void testKMeansPPWithRandomSeed() throws Exception {
     	ClusterK.setRandomSeed(10);
-    	setupStandardKmeans(ClusterK.KMEANS_PLUS_PLUS_CENTROIDS);
+    	setupStandardKmeans(ClusterK.CentroidsApproach.KMEANS_PLUS_PLUS_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
     	
     	assertEquals(7, collectionID);
@@ -489,7 +494,7 @@ public class KMeansTest extends TestCase {
      * @param clustering TODO
      * @param clustering specifies the initial clustering algorithm
      */
-    private void setupStandardKmeans(int clustering) {
+    private void setupStandardKmeans(ClusterK.CentroidsApproach clustering) {
         ArrayList<String> list = new ArrayList<String>();
         list.add("ATOFMSAtomInfoSparse.PeakArea");
     	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);

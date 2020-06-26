@@ -127,7 +127,7 @@ public class ClusterDialog extends AbstractClusterDialog
 		setVisible(true);
 	}
 	
-	public void doOKButtonAction(DistanceMetric dMetInt, int initialCentroidsInt) {
+	public void doOKButtonAction(DistanceMetric dMetInt, ClusterK.CentroidsApproach initialCentroidsInt) {
 		// TODO: error check here to make sure something is selected.
 		// TODO: make this more graceful.
 		// Get clustering specifications and create ClusterInformation object.
@@ -247,7 +247,7 @@ public class ClusterDialog extends AbstractClusterDialog
 			try {
 				Set<Integer> kValues;
 				// set k equal to number of centroid filenames -- MM 2014
-				if (initialCentroidsInt == ClusterK.USER_DEFINED_CENTROIDS) {
+				if (initialCentroidsInt == ClusterK.CentroidsApproach.USER_DEFINED_CENTROIDS) {
 					kValues = new TreeSet<Integer>();
 					kValues.add(filenames.size());
 				} else {
@@ -306,7 +306,7 @@ public class ClusterDialog extends AbstractClusterDialog
 							kMeans.addInfo(cInfo);
 							kMeans.setDistanceMetric(dMetInt);
 							// pass in the centroids filename if using user-defined
-							if (initialCentroidsInt == ClusterK.USER_DEFINED_CENTROIDS)
+							if (initialCentroidsInt == ClusterK.CentroidsApproach.USER_DEFINED_CENTROIDS)
 								kMeans.setCentroidFilenames(filenames);
 								
 							//TODO:  When should we use disk based and memory based 

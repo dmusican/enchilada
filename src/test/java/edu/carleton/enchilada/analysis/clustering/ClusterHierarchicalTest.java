@@ -102,7 +102,7 @@ public class ClusterHierarchicalTest extends TestCase {
         ArrayList<String> list = new ArrayList<String>();
         list.add("ATOFMSAtomInfoSparse.PeakArea");
     	ClusterInformation cInfo = new ClusterInformation(list, "ATOFMSAtomInfoSparse.PeakLocation", null, false, true);
-    	KMeans kmeans = new KMeans(cID,db,k,name,comment,ClusterK.FARTHEST_DIST_CENTROIDS, cInfo);
+    	KMeans kmeans = new KMeans(cID,db,k,name,comment,ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS, cInfo);
     	kmeans.setCursorType(CollectionDivider.STORE_ON_FIRST_PASS);
 		kmeans.setCreateCentroids(false);
     	int dividedParticleCollectionId = kmeans.cluster(false);

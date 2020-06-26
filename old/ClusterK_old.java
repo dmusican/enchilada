@@ -253,7 +253,6 @@ public abstract class ClusterK extends Cluster {
 				}
 		return true;
 		case CollectionDivider.STORE_ON_FIRST_PASS : 
-		    System.out.println("STORE_ON_FIRST_PASS");
 			curs = new NonZeroCursor(db.getMemoryClusteringCursor(db.getCollection(collectionID), clusterInfo));
 		return true;
 		default :
