@@ -137,10 +137,10 @@ public class ClusterQueryTest extends TestCase {
 		System.runFinalization();
 		System.gc();
 	    Database.dropDatabase(dbName);
-//	    assertTrue(par1.toFile().delete());
-//	    assertTrue(par2.toFile().delete());
-//		assertTrue(par3.toFile().delete());
-//	    assertTrue(tempDir.toFile().delete());
+	    assertTrue(par1.toFile().delete());
+	    assertTrue(par2.toFile().delete());
+		assertTrue(par3.toFile().delete());
+	    assertTrue(tempDir.toFile().delete());
 	}
 		
 	public void testGoodCluster(){

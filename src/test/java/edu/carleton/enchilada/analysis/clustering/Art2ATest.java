@@ -51,7 +51,7 @@ public class Art2ATest extends TestCase{
 			db.closeConnection();
 			System.runFinalization();
 			System.gc();
-		    //Database.dropDatabase(dbName);
+		    Database.dropDatabase(dbName);
 	    }
 
 	    public void testGetDistance() {

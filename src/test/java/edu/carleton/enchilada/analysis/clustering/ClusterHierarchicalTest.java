@@ -84,7 +84,7 @@ public class ClusterHierarchicalTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-//	    Database.dropDatabase(dbName);
+	    Database.dropDatabase(dbName);
     }
 
     // TEST DISABLED FOR NOW, as it seems as though it was never working

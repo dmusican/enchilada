@@ -130,7 +130,7 @@ public class ClusterTest extends TestCase{
     	rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense WHERE AtomId = " + atomId);
     	if (rs.next()) {
     		assertEquals(10.0f/3.0f, rs.getFloat("LaserPower"));
-    		assertEquals(.333333334f, rs.getFloat("Size"));
+    		assertEquals(.033333333f, rs.getFloat("Size"));
     		assertEquals(3, rs.getInt("ScatDelay"));
     	}
 
@@ -156,7 +156,7 @@ public class ClusterTest extends TestCase{
     	rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense WHERE AtomId = " + atomId);
     	if (rs.next()) {
     		assertEquals(4.0f, rs.getFloat("LaserPower"));
-    		assertEquals(.4f, rs.getFloat("Size"));
+    		assertEquals(.04f, rs.getFloat("Size"));
     		assertEquals(4, rs.getInt("ScatDelay"));
     	}
     	
