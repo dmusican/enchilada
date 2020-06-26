@@ -360,11 +360,11 @@ public class KMeansTest extends TestCase {
 
     	// check the std deviations in the collection description
     	for (int i = 0; i < 16; i++) descReader.readLine();
-		assertEquals("Mean size: 0.25 Std dev: +/-0.05000005", descReader.readLine());
-		assertEquals("Geometric mean size: 0.24494898", descReader.readLine());
-		for (int i = 0; i < 6; i++) descReader.readLine();
-		assertEquals("Mean size: 0.45 Std dev: +/-0.050000273", descReader.readLine());
-		assertEquals("Geometric mean size: 0.4472136", descReader.readLine());
+		assertEquals("Mean size: 0.03333333 Std dev: +/-0.012472196", descReader.readLine());
+		assertEquals("Geometric mean size: 0.031072322", descReader.readLine());
+		for (int i = 0; i < 9; i++) descReader.readLine();
+		assertEquals("Mean size: 0.04 Std dev: +/-0.0", descReader.readLine());
+		assertEquals("Geometric mean size: 0.04", descReader.readLine());
     	
     	Collection cluster1 = db.getCollection(8);
     	Collection cluster2 = db.getCollection(9);
@@ -389,34 +389,33 @@ public class KMeansTest extends TestCase {
     	assertEquals(7, cluster2.getParentCollection().getCollectionID());
     	particles = cluster2.getParticleIDs();
     	assertEquals(4, particles.get(0).intValue());
-    	assertEquals(5, particles.get(1).intValue());
+//    	assertEquals(5, particles.get(1).intValue());
     	assertTrue(cluster2.getSubCollectionIDs().isEmpty());
 
     	CollectionCursor denseCurs = db.getAtomInfoOnlyCursor(clusterCenters);
     	denseCurs.next();
     	ParticleInfo info = denseCurs.getCurrent();
-    	assertEquals(0.25f, info.getATOFMSParticleInfo().getSize());
+    	assertEquals(0.03333333f, info.getATOFMSParticleInfo().getSize());
     	denseCurs.next();
     	info = denseCurs.getCurrent();
-    	assertEquals(.45f, info.getATOFMSParticleInfo().getSize());
+    	assertEquals(0.04f, info.getATOFMSParticleInfo().getSize());
 
     	CollectionCursor sparseCurs = db.getBPLOnlyCursor(clusterCenters);
     	sparseCurs.next();
     	info = sparseCurs.getCurrent();
     	Map<Integer, Float> peaks = info.getBinnedList().getPeaks();
-    	assertEquals(5000.0f, peaks.get(-30).floatValue());
-    	assertEquals(3750.0f, peaks.get(30).floatValue());
-    	assertEquals(1250.0f, peaks.get(45).floatValue());
+		assertEquals(555.0f, peaks.get(-300).floatValue());
+    	assertEquals(3888.0f, peaks.get(-30).floatValue());
+		assertEquals(833.0f, peaks.get(6).floatValue());
+    	assertEquals(3333.0f, peaks.get(30).floatValue());
+    	assertEquals(833.0f, peaks.get(45).floatValue());
     	sparseCurs.next();
     	info = sparseCurs.getCurrent();
     	peaks = info.getBinnedList().getPeaks();
-    	assertEquals(833.0f, peaks.get(-300).floatValue());
     	assertEquals(1666.0f, peaks.get(-30).floatValue());
     	assertEquals(1666.0f, peaks.get(-20).floatValue());
-    	assertEquals(833.0f, peaks.get(-10).floatValue());
-    	assertEquals(1250.0f, peaks.get(6).floatValue());
-    	assertEquals(2500.0f, peaks.get(20).floatValue());
-    	assertEquals(1250.0f, peaks.get(30).floatValue());
+    	assertEquals(1666.0f, peaks.get(-10).floatValue());
+    	assertEquals(5000.0f, peaks.get(20).floatValue());
     }
 
     /**
@@ -478,13 +477,13 @@ public class KMeansTest extends TestCase {
     	ArrayList<Integer> particles = cluster1.getParticleIDs();
        	assertEquals(2, particles.get(0).intValue());
     	assertEquals(3, particles.get(1).intValue());
+		assertEquals(5, particles.get(2).intValue());
     	assertTrue(cluster1.getSubCollectionIDs().isEmpty());
     	
     	assertTrue(cluster2.containsData());
     	assertEquals(7, cluster2.getParentCollection().getCollectionID());
     	particles = cluster2.getParticleIDs();
     	assertEquals(4, particles.get(0).intValue());
-    	assertEquals(5, particles.get(1).intValue());
     	assertTrue(cluster2.getSubCollectionIDs().isEmpty());
     }
 
