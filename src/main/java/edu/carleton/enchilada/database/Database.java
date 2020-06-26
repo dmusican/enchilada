@@ -96,8 +96,6 @@ public abstract class Database implements InfoWarehouse {
 	protected String port;
 	protected String database;
 	
-//	protected String tempdir;
-	
 	//the name of this database, for debugging and error reporting purposes
 	private String dbType;
 	
@@ -111,7 +109,9 @@ public abstract class Database implements InfoWarehouse {
 	public boolean isDirty(){
 		return isDirty;
 	}
-	
+
+	private int randomSeed = 0;
+
 	/**
 	 * Construct an instance of either SQLServerDatabase or MySQLDatabase
 	 * @param dbname the name of the database to use (SpASMSdb, TestDB, etc)
@@ -4154,14 +4154,12 @@ public abstract class Database implements InfoWarehouse {
 		protected Statement stmt = null;
 		private double randMultiplier;
 		private Collection collection;
-		/**
-		 * @param collectionID
-		 */
+
 		public RandomizedCursor(Collection col) {
 			super(col);
 			collection = col;
-			randMultiplier = Math.random();
-			//Statement stmt = null;
+			randMultiplier = new Random(randomSeed).nextDouble();
+
 			try {
 				stmt = con.createStatement();
 				executeRandomizedCursorQuery();
@@ -4346,35 +4344,7 @@ public abstract class Database implements InfoWarehouse {
 	 * Seeds the random number generator.
 	 */
 	public void seedRandom(int seed) {
-		try {
-			Statement stmt = con.createStatement();
-			stmt.executeQuery("SELECT RAND(" + seed + ")\n");
-			stmt.close();
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception seeding the random number generator.");
-			System.err.println("Error in seeding random number generator.");		
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 *  Used for testing random number seeding 
-	 */
-	public double getNumber() {
-		double num = -1;
-		try {
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT RAND()");
-			rs.next();
-			num = rs.getDouble(1);
-			System.out.println(num);
-			stmt.close();
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception testing the random number seeding.");
-			System.err.println("Error in generating single number.");
-			e.printStackTrace();
-		}
-		return num;
+		randomSeed = seed;
 	}
 	
 	/**

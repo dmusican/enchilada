@@ -303,9 +303,6 @@ public interface InfoWarehouse {
 
 	public void seedRandom(int seed);
 
-	/* Used for testing random number seeding */
-	public double getNumber();
-
 	public ArrayList<String> getColNames(String datatype, DynamicTable table);
 	public Connection getCon();
 	public Vector<Vector<Object>> updateParticleTable(Collection collection, Vector<Vector<Object>> particleTable, int lowAtomID, int hightAtomID);

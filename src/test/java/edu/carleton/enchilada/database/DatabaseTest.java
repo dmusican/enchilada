@@ -1148,32 +1148,6 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	
-	// TODO: ERROR WITH SEED RANDOM!! DON'T KNOW WHY - AR
-	public void testSeedRandom()
-	{
-	    db.openConnection(dbName);
-	    //db.getNumber();
-	    db.seedRandom(12345);
-	    double rand1 = db.getNumber();
-	    db.getNumber();
-	    db.getNumber();
-	    
-	    System.out.println();
-	    db.seedRandom(12345);
-	    double rand2 = db.getNumber();
-	    db.getNumber();
-	    db.getNumber();
-	    
-	    System.out.println();
-	    db.seedRandom(12345);
-	    db.getNumber();
-	    db.getNumber();
-	    db.getNumber();
-
-		assertEquals(rand1, rand2);
-	    db.closeConnection();
-	    
-	}
 	public void testGetParticleInfoOnlyCursor() {
 		db.openConnection(dbName);
 		CollectionCursor curs = db.getAtomInfoOnlyCursor(db.getCollection(2));
@@ -1264,7 +1238,58 @@ public class DatabaseTest extends TestCase {
 		db.openConnection(dbName);
 		CollectionCursor curs = db.getRandomizedCursor(db.getCollection(2));	
 		testCursor(curs);	
+
+		// Verify that order is same with same seeds and different with different seeds
+		db.seedRandom(123);
+		curs = db.getRandomizedCursor(db.getCollection(2));
+		int[] ids1 = new int[5];
+		for (int i = 0; i < 5; i++) {
+			curs.next();
+			ids1[i] = curs.getCurrent().getID();
+		}
+		assertFalse(curs.next());
+		curs.reset();
+
+		db.seedRandom(123);
+		curs = db.getRandomizedCursor(db.getCollection(2));
+		int[] ids2 = new int[5];
+		for (int i = 0; i < 5; i++) {
+			curs.next();
+			ids2[i] = curs.getCurrent().getID();
+		}
+		assertFalse(curs.next());
+		curs.reset();
+
+		boolean different = false;
+		for (int i=0; i < 5; i++)
+			if (ids1[i] != ids2[i]) {
+				different = true;
+				break;
+			}
+
+		assertFalse(different);
+
+		db.seedRandom(456);
+		curs = db.getRandomizedCursor(db.getCollection(2));
+		int[] ids3 = new int[5];
+		for (int i = 0; i < 5; i++) {
+			curs.next();
+			ids3[i] = curs.getCurrent().getID();
+		}
+		assertFalse(curs.next());
+		curs.reset();
+
+		different = false;
+		for (int i=0; i < 5; i++)
+			if (ids1[i] != ids3[i]) {
+				different = true;
+				break;
+			}
+
+		assertTrue(different);
+
 		db.closeConnection();
+
 	}
 
 	// SubSampleCursor is actually located in the analysis package, but
