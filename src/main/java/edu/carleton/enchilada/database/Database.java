@@ -1220,7 +1220,6 @@ public abstract class Database implements InfoWarehouse {
 		returnVals[0] = createEmptyCollection(datatype, parent, datasetName, comment, datasetName + ": " + comment);
 		try {
 			Statement stmt = con.createStatement();
-			System.out.println(getDynamicTableName(DynamicTable.DataSetInfo,datatype));
 			ResultSet rs = stmt.executeQuery("SELECT MAX(DataSetID) " +
 					"FROM " + getDynamicTableName(DynamicTable.DataSetInfo,datatype));
 			

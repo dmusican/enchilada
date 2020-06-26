@@ -935,12 +935,10 @@ public class DatabaseTest extends TestCase {
 		ArrayList<ATOFMSPeak> sparseData = new ArrayList<>();
 		int collectionID = 2;
 		int datasetID = 1;
-		System.out.println(db.getCollectionSize(collectionID));
 		assertEquals(5, db.getCollectionSize(collectionID));
 		
 		db.insertParticle(dateString + "," + laserPower + "," + digitRate + ","	
 				+ scatterDelay + ", " + filename, sparseData, db.getCollection(collectionID),datasetID,db.getNextID()+1);
-		System.out.println(db.getCollectionSize(collectionID));
 		assertEquals(6, db.getCollectionSize(collectionID));
 			
 		db.closeConnection();
