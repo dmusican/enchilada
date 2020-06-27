@@ -53,8 +53,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 
 import edu.carleton.enchilada.ATOFMS.Peak;
-import edu.carleton.enchilada.analysis.dataCompression.BIRCH;
-import edu.carleton.enchilada.analysis.DistanceMetric;
 
 import edu.carleton.enchilada.collection.*;
 
@@ -130,7 +128,6 @@ public class MainFrame extends JFrame implements ActionListener
 	private JMenuItem saveParticle;
 	private JMenuItem queryItem;
 	private JMenuItem clusterQueryItem;
-	private JMenuItem compressItem;
 	private JMenuItem clusterItem;
 	private JMenuItem detectPlumesItem;
 	private JMenuItem rebuildItem;
@@ -860,53 +857,6 @@ public class MainFrame extends JFrame implements ActionListener
 				new DetectPlumesDialog(this,synchronizedPane, db);
 		}
 		
-		else if (source == compressItem) {
-			if (collectionPane.getSelectedCollection() == null)
-				JOptionPane.showMessageDialog(this, "Please select a collection to compress.", 
-						"No collection selected.", JOptionPane.WARNING_MESSAGE);
-			else {
-				//Added input box for a collection name as indicated.
-				//This could still be made more elegant - adding a comment field, choosing a distance metric,
-				//and giving more feedback on the stage of compression might be nice.
-				//@author shaferia
-				final String name = JOptionPane.showInputDialog(
-						this, 
-						"Enter a name for the compressed collection:", 
-						"Input name", 
-						JOptionPane.QUESTION_MESSAGE);
-				if (name == null)
-					return;
-				
-				final MainFrame thisref = this;
-				final ProgressBarWrapper pbar = new ProgressBarWrapper(this, "Compress", 100);
-				pbar.setIndeterminate(true);
-				pbar.setText("Compressing collection " + collectionPane.getSelectedCollection().getName() + "...");
-				
-				UIWorker worker = new UIWorker() {
-					public Object construct() {
-						try {
-							BIRCH b = new BIRCH(collectionPane.getSelectedCollection(),db,name,"comment",DistanceMetric.EUCLIDEAN_SQUARED);
-							b.compress();
-						}
-						catch (Exception ex) {
-							ErrorLogger.writeExceptionToLogAndPrompt("Compression", ex.getMessage());
-							ErrorLogger.flushLog(thisref);
-							ex.printStackTrace();
-							finished();
-						}
-						return null;
-					}
-					public void finished() {
-						collectionPane.updateTree();
-						pbar.disposeThis();
-						super.finished();
-					}
-				};
-				pbar.constructThis();
-				worker.start();
-			}
-		}
-		
 		else if (source == rebuildItem) {
 			if (JOptionPane.showConfirmDialog(this,
 			"Are you sure? This will destroy all data in your database.") ==
@@ -1326,8 +1276,6 @@ public class MainFrame extends JFrame implements ActionListener
 //				KeyEvent.VK_F);
 		queryItem = new JMenuItem("Query. . . ", KeyEvent.VK_Q);
 		queryItem.addActionListener(this);
-		compressItem = new JMenuItem("Compress. . . ", KeyEvent.VK_P);
-		compressItem.addActionListener(this);
 		visualizeItem = new JMenuItem("Visualize. . .", KeyEvent.VK_V);
 		visualizeItem.addActionListener(this);
 		visualizeHierarchyItem = new JMenuItem("Visualize Hierarchy. . .", KeyEvent.VK_H);
@@ -1346,7 +1294,6 @@ public class MainFrame extends JFrame implements ActionListener
 //		analysisMenu.add(labelItem);
 //		analysisMenu.add(classifyItem);
 		analysisMenu.add(queryItem);
-//		analysisMenu.add(compressItem);
 		analysisMenu.add(visualizeItem);
 		analysisMenu.add(visualizeHierarchyItem);
 		//analysisMenu.add(detectPlumesItem);

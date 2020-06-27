@@ -1,4 +1,4 @@
-package edu.carleton.enchilada.analysis.dataCompression;
+package edu.carleton.enchilada.analysis;
 /**
  *  @author dmusican
  *

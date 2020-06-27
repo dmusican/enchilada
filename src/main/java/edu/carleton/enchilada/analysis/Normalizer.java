@@ -3,7 +3,7 @@ package edu.carleton.enchilada.analysis;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import edu.carleton.enchilada.analysis.dataCompression.Pair;
+
 public class Normalizer extends Normalizable {
 
 	public float normalize(BinnedPeakList peakList, DistanceMetric dMetric) {

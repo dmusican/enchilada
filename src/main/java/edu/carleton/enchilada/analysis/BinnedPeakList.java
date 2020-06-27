@@ -42,9 +42,6 @@ package edu.carleton.enchilada.analysis;
 import java.util.*;
 import java.util.Map.Entry;
 
-import edu.carleton.enchilada.analysis.dataCompression.Pair;
-import edu.carleton.enchilada.analysis.PeakTransform;
-
 /**
  * @author andersbe
  * @author smitht

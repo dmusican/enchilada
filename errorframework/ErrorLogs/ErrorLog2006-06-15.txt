@@ -1,2 +1,0 @@
-ErrorLog: started @ 2006-06-15
-15:27:14:046 : SQLServer Error: Error rebuilding SQL Server database.
