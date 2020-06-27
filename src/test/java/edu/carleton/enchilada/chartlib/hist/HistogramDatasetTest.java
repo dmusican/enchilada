@@ -58,13 +58,9 @@ public class HistogramDatasetTest extends TestCase {
 	   Connection con = db.getCon();
 	   Connection con2 = db2.getCon();
 	   Statement stmt = con.createStatement();
-	   stmt.executeUpdate(
-			   "USE TestDB\n" +
-	   			"INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
+	   stmt.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
 	   Statement stmt2 = con2.createStatement();
-	   stmt2.executeUpdate(
-			   "USE TestDB2\n" +
-	   			"INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
+	   stmt2.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
 	
 
 		ALBPL base = new ALBPL(100), compare = new ALBPL(100);
@@ -80,11 +76,9 @@ public class HistogramDatasetTest extends TestCase {
 				location = maxMZ - k;
 				size = (int) (300* Math.random());
 				bpl.add(location, size);
-				q = "USE TestDB\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
+				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
 				stmt.executeUpdate(q);
-				q = "USE TestDB2\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
+				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
 				stmt2.executeUpdate(q);
 				k++;
 				}
@@ -97,8 +91,7 @@ public class HistogramDatasetTest extends TestCase {
 				size = (int) (300* Math.random());
 				
 				bpl.add(location, size);
-				q = "USE TestDB\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
+				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
 				stmt.executeUpdate(q);
 			//	bpl.normalize(DistanceMetric.CITY_BLOCK);
 				
@@ -109,8 +102,7 @@ public class HistogramDatasetTest extends TestCase {
 				}*/
 				
 				
-				q = "USE TestDB2\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
+				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
 				stmt2.executeUpdate(q);
 				
 				// keep is the list for testIntersect()
@@ -118,25 +110,23 @@ public class HistogramDatasetTest extends TestCase {
 			} else {
 			//	bpl.normalize(DistanceMetric.CITY_BLOCK);
 			}
-			q = "USE TestDB\n" +
-			"INSERT INTO AtomMembership VALUES(2,"+i+")\n";
+			q = "INSERT INTO AtomMembership VALUES(2,"+i+")\n";
 			
 			stmt.executeUpdate(q);
 			base.add(new Tuple<Integer, BinnedPeakList>(i, bpl));
-			q = "USE TestDB2\n" +
-			"INSERT INTO AtomMembership VALUES(2,"+(i)+")\n";
+			q = "INSERT INTO AtomMembership VALUES(2,"+(i)+")\n";
 			stmt2.executeUpdate(q);
 		}
 		
-		ResultSet rs = stmt.executeQuery("USE TestDB SELECT AtomID FROM AtomMembership WHERE" +
+		ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 		" CollectionID = 2");
 		while(rs.next())
-				stmt.addBatch("USE TestDB INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
+				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
 		stmt.executeBatch();
-		rs = stmt2.executeQuery("USE TestDB2 SELECT AtomID FROM AtomMembership WHERE" +
+		rs = stmt2.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
 		" CollectionID = 2");
 		while(rs.next())
-				stmt2.addBatch("USE TestDB2 INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
+				stmt2.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
 		stmt2.executeBatch();
 		
 		baseHist = HistogramDataset.analyseBPLs(db.getBPLOnlyCursor(db.getCollection(2)), Color.BLACK);
@@ -147,20 +137,9 @@ public class HistogramDatasetTest extends TestCase {
 	protected void tearDown() throws Exception {
 		super.tearDown();
 		db.closeConnection();
+		db.dropDatabaseCommands();
 		db2.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			db = (Database) Database.getDatabase("");
-			db.openConnection();
-			Connection con = db.getCon();
-			con.createStatement().executeUpdate("DROP DATABASE TestDB");
-			con.createStatement().executeUpdate("DROP DATABASE TestDB2");
-			con.close();
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		db2.dropDatabaseCommands();
 	}
 
 	public void testEquals() {
