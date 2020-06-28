@@ -488,14 +488,17 @@ public abstract class Database implements InfoWarehouse {
 		}
 
 		public void executeBuckets() {
-			for (PreparedStatement bucket : buckets) {
-				try {
+			try {
+				con.setAutoCommit(false);
+				for (PreparedStatement bucket : buckets)
 					bucket.executeBatch();
-				} catch (SQLException throwables) {
-					throw new ExceptionAdapter(throwables);
-				}
+				con.commit();
+				con.setAutoCommit(true);
+			} catch (SQLException throwables) {
+				throw new ExceptionAdapter(throwables);
 			}
 		}
+
 		public void close() {
 			try {
 				for(int i = 0; i<tables.length; i++)
@@ -893,6 +896,7 @@ public abstract class Database implements InfoWarehouse {
 		Statement stmt;
 		boolean exists = false;
 		try {
+			con.setAutoCommit(false);
 			stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT AtomID FROM" +
 					" InternalAtomOrder WHERE CollectionID = "+toParentID + " ORDER BY AtomID");
@@ -907,6 +911,8 @@ public abstract class Database implements InfoWarehouse {
 							+atomID+","+toParentID+")");	
 				stmt.executeBatch();
 			}
+			con.commit();
+			con.setAutoCommit(true);
 			stmt.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -925,6 +931,7 @@ public abstract class Database implements InfoWarehouse {
 	public boolean compactDatabase(ProgressBarWrapper progressBar)
 	{
 		try {
+			con.setAutoCommit(false);
 			Statement stmt = con.createStatement();
 			Statement typesStmt = con.createStatement();
 			stmt.execute("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
@@ -944,10 +951,6 @@ public abstract class Database implements InfoWarehouse {
 
 			stmt.execute("DELETE FROM AtomMembership\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
-
-//			stmt.addBatch("DELETE AtomMembership\nFROM AtomMembership\n"
-//					+ "INNER JOIN temp.CollectionsToCompact\n ON " +
-//							"(temp.CollectionsToCompact.CollectionID = AtomMembership.CollectionID);\n");
 
 			stmt.execute("DELETE FROM InternalAtomOrder\n"
 					+ "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToCompact);\n");
@@ -997,12 +1000,6 @@ public abstract class Database implements InfoWarehouse {
 				stmt.addBatch("DELETE FROM " + denseTableName + "\n" +
 						"WHERE " + denseTableName + ".AtomID IN temp.AtomsToCompact");
 
-//				stmt.addBatch("IF EXISTS (select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME = '" + sparseTableName + "')" +
-//						"DELETE "+sparseTableName+" FROM " + sparseTableName + "\n" +
-//						"INNER JOIN #atoms ON (#atoms.AtomID = "+sparseTableName+".AtomID);\n");
-//				stmt.addBatch("DELETE "+denseTableName+" FROM " + denseTableName + "\n" +
-//						"INNER JOIN #atoms ON (#atoms.AtomID = "+denseTableName+".AtomID);\n");
-
 				//This separation is necessary!!
 				// SQL Server parser is stupid and if you create, delete, and recreate a temporary table
 				// the parser thinks you're doing something wrong and will die.
@@ -1011,6 +1008,8 @@ public abstract class Database implements InfoWarehouse {
 					stmt.addBatch("DROP TABLE temp.CollectionsToCompact;\n");
 					typesStmt.close();
 					stmt.executeBatch();
+					con.commit();
+					con.setAutoCommit(true);
 					stmt.close();
 					return false;
 				}
@@ -1023,6 +1022,8 @@ public abstract class Database implements InfoWarehouse {
 			stmt.execute("DROP TABLE temp.AtomsToCompact;\n");
 
 			isDirty = false;
+			con.commit();
+			con.setAutoCommit(true);
 			stmt.close();
 			//updateAncestors(0);
 		} catch (Exception e){
@@ -1299,7 +1300,8 @@ public abstract class Database implements InfoWarehouse {
 		try {
 			if (collection.getCollectionID() == toCollection.getCollectionID())
 				throw new SQLException("Cannot copy a collection into itself");
-			
+
+			con.setAutoCommit(false);
 			Statement stmt = con.createStatement();
 			
 			// Get Collection info:
@@ -1331,6 +1333,8 @@ public abstract class Database implements InfoWarehouse {
 			}
 
 			pstmt.executeBatch();
+			con.commit();
+			con.setAutoCommit(true);
 			rs.close();
 			// Get Children
 			ArrayList<Integer> children = getImmediateSubCollections(collection);
@@ -1385,134 +1389,6 @@ public abstract class Database implements InfoWarehouse {
 			System.err.println("Error moving collection: ");
 			System.err.println(e);
 			return false;
-		}
-		return true;
-	}
-	
-	/* Insert Atoms */
-	
-	/**
-	 * Inserts a list of AtomicAnalysisUnits to the warehouse.  Intended 
-	 * for use on original importation of atoms.
-	 * 
-	 * @param datatype collection's datatype
-	 * @param atomList An ArrayList of AtomicAnalysisUnits which describe
-	 * the atoms to add to the warehouse.
-	 * @param collectionID The collectionID of the collection to add the
-	 * particles to.  
-	 * 
-	 * @return true on success. 
-	 */
-	private boolean insertAtomicList(String datatype, 
-			ArrayList<String> atomList, 
-			Collection collection)
-	{
-		// first, create entries for the Atoms in the AtomInfo table
-		// and the peaklist table
-		int[] atomIDs = createAtomInfo(datatype, atomList);	
-		if (!createSparseData(datatype, atomList, atomIDs))
-			return false;
-		// now add atomIDs to the ownership table
-		try {
-			Statement stmt = con.createStatement();
-			for (int i = 0; i < atomIDs.length; i++)
-			{
-				stmt.addBatch("INSERT INTO AtomMembership\n" +
-						"(CollectionID,AtomID)\n" +
-						"VALUES (" + 
-						Integer.toString(collection.getCollectionID()) + ", " +
-						Integer.toString(atomIDs[i]) + ")");
-			}
-			stmt.executeBatch();
-			stmt.close();
-		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception adding particles, please check the incoming data for correct format.");
-			System.err.println("Exception adding particle memberships:");
-			System.err.println(e);
-			return false;
-		}
-		return true;
-	}
-	
-	/**
-	 * createAtomInfo takes an arraylist of atoms and inserts them into
-	 * the AtomInfoDense table for the given datatype.
-	 * @param datatype
-	 * @param atomList
-	 * @return array of IDs.
-	 */
-	private int[] createAtomInfo(String datatype, ArrayList<String> atomList)
-	{
-		int idArray[] = null;
-		try{
-			Statement stmt = con.createStatement();
-			
-			ResultSet rs = stmt.executeQuery("SELECT MAX(AtomID)\n" +
-					"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,datatype));
-			int nextID = -1;
-			if(rs.next())
-				nextID = rs.getInt(1) + 1;
-			else
-				nextID = 0;
-			
-			idArray = new int[atomList.size()];
-			
-			for (int i = 0; i < atomList.size(); i++)
-			{
-				idArray[i] = nextID;
-				String currentParticle = atomList.get(i);
-				
-				stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,datatype) + 
-						" VALUES (" + nextID + ", " +
-						currentParticle + ")");
-				nextID++;
-			}
-			stmt.executeBatch();
-			stmt.close();
-		} catch (SQLException e){
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception creating items in AtomInfoDense table.  Please check incoming data for correct format.");
-			System.err.println("Error creating items in AtomInfo table:");
-			System.err.println(e);
-			return null;
-		}
-		
-		return idArray;
-	}
-	
-	/**
-	 * createSparseData takes an arrayList of atoms and their atomIDs and 
-	 * inserts each atom's sparse data into the AtomInfoSparse table for 
-	 * the given datatype.
-	 * @param datatype
-	 * @param atomList
-	 * @param atomIDs
-	 * @return true if successful.
-	 */
-	private boolean createSparseData(String datatype, 
-			ArrayList<String> atomList, int[] atomIDs)
-	{
-		if (atomIDs.length != atomList.size())
-			return false;
-		else
-		{
-			try {
-				Statement stmt = con.createStatement();
-				String particle;
-				for (int i = 0; i < atomList.size(); i++)
-				{
-					particle = atomList.get(i);
-					stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoSparse,datatype) + " VALUES (" + 
-							particle + ")");
-				}
-				stmt.executeBatch();
-				stmt.close();
-			} catch (SQLException e) {
-				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting into AtomInfoSparse.  Please check the data for correct format.");
-				System.err.println("Exception inserting the " +
-				"peaklists");
-				System.err.println(e);
-				return false;
-			}
 		}
 		return true;
 	}
@@ -1745,10 +1621,10 @@ public abstract class Database implements InfoWarehouse {
 	 */
 	public boolean recursiveDelete(Collection collection)
 	{
-		Collection parent = collection.getParentCollection();
 		String datatype = collection.getDatatype();
 		try {
 			Statement stmt = con.createStatement();
+			con.setAutoCommit(false);
 			stmt.executeUpdate("DROP TABLE IF EXISTS temp.CollectionsToDelete;");
 			stmt.executeUpdate("CREATE TEMPORARY TABLE CollectionsToDelete " +
 					                  "(CollectionID int, PRIMARY KEY([CollectionID]));");
@@ -1787,6 +1663,8 @@ public abstract class Database implements InfoWarehouse {
 
 			stmt.executeUpdate("DROP TABLE temp.CollectionsToDelete;\n");
 			isDirty = true;
+			con.commit();
+			con.setAutoCommit(true);
 			stmt.close();
 
 		} catch (Exception e){
@@ -2006,7 +1884,6 @@ public abstract class Database implements InfoWarehouse {
 	 */
 	public void atomBatchExecute() {
 		try {
-			long time = System.currentTimeMillis();
 			batchStatement.executeBatch();
 			for (int i = 0; i < alteredCollections.size(); i++)
 				updateInternalAtomOrder(getCollection(alteredCollections.get(i)));
@@ -6080,6 +5957,7 @@ public abstract class Database implements InfoWarehouse {
 			return;
 		try {
 			Statement stmt = con.createStatement();
+			con.setAutoCommit(false);
 
 			//again, want to compare with existing IAO table to see if there
 			//are any difference, if not, why delete? - steinbel
@@ -6106,6 +5984,8 @@ public abstract class Database implements InfoWarehouse {
 			}
 
 			pstmt.executeBatch();
+			con.commit();
+			con.setAutoCommit(true);
 			stmt.close();
 			if (tempFile != null && tempFile.exists()) {
 				tempFile.delete();
@@ -6182,6 +6062,7 @@ public abstract class Database implements InfoWarehouse {
 		int cID = collection.getCollectionID();
 		try {
 			Statement stmt = con.createStatement();
+			con.setAutoCommit(false);
 			
 			/*get atomIDs for collection in IAO and in AtomMembership.  
 			 * if difference, rectify it
@@ -6224,20 +6105,11 @@ public abstract class Database implements InfoWarehouse {
 					}
 					pstmt.executeBatch();
 				}
-//				System.out.println(query);
-//				stmt.executeUpdate(query);
-//				stmt.executeUpdate("UPDATE temp.children SET CollectionID = " + cID);
-//				stmt.executeUpdate("INSERT INTO InternalAtomOrder " +
-//						" (AtomID, CollectionID) SELECT * FROM temp.children " +
-//						" WHERE NOT EXISTS (SELECT * FROM InternalAtomOrder" +
-//						" WHERE InternalAtomOrder.CollectionID = " + cID +
-//						" AND InternalAtomOrder.AtomID = temp.children.AtomID)");
-//				System.out.println("Going to drop temp.children now");//TESTING
-//				stmt = con.createStatement();
-////				stmt.executeUpdate("DROP TABLE temp.children");
 			}
 
 
+			con.commit();
+			con.setAutoCommit(true);
 			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
