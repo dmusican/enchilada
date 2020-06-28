@@ -37,19 +37,19 @@ public class TSBulkInserterTest extends TestCase {
 	 * Test method for 'database.TSBulkInserter.addPoint(Date, Float)'
 	 */
 	public void testAddOnePoint() {
-		TreeMap<Date, Float> data = new TreeMap<Date, Float>();
+		TreeMap<Date, Float> data = new TreeMap<>();
 		Date initialDate = new Date();
-		data.put(initialDate, new Float(0));
+		data.put(initialDate, 0f);
 		insertAndTest(data, initialDate);
 	}
 	
 	public void testAdd500Points() {
-		TreeMap<Date, Float> data = new TreeMap<Date, Float>();
+		TreeMap<Date, Float> data = new TreeMap<>();
 		Date initialDate = new Date();
 		Calendar c = new GregorianCalendar();
 		c.setTimeInMillis(initialDate.getTime());
 		for (int i = 0; i < 500; i++) {
-			data.put(c.getTime(), new Float(i));
+			data.put(c.getTime(), (float)i);
 			
 			c.add(Calendar.SECOND, 30);
 		}
@@ -58,12 +58,12 @@ public class TSBulkInserterTest extends TestCase {
 
 	// test to see if we still get out of memory exceptions on big collections
 	public void testAdd30000Points() {
-		TreeMap<Date, Float> data = new TreeMap<Date, Float>();
+		TreeMap<Date, Float> data = new TreeMap<>();
 		Date initialDate = new Date();
 		Calendar c = new GregorianCalendar();
 		c.setTimeInMillis(initialDate.getTime());
 		for (int i = 0; i < 30000; i++) {
-			data.put(c.getTime(), new Float(i));
+			data.put(c.getTime(), (float)i);
 			
 			c.add(Calendar.SECOND, 30);
 		}
@@ -82,10 +82,10 @@ public class TSBulkInserterTest extends TestCase {
 				ins.addPoint(e.getKey(), e.getValue());
 			}
 			ins.commit();
-
 			// test it
 			Connection con = db.getCon();
-			PreparedStatement ps = con.prepareStatement("select atomid, time, value from timeseriesatominfodense where atomid = ?");
+			PreparedStatement ps = con.prepareStatement(
+					"select atomid, time, value from timeseriesatominfodense where atomid = ?");
 			ResultSet rs;
 			
 			Calendar cal = Calendar.getInstance();
@@ -96,7 +96,7 @@ public class TSBulkInserterTest extends TestCase {
 			ps.setInt(1, 22);
 			rs = ps.executeQuery();
 			assertTrue(rs.next());
-			assertEquals(initialDate.getTime(), rs.getTimestamp("time").getTime());
+			assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
 			assertEquals(0f, rs.getFloat("value"));
 			if (data.size() > 1)
 			{
@@ -108,7 +108,7 @@ public class TSBulkInserterTest extends TestCase {
 				ps.setInt(1, 22 + half);
 				rs = ps.executeQuery();
 				assertTrue(rs.next());
-				assertEquals(initialDate.getTime(), rs.getTimestamp("time").getTime());
+				assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
 				assertEquals(0f + half, rs.getFloat("value"));
 				
 				// check the last one
@@ -118,7 +118,7 @@ public class TSBulkInserterTest extends TestCase {
 				ps.setInt(1, 22 + data.size() - 1);
 				rs = ps.executeQuery();
 				assertTrue(rs.next());
-				assertEquals(initialDate.getTime(), rs.getTimestamp("time").getTime());
+				assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
 				assertEquals(0f + data.size() - 1, rs.getFloat("value"));
 			}
 

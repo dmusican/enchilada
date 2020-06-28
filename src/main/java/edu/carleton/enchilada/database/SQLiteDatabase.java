@@ -90,7 +90,7 @@ public class SQLiteDatabase extends Database {
     }
 
     /**
-     * @return the format to match how elsewhere in SQL Server expects it
+     * @return the format to match how elsewhere in SQLite expects it
      */
     public DateFormat getDateFormat() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
