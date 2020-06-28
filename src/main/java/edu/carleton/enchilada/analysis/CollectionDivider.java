@@ -346,10 +346,10 @@ public abstract class CollectionDivider {
 		//build a table for deletes
 		//drop the table in case it already (mistakenly) exists
 		System.out.println("Creating deletion table...");
-		Connection dbCon = db.getCon();
-		Statement delStmt = null;
-		try {
-			delStmt = dbCon.createStatement();
+		try  {
+			Connection dbCon = db.getCon();
+			dbCon.setAutoCommit(false);
+			Statement delStmt = dbCon.createStatement();
 			delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
 			delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
 			PreparedStatement pstmt = dbCon.prepareStatement(
@@ -365,30 +365,28 @@ public abstract class CollectionDivider {
 			}
 			pstmt.executeBatch();
 
-		} catch (SQLException e) {
-			throw new ExceptionAdapter(e);
-		}
-
-		//finally, delete what's in stuffToDelete from AtomMembership
-		//and drop the stuffToDelete table
-		System.out.println("Finally, deleting from AtomMembership...");
-		String deletionquery = "DELETE FROM AtomMembership\n" +
-		  					   "WHERE CollectionID = " + collection.getCollectionID() + 
-		  					   "\n" + "AND AtomID IN \n" +
-		  					   "(SELECT atoms FROM temp.stuffToDelete)";
-		System.out.println("Query:");
-		System.out.println(deletionquery);
-		try {
+			//finally, delete what's in stuffToDelete from AtomMembership
+			//and drop the stuffToDelete table
+			System.out.println("Finally, deleting from AtomMembership...");
+			String deletionquery = "DELETE FROM AtomMembership\n" +
+					"WHERE CollectionID = " + collection.getCollectionID() +
+					"\n" + "AND AtomID IN \n" +
+					"(SELECT atoms FROM temp.stuffToDelete)";
+			System.out.println("Query:");
+			System.out.println(deletionquery);
 			delStmt.executeUpdate(deletionquery);
 			delStmt.executeUpdate("DROP TABLE temp.stuffToDelete");
+			System.out.println("...and dropping deletion table.");
+
+			System.out.println("Done with DELETEs.");
+
+			dbCon.commit();
+			dbCon.setAutoCommit(true);
 		}
 		catch (SQLException e) {
 			throw new ExceptionAdapter(e);
 		}
-		System.out.println("...and dropping deletion table.");
-		
-		System.out.println("Done with DELETEs.");
-		
+
 	}
 
 	/**
