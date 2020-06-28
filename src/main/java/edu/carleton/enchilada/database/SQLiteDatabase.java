@@ -96,42 +96,6 @@ public class SQLiteDatabase extends Database {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 
-    protected class StringBatchExecuter extends BatchExecuter {
-        private StringBuilder sb;
-        public StringBatchExecuter(Statement stmt) {
-            super(stmt);
-            sb = new StringBuilder();
-        }
-
-        public void append(String sql) throws SQLException {
-            if (sql.endsWith("\n"))
-                sb.append(sql);
-            else {
-                sb.append(sql);
-                sb.append("\n");
-            }
-        }
-
-        public void execute() throws SQLException {
-            System.out.println(sb);
-            stmt.execute(sb.toString());
-        }
-    }
-
-    //TODO-POSTGRES
-    //Postgres doesn't have this type of bulk insert
-    //But it does have something else
-    /**
-     * @return a SQL Server BulkInserter that reads from comma-delimited bulk files
-     */
-    protected BulkInserter getBulkInserter(BatchExecuter stmt, String table) {
-        return new BulkInserter(stmt, table) {
-            protected String getBatchSQL() {
-                return "BULK INSERT " + table + " FROM '" + tempFile.getAbsolutePath() + "' WITH (FIELDTERMINATOR=',')";
-            }
-        };
-    }
-
     /**
      * Specific commands to drop database.
      * @throws SQLException
@@ -229,6 +193,7 @@ public class SQLiteDatabase extends Database {
 
         try {
             Statement stmt = con.createStatement();
+            con.setAutoCommit(false);
             stmt.execute("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + " VALUES (" +
                     nextID + ", " + dense + ");");
             stmt.execute("INSERT INTO AtomMembership " +
@@ -257,6 +222,8 @@ public class SQLiteDatabase extends Database {
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
+            con.commit();
+            con.setAutoCommit(true);
 
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception inserting atom.  Please check incoming data for correct format.");

@@ -283,24 +283,6 @@ public abstract class Database implements InfoWarehouse {
 		public abstract void execute() throws SQLException;
 	}
 	
-	/**
-	 * If safe to use a variety of bulk insert (ie, database is on localhost), 
-	 * 	this method will return an instance of BulkInserter.
-	 * If not, a standard inserter that uses a batch statement will be returned.
-	 * @param stmt the BatchExecuter to construct the Inserter on
-	 * @param table the table to insert into
-	 * @return
-	 */
-	protected Inserter getInserter(BatchExecuter stmt, String table) {
-		return new BatchInserter(stmt, table);
-	}
-	
-	/**
-	 * For those subclassing Database: retrieves an Inserter that uses bulk storage/retrieval
-	 * @return a BulkInserter
-	 */
-	protected abstract Inserter getBulkInserter(BatchExecuter stmt, String table);
-	
 	protected abstract class Inserter {
 		protected BatchExecuter stmt;
 		protected String table;
