@@ -288,105 +288,11 @@ public class CreateTestDatabase2 {
 	}
 	
 
-	/**
-	 * Creates temporary test files to be used when testing the 
-	 * DynamicTableGenerator.
-	 *
-	 * @return ArrayList<File> - the files created
-	 */
-	public ArrayList<File> createMetaFiles(){
-		ArrayList<File> files = new ArrayList<File>();
-		FileWriter writer;
-		
-		File metaD = new File("meta.dtd");
-		try {
-			metaD.createNewFile();
-			writer = new FileWriter(metaD, true);
-			writer.write("<?xml version=" + quote + "1.0" + quote+ " " +
-				"encoding=" + quote + "utf-8" + quote + "?>\n"
-				+ "<!ELEMENT metadata (datasetinfo, atominfodense, atominfosparse)>\n"
-				+ "<!-- The metadata element MUST have a datatype associated with it -->\n"
-				+ "<!ATTLIST metadata datatype CDATA #REQUIRED>\n"
-				+ "<!ELEMENT datasetinfo (field*)>\n"
-				+ "<!ELEMENT atominfodense (field*)>\n"
-				+ "<!ELEMENT atominfosparse (field*)>\n"
-				+ "<!ELEMENT atominfosparse (field*)>\n"
-				+ "<!ELEMENT field (#PCDATA)>\n"
-				+ "<!-- Attributes are the type of data in that field, and whether"
-				+ " or not it is a primary key - used for the AIS table.  -->\n"
-				+ "<!ATTLIST field \n"
-				+ "type CDATA #REQUIRED\n"
-				+ "primaryKey (true | false) " + quote + "false" + quote + "\n"
-				+ ">");
-			writer.close();
-			
-		} catch (IOException e) {
-			System.err.println("Problem creating dtd.");
-			e.printStackTrace();
-		}
-		files.add(metaD);
-		
-		File testMeta = new File("test.md");
-		try {
-			testMeta.createNewFile();
-			writer = new FileWriter(testMeta, true);
-			writer.write("<?xml version=" + quote + "1.0" + quote + " encoding="
-					+ quote + "utf-8" + quote + "?>\n"
-					+ "<!DOCTYPE metadata SYSTEM " + quote + "meta.dtd" + quote + ">\n"
-					+ "<metadata datatype=" + quote + "SimpleParticle" + quote + ">\n"
-					+ "<datasetinfo> \n"
-					+ "<field type=" + quote + "int" + quote + ">Number</field>\n"
-					+ "</datasetinfo> \n"
-					+ "<atominfodense> \n"
-					+ "<field type=" + quote + "real" + quote + ">Size</field>\n"
-					+ "<field type=" + quote + "real" + quote + ">Magnitude</field>\n"
-					+ "</atominfodense>\n"
-					+ "<atominfosparse table=" + quote + quote + ">\n"
-					+ "<field type=" + quote + "int" + quote + " primaryKey="
-					+ quote + "true" + quote + ">Delay</field>\n"
-					+ "<field type=" + quote + "bit" + quote + ">Valid</field>\n"
-					+ "</atominfosparse>\n"
-					+ "</metadata>");
-			writer.close();
-		} catch (IOException e) {
-			System.err.println("Error creating temporary simpleparticle .md file");
-			e.printStackTrace();
-		}
-		files.add(testMeta);
-		
-		File testMetaBad = new File("testBad.md");
-		try {
-			testMetaBad.createNewFile();
-			writer = new FileWriter(testMetaBad, true);
-			writer.write("<?xml version=" + quote + "1.0" + quote + " encoding="
-					+ quote + "utf-8" + quote + "?>\n"
-					+ "<!DOCTYPE metadata SYSTEM " + quote + "meta.dtd" + quote + ">\n"
-					+ "<metadata datatype=" + quote + "BadExample" + quote + ">\n"
-					+ "<datasetinfo> \n"
-					+ "<field type=" + quote + "int" + quote + ">atomid</field>\n"
-					+ "</datasetinfo>\n"
-					+ "<atominfodense>\n"
-					+ "<field type=" + quote + "real" + quote + ">Size</field>\n"
-					+ "<field type=" + quote + "real" + quote + ">Magnitude</field>\n"
-					+ "</atominfodense>\n"
-					+ "<atominfosparse table=" + quote + quote + ">\n"
-					+ "<field type=" + quote + "int" + quote + " primaryKey="
-					+ quote + "true" + quote + ">Delay</field>\n"
-					+ "<field type=" + quote + "bit" + quote + ">Valid</field>\n"
-					+ "</atominfosparse>\n"
-					+ "</metadata>");
-			writer.close();
-		} catch (IOException e) {
-			System.err.println("Error creating temporary badexample .md file");
-			e.printStackTrace();
-		}
-		files.add(testMetaBad);
-		return files;
-	}
-	
+
 	private void updateInternalAtomOrderTestTable() {
 		try {
 			Statement stmt = con.createStatement();
+			con.setAutoCommit(false);
 			// updateInternalAtomOrderTable for CID=2
 			ResultSet rs = stmt.executeQuery("USE TestDB2 SELECT AtomID FROM AtomMembership WHERE CollectionID = 2 OR CollectionID = 3");
 			while(rs.next())
@@ -410,7 +316,9 @@ public class CreateTestDatabase2 {
 			while(rs.next())
 				stmt.addBatch("USE TestDB2 INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
 			stmt.executeBatch();
-			
+
+			con.commit();
+			con.setAutoCommit(true);
 			rs.close();
 			stmt.close();
 		} catch (SQLException e) {

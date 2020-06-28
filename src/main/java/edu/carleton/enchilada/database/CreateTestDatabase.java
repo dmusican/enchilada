@@ -62,20 +62,7 @@ public class CreateTestDatabase {
 	private static final String dbname = "TestDB";
 	
 	public CreateTestDatabase() {
-//        tempDB = Database.getDatabase();
-//        tempDB.openConnection();
-//        con = tempDB.getCon();
-        
 		Database.getDatabase(dbname).rebuildDatabase(dbname);
-
-//		try {
-//			if (con.createStatement() == null)
-//				System.err.println("con should not be null");
-//		} catch (SQLException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-
 		InfoWarehouse db = Database.getDatabase(dbname);
 		db.openConnection(dbname);
 		con = db.getCon();
@@ -262,207 +249,7 @@ public class CreateTestDatabase {
 
 	}
 	
-	/**
-	 * Creates temporary test files to be used when testing the 
-	 * EnchiladaDataSetImporter.
-	 *
-	 * @return ArrayList<File> - the files created
-	 */
-	public ArrayList<File> createEnchFiles(){
-		ArrayList<File> files = new ArrayList<File>();
-		FileWriter writer;
-		
-		File enchiladaD = new File("enchilada.dtd");
-		try {
-			enchiladaD.createNewFile();
-			writer = new FileWriter(enchiladaD, true);
-			String string = new String("<?xml version=" + quote + "1.0" + quote
-				+ " encoding=" + quote + "utf-8" + quote + "?>\n"
-				+ "<!ELEMENT enchiladadata (datasetinfo+)>\n"
-				+ "<!-- The enchiladadata element MUST have a datatype associated with it. -->\n"
-				+ "<!ATTLIST enchiladadata datatype CDATA #REQUIRED>\n"
-				+ "<!ELEMENT datasetinfo (field*, atominfodense*)>\n"
-				+ "<!-- Each dataset MUST have a name (this is used as a primary key). -->\n"
-				+ "<!ATTLIST datasetinfo dataSetName CDATA #REQUIRED>\n"
-				+ "<!ELEMENT atominfodense (field*, atominfosparse*)>\n"
-				+ "<!ELEMENT atominfosparse (field*)>\n"
-				+ "<!-- The AIS elements MUST specify which AIS table they belong to.  -->\n"
-				+ "<!ATTLIST atominfosparse table CDATA #REQUIRED>\n"
-				+ "<!ELEMENT field (#PCDATA)>");
-			//System.out.println(string);//debugging
-			writer.write(string);
-			writer.close();
-		} catch (IOException e) {
-			System.err.println("Problem creating dtd.");
-			e.printStackTrace();
-		}
-		files.add(enchiladaD);
-		
-		/*
-		 * This is what the following file should look like, but I've left out
-		 * line breaks in the temporary file.
-		 * 
-		 *  <?xml version="1.0" encoding="utf-8"?>
-		 *	<!DOCTYPE enchiladadata SYSTEM "enchilada.dtd">
-		 *
-		 *	<enchiladadata datatype="SimpleParticle">
-		 *		<datasetinfo dataSetName="Simple Dataset">
-		 *			<field>22</field>
-		 *			<atominfodense>
-		 *	 			<field>33.00</field>
-		 *				<field>42.00</field>
-		 *			</atominfodense>
-		 *			<atominfodense>
-		 *				<field>1.00</field>
-		 *				<field>2.00</field>
-		 *				<atominfosparse table="">
-		 *					<field>4</field>
-		 *					<field>1</field>
-		 *				</atominfosparse>
-		 *			</atominfodense>
-		 *	
-		 *			<atominfodense>
-		 *				<field>21.0</field>
-		 *				<field>12.2</field>
-		 *				<atominfosparse table="">
-		 *					<field>9</field>
-		 *					<field>0</field>
-		 *				</atominfosparse>
-		 *				<atominfosparse table="">
-		 *					<field>8</field>
-		 *					<field>0</field>
-		 *				</atominfosparse>
-		 *			</atominfodense>
-		 *			<atominfodense>
-		 *				<field>56.6</field>
-		 *				<field>76.5</field>
-		 *				<atominfosparse table="">
-		 *					<field>10</field>
-		 *					<field>1</field>
-		 *				</atominfosparse>
-		 *				<atominfosparse table="">
-		 *					<field>1</field>
-		 *					<field>0</field>
-		 *				</atominfosparse>
-		 *				<atominfosparse table="">
-		 *					<field>2</field>
-		 *					<field>1</field>
-		 *				</atominfosparse>
-		 *			</atominfodense>
-		 *		</datasetinfo>
-		 *	</enchiladadata>
-		 */
-		
-		File testData = new File("test.ed");
-		try {
-			testData.createNewFile();
-			writer = new FileWriter(testData, true);
-			String string = new String("<?xml version=" + quote + "1.0"  + quote + 
-					" encoding=" + quote + "utf-8" + quote + "?>" +
-					"<!DOCTYPE enchiladadata SYSTEM " + quote + "enchilada.dtd" +
-					quote + "> <enchiladadata datatype=" + quote + "SimpleParticle"
-					+ quote + "> <datasetinfo dataSetName=" + quote + "Simple Dataset"
-					+ quote + "> <field>22</field> <atominfodense> <field>33.00</field>"
-					+ "<field>42.00</field> </atominfodense> <atominfodense>"
-					+ "<field>1.00</field> <field>2.00</field>"
-					+ "<atominfosparse table=" + quote + quote + ">	<field>4</field>"
-					+ "<field>1</field> </atominfosparse> </atominfodense>"
-					+ "<atominfodense> <field>21.0</field> <field>12.2</field>"
-					+ "<atominfosparse table=" + quote + quote + ">"
-					+ "<field>9</field> <field>0</field> </atominfosparse>"
-					+ "<atominfosparse table=" + quote + quote + ">"
-					+ "<field>8</field> <field>0</field> </atominfosparse>"
-					+ "</atominfodense> <atominfodense> <field>56.6</field>"
-					+ "<field>76.5</field> <atominfosparse table=" + quote +
-					quote + "> <field>10</field> <field>1</field>"
-					+ "</atominfosparse> <atominfosparse table=" + quote +
-					quote + "> <field>1</field> <field>0</field>"
-					+ "</atominfosparse> <atominfosparse table=" + quote + 
-					quote + "> <field>2</field> <field>1</field>"
-					+ "</atominfosparse> </atominfodense> </datasetinfo>"
-					+ "</enchiladadata>");
-			//System.out.println(string);//debugging
-			writer.write(string);
-			writer.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		files.add(testData);
-		
-		return files;
-	}
-	
-	/**
-	 * Creates temporary test files to be used when testing the 
-	 * DynamicTableGenerator.
-	 *
-	 * @return ArrayList<File> - the files created
-	 */
-	public ArrayList<File> createMetaFiles(){
-		ArrayList<File> files = new ArrayList<File>();
-		FileWriter writer;
-		
-		File metaD = new File("meta.dtd");
-		try {
-			metaD.createNewFile();
-			writer = new FileWriter(metaD, true);
-			writer.write("<?xml version=" + quote + "1.0" + quote+ " " +
-				"encoding=" + quote + "utf-8" + quote + "?>\n"
-				+ "<!ELEMENT metadata (datasetinfo, atominfodense, atominfosparse+)>\n"
-				+ "<!-- The metadata element MUST have a datatype associated with it -->\n"
-				+ "<!ATTLIST metadata datatype CDATA #REQUIRED>\n"
-				+ "<!ELEMENT datasetinfo (field*)>\n"
-				+ "<!ELEMENT atominfodense (field*)>\n"
-				+ "<!ELEMENT atominfosparse (field*)>\n"
-				+ "<!-- In case more than one AIS tabe is required, each must"
-				+ " have a name/number. -->\n"
-				+ "<!ATTLIST atominfosparse table CDATA #REQUIRED>\n"
-				+ "<!ELEMENT field (#PCDATA)>\n"
-				+ "<!-- Attributes are the type of data in that field, and whether"
-				+ " or not it is a primary key - used for the AIS table(s).  -->\n"
-				+ "<!ATTLIST field \n"
-				+ "type CDATA #REQUIRED\n"
-				+ "primaryKey (true | false) " + quote + "false" + quote + "\n"
-				+ ">");
-			writer.close();
-			
-		} catch (IOException e) {
-			System.err.println("Problem creating dtd.");
-			e.printStackTrace();
-		}
-		files.add(metaD);
-		
-		File testMeta = new File("test.md");
-		try {
-			testMeta.createNewFile();
-			writer = new FileWriter(testMeta, true);
-			writer.write("<?xml version=" + quote + "1.0" + quote + " encoding="
-					+ quote + "utf-8" + quote + "?>\n"
-					+ "<!DOCTYPE metadata SYSTEM " + quote + "meta.dtd" + quote + ">\n"
-					+ "<metadata datatype=" + quote + "SimpleParticle" + quote + ">\n"
-					+ "<datasetinfo> \n"
-					+ "<field type=" + quote + "int" + quote + ">Number</field>\n"
-					+ "</datasetinfo>\n"
-					+ "<atominfodense>\n"
-					+ "<field type=" + quote + "real" + quote + ">Size</field>\n"
-					+ "<field type=" + quote + "real" + quote + ">Magnitude</field>\n"
-					+ "</atominfodense>\n"
-					+ "<atominfosparse table=" + quote + quote + ">\n"
-					+ "<field type=" + quote + "int" + quote + " primaryKey="
-					+ quote + "true" + quote + ">Delay</field>\n"
-					+ "<field type=" + quote + "bit" + quote + ">Valid</field>\n"
-					+ "</atominfosparse>/n"
-					+ "</metadata>");
-			writer.close();
-		} catch (IOException e) {
-			System.err.println("Error creating temporary simpleparticle .md file");
-			e.printStackTrace();
-		}
-		files.add(testMeta);
-		return files;
-	}
-	
+
 	/**
 	 * @author steinbel
 	 * Could still use some optimization - all I did was take out all references
@@ -471,6 +258,7 @@ public class CreateTestDatabase {
 	 */
 	private void updateInternalAtomOrderTestTable() {
 		try {
+			con.setAutoCommit(false);
 			Statement queryStmt = con.createStatement();
 			Statement insertStmt = con.createStatement();
 			// updateInternalAtomOrderTable for CID=2
@@ -506,6 +294,8 @@ public class CreateTestDatabase {
 			rs.close();
 			queryStmt.close();
 			insertStmt.close();
+			con.commit();
+			con.setAutoCommit(true);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -1123,22 +1123,6 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 
-/*
-	public void testInsertGeneralParticles() {
-		db.openConnection();
-		 int[] pSpect = {1,2,3};
-		 int[] nSpect = {1,2,3};
-		EnchiladaDataPoint part = new EnchiladaDataPoint("newpart");
-		ArrayList<EnchiladaDataPoint> array = new ArrayList<EnchiladaDataPoint>();
-		array.add(part);
-		int id = db.insertGeneralParticles(array,1);
-		assertTrue(db.checkAtomParent(id,1));
-		db.atomBatchInit();
-		db.deleteAtomBatch(id,1);
-		db.executeBatch();
-		db.closeConnection();
-		}
-*/
 	public void testGetAtomDatatype() {
 		db.openConnection(dbName);
 		assertEquals("ATOFMS", db.getAtomDatatype(2));
