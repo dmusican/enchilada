@@ -4457,16 +4457,14 @@ public abstract class Database implements InfoWarehouse {
 		File tempFile = null;
 		// grabbing the times for all subcollectionIDs
 		try {
-			StringBuilder tempTable = new StringBuilder();
 			Statement stmt = con.createStatement();
-			tempTable.append("IF object_id('tempdb..#TimeBins') IS NOT NULL\n"+
-					"DROP TABLE #TimeBins;\n");
-			tempTable.append("CREATE TABLE #TimeBins (AtomID INT, BinnedTime datetime, PRIMARY KEY (AtomID));\n");
+			stmt.executeUpdate("DROP TABLE IF EXISTS temp.TimeBins;\n");
+			stmt.executeUpdate("CREATE TEMPORARY TABLE TimeBins (AtomID INT, BinnedTime datetime, PRIMARY KEY (AtomID));\n");
 			// if aggregation is based on this collection, copy table
 			if (c.getCollectionID() == basis.getCollectionID()) {	
 				System.out.println("copying table...");
-				tempTable.append("INSERT #TimeBins (AtomID, BinnedTime)\n"+
-						"SELECT AID.AtomID, [Time] FROM "+getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype())+" AID,\n"+
+				stmt.executeUpdate("INSERT INTO temp.TimeBins (AtomID, BinnedTime)\n"+
+						"SELECT AID.AtomID, Time FROM "+getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype())+" AID,\n"+
 						"InternalAtomOrder IAO \n"+
 						"WHERE IAO.AtomID = AID.AtomID\n" +
 						"AND CollectionID = "+c.getCollectionID()+"\n"+
@@ -4477,14 +4475,14 @@ public abstract class Database implements InfoWarehouse {
 				Statement stmt1 = con.createStatement();
 				Statement stmt2 = con.createStatement();
 				// get distinct times from basis collection
-				ResultSet basisRS = stmt1.executeQuery("SELECT DISTINCT [Time] \n" +
+				ResultSet basisRS = stmt1.executeQuery("SELECT DISTINCT Time \n" +
 						"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, basis.getDatatype()) + " AID,\n" +
 						"InternalAtomOrder IAO \n"+
 						"WHERE IAO.AtomID = AID.AtomID\n" +
 						"AND CollectionID = "+basis.getCollectionID()+"\n"+
 				"ORDER BY Time;\n");
 				// get all times from collection to bin.
-				ResultSet collectionRS = stmt2.executeQuery("SELECT AID.AtomID, [Time] \n" +
+				ResultSet collectionRS = stmt2.executeQuery("SELECT AID.AtomID, Time \n" +
 						"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
 						"InternalAtomOrder IAO \n"+
 						"WHERE IAO.AtomID = AID.AtomID\n" +
@@ -4492,97 +4490,68 @@ public abstract class Database implements InfoWarehouse {
 				"ORDER BY Time;\n");
 				
 				// initialize first values:
-				Timestamp nextBin = null;
+				String nextBin = null;
 				boolean test = basisRS.next();
 				assert (test) : "no basis times for collection!";
-				Timestamp currentBin = basisRS.getTimestamp(1);
+				String currentBin = basisRS.getString(1);
 				collectionRS.next();
 				int atomID = collectionRS.getInt(1);
-				Timestamp collectionTime = collectionRS.getTimestamp(2);
+				String collectionTime = collectionRS.getString(2);
 				boolean next = true;
-				
+
 				// We skip the times before the first bin.
 				while (collectionTime.compareTo(currentBin) < 0) {
 					next = collectionRS.next();
 					if (!next)
 						break;
-					else { 
+					else {
 						atomID = collectionRS.getInt(1);
-						collectionTime = collectionRS.getTimestamp(2);
+						collectionTime = collectionRS.getString(2);
 					}
 				}
 				//	while the next time bin is legal...
-				
-				// Only bulk insert if client and server are on the same machine...
-				if (url.equals("localhost")) {
-					PrintWriter bulkFile = null;
-					try {
-						//tempFile = File.createTempFile("bulkfile", ".txt");
-						tempFile = new File("TEMP"+File.separator+"bulkfile"+".txt");
-						tempFile.deleteOnExit();
-						bulkFile = new PrintWriter(new FileWriter(tempFile));
-					} catch (IOException e) {
-						System.err.println("Trouble creating " + tempFile.getAbsolutePath() + "");
-						e.printStackTrace();
-					}
-					while (next && basisRS.next()) { 
-						nextBin = basisRS.getTimestamp(1);
-						// while collectionTime is within bin, insert it in table.
-						while (collectionTime.compareTo(nextBin) < 0) {
-							bulkFile.println(atomID+","+currentBin.toString());
-							next = collectionRS.next();
-							if (!next)
-								break;
-							else { 
-								atomID = collectionRS.getInt(1);
-								collectionTime = collectionRS.getTimestamp(2);
-							}	
+
+				PreparedStatement pstmt = con.prepareStatement("INSERT INTO temp.TimeBins VALUES (?,?)");
+				int counter = 0;
+				while (next && basisRS.next()) {
+					nextBin = basisRS.getString(1);
+					// while collectionTime is within bin, insert it in table.
+					while (collectionTime.compareTo(nextBin) < 0) {
+						pstmt.setInt(1, atomID);
+						pstmt.setString(2, currentBin);
+//						stmt.executeUpdate("INSERT INTO temp.TimeBins VALUES ("+atomID+",'"+currentBin+"');\n");
+						pstmt.addBatch();
+						counter++;
+						next = collectionRS.next();
+						if (!next)
+							break;
+						else {
+							atomID = collectionRS.getInt(1);
+							collectionTime = collectionRS.getString(2);
 						}
-						currentBin = nextBin;
-					}
-					bulkFile.close();
-					tempTable.append("BULK INSERT #TimeBins\n" +
-							"FROM '" + tempFile.getAbsolutePath() + "'\n" +
-					"WITH (FIELDTERMINATOR=',');\n");
-				} else {
-					int counter = 0;
-					while (next && basisRS.next()) { 
-						nextBin = basisRS.getTimestamp(1);
-						// while collectionTime is within bin, insert it in table.
-						while (collectionTime.compareTo(nextBin) < 0) {
-							tempTable.append("INSERT INTO #TimeBins VALUES ("+atomID+",'"+currentBin+"');\n");
-							counter++;
-							next = collectionRS.next();
-							if (!next)
-								break;
-							else { 
-								atomID = collectionRS.getInt(1);
-								collectionTime = collectionRS.getTimestamp(2);
-							}	
-							if (counter > 500) {
-								stmt.execute(tempTable.toString());
-								counter = 0;
-								tempTable = new StringBuilder();
-							}
+						if (counter > 500) {
+							pstmt.executeBatch();
+							counter = 0;
+							pstmt.clearBatch();
 						}
-						currentBin = nextBin;
 					}
-				}		
-//				We skip the times after the last bin.
+					currentBin = nextBin;
+				}
+				pstmt.executeBatch();
+
+				//	We skip the times after the last bin.
 				stmt1.close();
 				stmt2.close();
 			}
-			stmt.execute(tempTable.toString());
-			stmt.close();	
+			stmt.close();
 			if (tempFile != null && tempFile.exists()) {
 				tempFile.delete();
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 	}
-	
+
 	/**
 	 * Assign each Atom in c to a 'bin' and  store this information into the #TimeBins table
 	 * This method uses the start, end and interval parameters and 
@@ -4826,8 +4795,6 @@ public abstract class Database implements InfoWarehouse {
 							"select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
 					stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " (AtomID, Time, Value) \n" +
 							"select NewAtomID, Time, Value from tmpatoms;\n");
-					stmt.executeBatch();
-
 
 					progressBar.increment("  " + collectionName + ", Particle Counts");
 					long start = System.currentTimeMillis();
@@ -4843,7 +4810,7 @@ public abstract class Database implements InfoWarehouse {
 
 				/* IF DATATYPE IS TIME SERIES */
 			} else if (curColl.getDatatype().equals("TimeSeries")) {
-				stmt.addBatch("insert tmpatoms (Time, Value) \n" +
+				stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
 						"select BinnedTime, " + options.getGroupMethodStr() + "(AID.Value) AS Value \n" +
 						"from temp.TimeBins TB \n" +
 						"join TimeSeriesAtomInfoDense AID on (TB.AtomID = AID.AtomID) \n"+
@@ -4872,13 +4839,13 @@ public abstract class Database implements InfoWarehouse {
 					System.err.println("Collections need to overlap times in order to be aggregated.");
 				} else {
 					//create and insert MZ Values into temporary #mz table.
-					stmt.addBatch("DROP TABLE temp.mz;\n");
-					stmt.addBatch("CREATE TEMPORARY TABLE temp.mz (Value INT);\n");
-					for (int i = 0; i < mzValues.length; i++){
-						stmt.addBatch("INSERT INTO temp.mz VALUES("+mzValues[i]+");\n");
+					stmt.addBatch("DROP TABLE IF EXISTS temp.mz;\n");
+					stmt.addBatch("CREATE TEMPORARY TABLE mz (Value INT);\n");
+					for (int mzValue : mzValues) {
+						stmt.addBatch("INSERT INTO temp.mz VALUES(" + mzValue + ");\n");
 					}
 					// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
-					stmt.addBatch("insert tmpatoms (Time, MZLocation, Value) \n" +
+					stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
 							"SELECT BinnedTime, MZ.Value AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
 							"FROM temp.TimeBins TB\n" +
 							"JOIN AMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
@@ -4900,7 +4867,7 @@ public abstract class Database implements InfoWarehouse {
 								"ORDER BY NewAtomID;\n");
 						stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
 								"select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = "+mzPeakLoc+
-								"ORDER BY NewAtomID;\n");
+								" ORDER BY NewAtomID;\n");
 					}
 					stmt.addBatch("DROP TABLE temp.mz;\n");
 					progressBar.increment("  Executing M/Z Queries...");
