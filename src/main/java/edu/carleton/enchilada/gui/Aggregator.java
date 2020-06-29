@@ -164,8 +164,8 @@ public class Aggregator {
 		
 		if (mainFrame != null)
 			mainFrame.updateSynchronizedTree(rootCollectionID);
-		
-		
+
+
 		return rootCollectionID;
 	}
 }

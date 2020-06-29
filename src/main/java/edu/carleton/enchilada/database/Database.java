@@ -4563,6 +4563,7 @@ public abstract class Database implements InfoWarehouse {
 		System.out.println("collection: "+c.getCollectionID()+"\nstart: "+start.getTimeInMillis()+"\nend: "+end.getTimeInMillis()+"\ninterval: "+interval.getTimeInMillis());
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Calendar increment = (Calendar) start.clone();
+		System.out.println("Increment = " + increment);
 		int counter = 0;
 		try (
 			Statement stmt = con.createStatement();
@@ -4573,6 +4574,13 @@ public abstract class Database implements InfoWarehouse {
 			PreparedStatement timeBinsInsertStmt = con.prepareStatement("INSERT INTO temp.TimeBins VALUES (?, ?);");
 			counter++;
 			// get all times from collection to bin.
+			String query = "SELECT AID.AtomID, Time \n" +
+					"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
+					"InternalAtomOrder IAO \n" +
+					"WHERE IAO.AtomID = AID.AtomID\n" +
+					"AND CollectionID = " + c.getCollectionID() + "\n" +
+					"ORDER BY Time;\n";
+			System.out.println(query);
 			ResultSet collectionRS = stmt1.executeQuery("SELECT AID.AtomID, Time \n" +
 					"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
 					"InternalAtomOrder IAO \n" +
@@ -4595,19 +4603,22 @@ public abstract class Database implements InfoWarehouse {
 					break;
 				else {
 					atomID = collectionRS.getInt(1);
-					collectionTime = collectionRS.getTimestamp(2);
+					collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 				}
 			}
 			System.out.println(interval);
 			// while the next time bin is legal...
 			while (next) {
+				increment.add(Calendar.DATE, interval.get(Calendar.DATE) - 1);
 				increment.add(Calendar.HOUR, interval.get(Calendar.HOUR_OF_DAY));
 				increment.add(Calendar.MINUTE, interval.get(Calendar.MINUTE));
 				increment.add(Calendar.SECOND, interval.get(Calendar.SECOND));
 				nextTime = increment.getTime();
+				System.out.println("NEXTTIME = " + nextTime + " " + collectionTime);
 				while (next && nextTime.compareTo((Date) collectionTime) > 0) {
 					timeBinsInsertStmt.setInt(1, atomID);
 					timeBinsInsertStmt.setString(2, dateFormat.format(basisTime));
+					System.out.println("abcdef " + atomID + " " + dateFormat.format(basisTime));
 					timeBinsInsertStmt.addBatch();
 					//stmt.executeUpdate("INSERT INTO temp.TimeBins VALUES ("+atomID+",'"+dateFormat.format(basisTime)+"');");
 					counter++;
@@ -4615,7 +4626,7 @@ public abstract class Database implements InfoWarehouse {
 					if (!next)
 						break;
 					atomID = collectionRS.getInt(1);
-					collectionTime = collectionRS.getTimestamp(2);
+					collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 					if (counter > 1000) {
 						timeBinsInsertStmt.executeBatch();
 						counter = 0;
@@ -4626,6 +4637,8 @@ public abstract class Database implements InfoWarehouse {
 					next = false;
 				else
 					basisTime = nextTime;
+
+
 			}
 
 			// if there are still more times, skip them.
@@ -4706,11 +4719,14 @@ public abstract class Database implements InfoWarehouse {
 			stmt.executeUpdate("CREATE TABLE IF NOT EXISTS tmpatoms " + "" +
 					"(NewAtomID INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 					" Time DateTime, \n MZLocation int, \n Value real, \n UNIQUE (MZLocation,Time));\n");
+			// Need to add a row then remove it so can update the autoincrement
+			// https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
+			stmt.executeUpdate("INSERT INTO tmpatoms (Time, MZLocation, Value) VALUES (NULL, NULL, NULL)");
 			stmt.executeUpdate("DELETE FROM tmpatoms");
+
 
 			// Set the autoincrement to start at the max atom id
 			// https://stackoverflow.com/a/692871/490329
-			System.out.println("next id = " + getNextID());
 			stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + getNextID() + " WHERE name='tmpatoms'");
 			// create the root collection
 
@@ -4733,14 +4749,12 @@ public abstract class Database implements InfoWarehouse {
 
 					// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
 					// collects the sum of the Height/Area over all atoms at a given Time and for a specific m/z
-
 					stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
 							"SELECT BinnedTime, AIS.PeakLocation AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
 							"FROM temp.TimeBins TB\n" +
 							"JOIN ATOFMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
 							"GROUP BY BinnedTime,AIS.PeakLocation\n"+
 							"ORDER BY Location, BinnedTime;\n");
-
 
 
 					// build 2 child collections - one for particle counts time-series,
@@ -4783,14 +4797,12 @@ public abstract class Database implements InfoWarehouse {
 				stmt.clearBatch();
 				stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + getNextID() + " WHERE name='tmpatoms'");
 				stmt.executeUpdate("DELETE FROM tmpatoms");
-				System.out.println("Now, next ID is " + getNextID());
 				if (options.produceParticleCountTS) {
 					int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
 					stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
 							"SELECT BinnedTime, COUNT(AtomID) AS IDCount FROM temp.TimeBins TB\n"+
 							"GROUP BY BinnedTime\n"+
 							"ORDER BY BinnedTime;\n");
-
 					stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
 							"select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
 					stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " (AtomID, Time, Value) \n" +

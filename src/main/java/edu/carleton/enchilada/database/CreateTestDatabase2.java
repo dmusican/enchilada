@@ -255,39 +255,41 @@ public class CreateTestDatabase2 {
 	private void updateInternalAtomOrderTestTable() {
 		try {
 			Statement stmt = con.createStatement();
+			Statement batchStmt = con.createStatement();
 			con.setAutoCommit(false);
 			// updateInternalAtomOrderTable for CID=2
 			ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE CollectionID = 2 OR CollectionID = 3");
-			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
-			stmt.executeBatch();
+			while(rs.next()) {
+				batchStmt.addBatch("INSERT INTO InternalAtomOrder VALUES (" + rs.getInt(1) + ",2)");
+			}
+			batchStmt.executeBatch();
 			
 			// updateInternalAtomOrderTable for CID=3
 			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE CollectionID = 3");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
-			stmt.executeBatch();
+				batchStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",3)");
+			batchStmt.executeBatch();
 			
 			// updateInternalAtomOrderTable for CID=4
 			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE CollectionID = 4");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
-			stmt.executeBatch();
+				batchStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",4)");
+			batchStmt.executeBatch();
 			
 			// updateInternalAtomOrderTable for CID=5
 			rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE CollectionID = 5");
 			while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
-			stmt.executeBatch();
+				batchStmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",5)");
+			batchStmt.executeBatch();
 
 			con.commit();
 			con.setAutoCommit(true);
 			rs.close();
 			stmt.close();
+			batchStmt.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}			
+			throw new ExceptionAdapter(e);
+		}
 	}
 	
 }
