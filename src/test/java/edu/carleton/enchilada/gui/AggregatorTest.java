@@ -115,7 +115,7 @@ public class AggregatorTest extends TestCase {
 			public void finished() {
 				try {
 					System.out.println("Performing aggregation tests...");
-					test.run(((Integer)getValue()).intValue());
+					test.run((Integer) getValue());
 					System.out.println("... done performing tests.");
 				}
 				catch (SQLException e) {

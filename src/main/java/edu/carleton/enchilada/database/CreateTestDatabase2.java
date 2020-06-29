@@ -77,38 +77,38 @@ public class CreateTestDatabase2 {
 			// real one so we can test on that one and make sure we
 			// know what the results should be.
 			//stmt.executeUpdate("CREATE DATABASE TestDB2");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (1,'9/2/2003 5:30:30 PM',1,0.1,1,'One')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (2,'9/2/2003 5:30:31 PM',2,0.2,2,'Two')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (3,'9/2/2003 5:30:34 PM',3,0.3,3,'Three')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (4,'9/2/2003 5:30:35 PM',4,0.4,4,'Four')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (5,'9/2/2003 5:30:36 PM',5,0.5,5,'Five')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (6,'9/2/2003 5:30:31 PM',6,0.6,6,'Six')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (7,'9/2/2003 5:30:33 PM',7,0.7,7,'Seven')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (8,'9/2/2003 5:30:33 PM',8,0.8,8,'Eight')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (9,'9/2/2003 5:30:35 PM',9,0.9,9,'Nine')");
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (10,'9/2/2003 5:30:36 PM',10,0.01,10,'Ten')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (1,'2003-09-02 17:30:30',1,0.1,1,'One')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (2,'2003-09-02 17:30:31',2,0.2,2,'Two')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (3,'2003-09-02 17:30:32',3,0.3,3,'Three')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (4,'2003-09-02 17:30:33',4,0.4,4,'Four')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (5,'2003-09-02 17:30:34',5,0.5,5,'Five')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (6,'2003-09-02 17:30:35',6,0.6,6,'Six')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (7,'2003-09-02 17:30:36',7,0.7,7,'Seven')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (8,'2003-09-02 17:30:37',8,0.8,8,'Eight')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (9,'2003-09-02 17:30:38',9,0.9,9,'Nine')");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (10,'2003-09-02 17:30:39',10,0.01,10,'Ten')");
 
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (11,'9/2/2003 5:30:30 PM',0.1)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (12,'9/2/2003 5:30:30 PM',0.2)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (13,'9/2/2003 5:30:31 PM',0.3)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (14,'9/2/2003 5:30:33 PM',0.4)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (15,'9/2/2003 5:30:33 PM',0.5)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (16,'9/2/2003 5:30:34 PM',0.6)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (17,'9/2/2003 5:30:35 PM',0.7)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (18,'9/2/2003 5:30:35 PM',0.8)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (19,'9/2/2003 5:30:36 PM',0.9)");
-			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (20,'9/2/2003 5:30:36 PM',1.0)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (11,'2003-09-02 17:30:30',0.1)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (12,'2003-09-02 17:30:31',0.2)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (13,'2003-09-02 17:30:32',0.3)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (14,'2003-09-02 17:30:33',0.4)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (15,'2003-09-02 17:30:34',0.5)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (16,'2003-09-02 17:30:35',0.6)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (17,'2003-09-02 17:30:36',0.7)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (18,'2003-09-02 17:30:37',0.8)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (19,'2003-09-02 17:30:38',0.9)");
+			stmt.executeUpdate("INSERT INTO TimeSeriesAtomInfoDense VALUES (20,'2003-09-02 17:30:39',1.0)");
 
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (21,'9/2/2003 5:30:30 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (22,'9/2/2003 5:30:30 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (23,'9/2/2003 5:30:31 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (24,'9/2/2003 5:30:32 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (25,'9/2/2003 5:30:32 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (26,'9/2/2003 5:30:32 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (27,'9/2/2003 5:30:34 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (28,'9/2/2003 5:30:34 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (29,'9/2/2003 5:30:35 PM')");
-			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (30,'9/2/2003 5:30:36 PM')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (21,'2003-09-02 17:30:30')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (22,'2003-09-02 17:30:31')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (23,'2003-09-02 17:30:32')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (24,'2003-09-02 17:30:33')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (25,'2003-09-02 17:30:34')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (26,'2003-09-02 17:30:35')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (27,'2003-09-02 17:30:36')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (28,'2003-09-02 17:30:37')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (29,'2003-09-02 17:30:38')");
+			stmt.executeUpdate("INSERT INTO AMSAtomInfoDense VALUES (30,'2003-09-02 17:30:39')");
 
 			stmt.executeUpdate("INSERT INTO Collections VALUES (2,'ATOFMS1', 'one', 'onedescrip', 'ATOFMS')");
 			stmt.executeUpdate("INSERT INTO Collections VALUES (3,'ATOFMS2','two','twodescrip','ATOFMS')");
