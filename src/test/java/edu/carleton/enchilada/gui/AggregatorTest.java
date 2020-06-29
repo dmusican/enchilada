@@ -13,6 +13,7 @@ import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.CreateTestDatabase2;
 import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
+import edu.carleton.enchilada.database.TimeUtilities;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -90,7 +91,7 @@ public class AggregatorTest extends TestCase {
 				try {
 					cID = aggregator.createAggregateTimeSeries("aggregated",collections,
 							progressBar, mf);
-					return new Integer(cID);
+					return cID;
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					errors.add(new AssertionFailedError("Aggregation interrupted"));
@@ -99,7 +100,7 @@ public class AggregatorTest extends TestCase {
 					errors.add(new AssertionFailedError("Aggregation failed."));
 				}
 				
-				return new Integer(cID);
+				return cID;
 			}
 			
 			/**
@@ -584,7 +585,7 @@ public class AggregatorTest extends TestCase {
 		Calendar cal = getDate(9, 2, 2003, 0, 0, 0);
 
 		for (int i = 0; i < 10; i++) {
-			stmt.setDate(1, new java.sql.Date(cal.getTime().getTime()));
+			stmt.setString(1, TimeUtilities.dateToIso8601(cal.getTime()));
 			stmt.setInt(2, i + 1);
 			cal.add(Calendar.DATE, 1);
 			cal.add(Calendar.SECOND, 2);

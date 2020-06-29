@@ -4629,9 +4629,10 @@ public abstract class Database implements InfoWarehouse {
 					collectionTime = collectionRS.getTimestamp(2);
 				}
 			}
+			System.out.println(interval);
 			// while the next time bin is legal...
 			while (next) {
-				increment.add(Calendar.HOUR, interval.get(Calendar.HOUR));
+				increment.add(Calendar.HOUR, interval.get(Calendar.HOUR_OF_DAY));
 				increment.add(Calendar.MINUTE, interval.get(Calendar.MINUTE));
 				increment.add(Calendar.SECOND, interval.get(Calendar.SECOND));
 				nextTime = increment.getTime();
