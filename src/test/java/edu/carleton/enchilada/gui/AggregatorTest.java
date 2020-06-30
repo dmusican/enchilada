@@ -18,6 +18,8 @@ import edu.carleton.enchilada.externalswing.SwingWorker;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
+import static junit.framework.TestCase.assertEquals;
+
 public class AggregatorTest extends TestCase {
 	private InfoWarehouse db;
 	private Aggregator aggregator;
@@ -203,29 +205,29 @@ public class AggregatorTest extends TestCase {
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 						"TimeSeriesAtomInfoDense WHERE AtomID = 35;");
 				rs.next();
-				assertTrue(rs.getDate(1).toString().equals("2003-09-02"));
-				assertTrue(rs.getInt(2)==12);
+				assertEquals("2003-09-02 17:30:31", rs.getString(1));
+				assertEquals(12, rs.getInt(2));
 				assertFalse(rs.next());
 				
 				// check TimeSeries collection:
 				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
 				" WHERE CollectionID = 29 ORDER BY AtomID;\n");
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),67);
+				assertEquals(67, rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),68);
+				assertEquals(68, rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),69);
+				assertEquals(69, rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),70);
+				assertEquals(70, rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),71);
+				assertEquals(71, rs.getInt(1));
 				assertFalse(rs.next());
 				
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 						"TimeSeriesAtomInfoDense WHERE AtomID = 67;");
 				assertTrue(rs.next());
-				assertTrue(rs.getDate(1).toString().equals("2003-09-02"));
+				assertEquals("2003-09-02 17:30:30", rs.getString(1));
 				assertEquals(rs.getInt(2),0);
 				assertFalse(rs.next());
 				
@@ -245,7 +247,7 @@ public class AggregatorTest extends TestCase {
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 				"TimeSeriesAtomInfoDense WHERE AtomID = 72;");
 				assertTrue(rs.next());
-				assertTrue(rs.getDate(1).toString().equals("2003-09-02"));
+				assertEquals("2003-09-02 17:30:30", rs.getString(1));
 				assertEquals(rs.getInt(2),1);
 			}
 		};
@@ -560,7 +562,7 @@ public class AggregatorTest extends TestCase {
 				//make sure there are no times outside of our boundaries
 				rs = db.getCon().createStatement().executeQuery(
 						"SELECT COUNT(*) FROM TimeSeriesAtomInfoDense WHERE AtomID > 30 AND " +
-						"(Time > '2003-09-11 17:30:35.0' OR Time < '2003-09-03 17:30:32.0')");
+						"(Time > '2003-09-11 17:30:35' OR Time < '2003-09-03 17:30:32')");
 				assertTrue(rs.next());
 				assertEquals(rs.getInt(1),0);
 			}

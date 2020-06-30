@@ -4805,7 +4805,7 @@ public abstract class Database implements InfoWarehouse {
 				}
 
 				stmt.clearBatch();
-				stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + getNextID() + " WHERE name='tmpatoms'");
+				stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + (getNextID()-1) + " WHERE name='tmpatoms'");
 				stmt.executeUpdate("DELETE FROM tmpatoms");
 				if (options.produceParticleCountTS) {
 					int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
