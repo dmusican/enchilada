@@ -164,10 +164,10 @@ public class SPASSDataSetImporterTest extends TestCase {
 			InfoWarehouse tempDB = Database.getDatabase();
 			tempDB.openConnection();
 			Connection con = tempDB.getCon();
-			con.createStatement().executeUpdate("DROP DATABASE TestDB");
 			tempDB.closeConnection();
+			tempDB.dropDatabaseCommands();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 				
 		for (String s : deleteFiles)
@@ -369,11 +369,8 @@ public class SPASSDataSetImporterTest extends TestCase {
 			for (int i = 0; i < items; ++i) {
 				rs.next();
 				assertEquals(rs.getInt(1), i + AtomIDStart);
-				rs.getTimestamp(2);
 				assertEquals(rs.getDouble(3),0.0);
-				rs.getDouble(4);
 				assertEquals(rs.getInt(5),i+1);
-				rs.getString(6);
 			}
 			
 			assertFalse(rs.next());
