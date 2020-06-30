@@ -145,7 +145,7 @@ public class SQLiteDatabase extends Database {
             propagateNewCollection(newCollection,newCollection.getParentCollection());
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new ExceptionAdapter(e);
         }
     }
 
@@ -155,11 +155,14 @@ public class SQLiteDatabase extends Database {
                 parentCollection.getCollectionID() == 0 ||
                 parentCollection.getCollectionID() == 1){
             try {
+                // Need to close previous connections in order to drop table
+                closeConnection();
+                openConnection(database);
                 Statement stmt = con.createStatement();
                 String query = "DROP TABLE IF EXISTS newCollection;";
                 stmt.execute(query);
             } catch (SQLException e) {
-                e.printStackTrace();
+                throw new ExceptionAdapter(e);
             }
             return;
         }

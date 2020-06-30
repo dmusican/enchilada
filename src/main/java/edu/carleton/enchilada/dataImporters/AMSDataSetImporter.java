@@ -4,6 +4,7 @@ import java.awt.Window;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -216,9 +217,9 @@ public class AMSDataSetImporter {
 		progressBar.setMaximum((totalParticles/10)+1);
 		progressBar.setIndeterminate(false);
 		
-		try{
+		try {
 			Collection destination = db.getCollection(id[0]);
-			
+
 			readData = new Scanner(new File(datasetName));
 			readData.next(); // skip name
 
@@ -227,9 +228,9 @@ public class AMSDataSetImporter {
 			particleNum = 0;
 			int nextID = db.getNextID();
 			while (readData.hasNext()) { // repeat until end of file.
-				if(particleNum % 10 == 0 && particleNum >= 10) {
-					String barText = "Importing Item # " + particleNum + " out of " 
-						+ totalParticles;
+				if (particleNum % 10 == 0 && particleNum >= 10) {
+					String barText = "Importing Item # " + particleNum + " out of "
+							+ totalParticles;
 					if (nodataParticles.size() > 0)
 						barText += ", " + nodataParticles.size() + " have no data";
 					progressBar.increment(barText);
@@ -237,22 +238,21 @@ public class AMSDataSetImporter {
 				read(particleNum, nextID);
 				if (sparse != null && sparse.size() > 0) {
 					//db.insertParticle(dense,sparse,destination,id[1],nextID);
-					((Database)db).saveDataParticle(dense,sparse,destination,id[1],nextID, ams_buckets);
+					((Database) db).saveDataParticle(dense, sparse, destination, id[1], nextID, ams_buckets);
 					nextID++;
-				}
-				else {
+				} else {
 					nodataParticles.add(particleNum);
 				}
 				particleNum++;
 			}
 			progressBar.setIndeterminate(true);
 			progressBar.setText("Inserting Items...");
-			((Database)db).BulkInsertDataParticles(ams_buckets);
-			((Database)db).updateInternalAtomOrder(destination);
+			((Database) db).BulkInsertDataParticles(ams_buckets);
+			((Database) db).updateInternalAtomOrder(destination);
 			//write information on no-data particles to Collection Information tab
 			if (nodataParticles.size() > 0) {
-				StringBuffer desc = 
-					new StringBuffer(db.getCollectionDescription(destination.getCollectionID()));
+				StringBuffer desc =
+						new StringBuffer(db.getCollectionDescription(destination.getCollectionID()));
 				desc.append("\n");
 				desc.append(nodataParticles.size());
 				desc.append(" items had no associated m/z spectrum data and were " +
@@ -260,18 +260,22 @@ public class AMSDataSetImporter {
 				Integer cur = null;
 				java.util.Iterator i = nodataParticles.iterator();
 				while (i.hasNext()) {
-					desc.append(((Integer)i.next()).intValue());					
+					desc.append(((Integer) i.next()).intValue());
 					if (i.hasNext())
 						desc.append(", ");
 				}
 				db.setCollectionDescription(destination, desc.toString());
 			}
-			
+
 			//percolate possession of new atoms up the hierarchy
 			progressBar.setText("Updating Ancestors...");
 			db.propagateNewCollection(destination);
 			readData.close();
-		}catch (Exception e) {
+		} catch (Exception e) {
+
+			if (e instanceof ExceptionAdapter && ((ExceptionAdapter) e).originalException instanceof SQLException) {
+				throw (ExceptionAdapter)e;
+			}
 			try {
 				e.printStackTrace();
 				final String exception = e.toString();

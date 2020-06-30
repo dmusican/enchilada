@@ -51,6 +51,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 
+import edu.carleton.enchilada.database.TimeUtilities;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.Database;
@@ -69,24 +70,24 @@ public class AMSDataSetImporterTest extends TestCase {
 	AMSDataSetImporter importer;
 	InfoWarehouse db;
 	AMSTableModel table;
-	
+
 	JFrame mf;
 	ProgressBarWrapper pbar;
-	
+
 	//was data loaded in this test?
 	boolean dataLoaded;
 	//the current row in the AMSTableModel
 	int curRow = 0;
 	//test data files to be deleted
 	Vector<String> deleteFiles;
-	
+
 	/**
 	 * @see TestCase#setUp()
 	 */
 	public AMSDataSetImporterTest(String s) {
 		super(s);
 	}
-	
+
 	/**
 	 * Note: does not load any data into the database
 	 */
@@ -104,13 +105,13 @@ public class AMSDataSetImporterTest extends TestCase {
 		}
 		db = Database.getDatabase("TestDB");
 		assertTrue(db.openConnection("TestDB"));
-		
+
 		curRow = 0;
 		deleteFiles = new Vector<String>();
 		table = new AMSTableModel();
 		dataLoaded = false;
 	}
-	
+
 	/**
 	 * Create a dataset with the given parameters (as defined in testRow/ams/GenData),
 	 * 	save it to disk, and add it to the import table
@@ -124,19 +125,19 @@ public class AMSDataSetImporterTest extends TestCase {
 	private void addData(int items, int mzlen, int[] peaks, long tstart, long tdelta) {
 		String[] names = new String[]{"Test_" + curRow, "TS_" + curRow, "MZ_" + curRow};
 		String[] files = GenData.generate(names, items, mzlen, peaks, tstart, tdelta);
-		
+
 		table.setValueAt(files[0], curRow, 1);
 		table.setValueAt(files[1], curRow, 2);
-		table.setValueAt(files[2], curRow, 3);		
+		table.setValueAt(files[2], curRow, 3);
 
 		table.tableChanged(new TableModelEvent(table, curRow));
-		
+
 		for (String s : files)
 			deleteFiles.add(s);
-		
+
 		++curRow;
 	}
-	
+
 	/**
 	 * Load data from the tablemodel and import it
 	 * preconditions: 
@@ -148,14 +149,14 @@ public class AMSDataSetImporterTest extends TestCase {
 		mf = new JFrame();
 		pbar = new ProgressBarWrapper(mf, "Importing Test AMS Data", 100);
 		importer = new AMSDataSetImporter(table, mf, db, pbar);
-		
+
 		try {
 			importer.errorCheck();
 		} catch (DisplayException ex) {
 			ex.printStackTrace();
 			fail("Error in inserting AMS table data");
 		}
-		
+
 		try {
 			importer.collectTableInfo();
 		} catch (Exception ex) {
@@ -163,41 +164,36 @@ public class AMSDataSetImporterTest extends TestCase {
 			fail("Error in importing test AMS data");
 		}
 	}
-	
-	protected void tearDown() {
+
+	protected void tearDown() throws Exception {
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			
-			InfoWarehouse tempDB = Database.getDatabase();
-			tempDB.openConnection();
-			Connection con = tempDB.getCon();
-			con.createStatement().executeUpdate("DROP DATABASE TestDB");
-			tempDB.closeConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-				
+		System.runFinalization();
+		System.gc();
+
+		InfoWarehouse tempDB = Database.getDatabase();
+		tempDB.openConnection();
+		Connection con = tempDB.getCon();
+		tempDB.dropDatabaseCommands();
+		tempDB.closeConnection();
 		for (String s : deleteFiles)
 			(new File(s)).delete();
-	
-		if (dataLoaded) {	
+
+		if (dataLoaded) {
 			mf.dispose();
 		}
 		table = null;
 	}
-	
+
 	public void testGetName() {
 		addData(20, 20, new int[]{4, 10, 11, 15}, 3114199800l, 600);
 		loadData();
-		
+
 		try {
 			assertEquals(importer.getName(), "Test_0");
 		} catch (FileNotFoundException ex) {
 			fail("Could not find saved datafile");
 		}
-		
+
 		//we shouldn't be able to access the datafile if it's deleted
 		//	(also be sure that AMSDataSetImporter closed all its read handles)
 		for (String s : deleteFiles) {
@@ -207,7 +203,7 @@ public class AMSDataSetImporterTest extends TestCase {
 			}
 		}
 		deleteFiles.removeAllElements();
-		
+
 		try {
 			importer.getName();
 			fail("Should not be able to find a name for a nonexistent AMS file");
@@ -215,27 +211,27 @@ public class AMSDataSetImporterTest extends TestCase {
 			//pass
 		}
 	}
-	
+
 	/**
 	 * Test the processing of a single dataset (without using collectTableInfo)
 	 */
-	public void testProcessDataSet() {
+	public void testProcessDataSet() throws Exception {
 		int items = 30;
 		int mzlen = 30;
 		int[] peaks = new int[]{4, 10, 11, 15, 24, 27};
 		long tstart = 3114199800l;
 		long tdelta = 600;
 		addData(items, mzlen, peaks, tstart, tdelta);
-	
+
 		dataLoaded = true;
 		mf = new JFrame();
 		pbar = new ProgressBarWrapper(mf, "Importing Test AMS Data", 100);
 		importer = new AMSDataSetImporter(table, mf, db, pbar);
-		
+
 		importer.datasetName = (String) table.getValueAt(0, 1);
 		importer.timeSeriesFile = (String) table.getValueAt(0, 2);
 		importer.massToChargeFile = (String) table.getValueAt(0, 3);
-		
+
 		//perform the import
 		try {
 			importer.processDataSet(0);
@@ -248,10 +244,10 @@ public class AMSDataSetImporterTest extends TestCase {
 			e2.printStackTrace();
 			fail("Couldn't process AMS dataset");
 		}
-		
+
 		//make sure the correct number of items were imported, and that sparse data has the correct length
 		testDataLength(items, items * peaks.length);
-		
+
 		//perform deeper testing
 		testDataset(items, mzlen, peaks, tstart, tdelta, 2, 1, 1);
 	}
@@ -266,16 +262,16 @@ public class AMSDataSetImporterTest extends TestCase {
 		long tstart = 3114199800l;
 		long tdelta = 600;
 		addData(items, mzlen, peaks, tstart, tdelta);
-	
+
 		dataLoaded = true;
 		mf = new JFrame();
 		pbar = new ProgressBarWrapper(mf, "Importing Test AMS Data", 100);
 		importer = new AMSDataSetImporter(table, mf, db, pbar);
-		
+
 		importer.datasetName = (String) table.getValueAt(0, 1);
 		importer.timeSeriesFile = (String) table.getValueAt(0, 2);
 		importer.massToChargeFile = (String) table.getValueAt(0, 3);
-		
+
 		//test for having no time series file
 		assertTrue(new File(deleteFiles.get(1)).renameTo(new File(deleteFiles.get(1) + ".old")));
 
@@ -283,92 +279,88 @@ public class AMSDataSetImporterTest extends TestCase {
 			importer.processDataSet(0);
 			fail("A WriteException should have been thrown if the AMS time series file does not exist");
 		} catch (WriteException ex) {
-			System.out.println("This should say something about a missing time series file: " 
-					+ ex.getMessage());
+			// expected
 		} catch (DisplayException ex) {
 			fail();
 		}
-		
+
 		assertTrue(new File(deleteFiles.get(1) + ".old").renameTo(new File(deleteFiles.get(1))));
-		
+
 		//test for having no m/z file
 		assertTrue(new File(deleteFiles.get(2)).renameTo(new File(deleteFiles.get(2) + ".old")));
-		
+
 		try {
 			importer.processDataSet(0);
 			fail("A WriteException should have been thrown if the AMS m/z does not exist");
 		} catch (WriteException ex) {
-			System.out.println("This should say something about a missing m/z file: " 
-					+ ex.getMessage());
+			// expected
 		} catch (DisplayException ex) {
 			fail();
 		}
-		
+
 		assertTrue(new File(deleteFiles.get(2) + ".old").renameTo(new File(deleteFiles.get(2))));
-		
+
 		//test for having no data file
 		assertTrue(new File(deleteFiles.get(0)).renameTo(new File(deleteFiles.get(0) + ".old")));
-		
+
 		try {
 			importer.processDataSet(0);
 			fail("A WriteException should have been thrown if the AMS datafile does not exist");
 		} catch (WriteException ex) {
-			System.out.println(
-					"This should say something about failure getting a name" + 
-					" due to a missing file: " + ex.getMessage());
+			// expected
 		} catch (DisplayException ex) {
 			fail();
 		}
-		
+
 		assertTrue(new File(deleteFiles.get(0) + ".old").renameTo(new File(deleteFiles.get(0))));
 	}
-	
+
 	/**
 	 * Test import of a AMS datasets imported separately using AMSDataSetImporter.collectTableInfo
 	 */
-	public void testCollectTableInfo() {
+	public void testCollectTableInfo() throws Exception {
 		int items = 30;
 		int mzlen = 30;
 		int[] peaks = new int[]{4, 10, 11, 15, 24, 27};
 		long tstart = 3114199800l;
 		long tdelta = 600;
 		addData(items, mzlen, peaks, tstart, tdelta);
-		
+
 		loadData();
-		
+
 		//make sure the correct number of items were imported, and that sparse data has the correct length
 		testDataLength(items, items * peaks.length);
-		
+
 		//perform deeper testing
 		testDataset(items, mzlen, peaks, tstart, tdelta, 2, 1, 1);
-		
+
 		//create a second AMS dataset with different values
 		int items_2 = 20;
 		int mzlen_2 = 40;
 		int[] peaks_2 = new int[]{4, 10, 11, 12};
 		long tstart_2 = 3114199800l;
 		long tdelta_2 = 400;
-		
+
 		curRow = 0;
-		
+
 		//add the other dataset, overwriting the first
 		String[] names = new String[]{"Test_" + curRow, "TS_" + curRow, "MZ_" + curRow};
 		String[] files = GenData.generate(names, items_2, mzlen_2, peaks_2, tstart_2, tdelta_2);
-		
+
 		table.setValueAt(files[0], curRow, 1);
 		table.setValueAt(files[1], curRow, 2);
-		table.setValueAt(files[2], curRow, 3);		
+		table.setValueAt(files[2], curRow, 3);
 
 		table.tableChanged(new TableModelEvent(table, curRow));
-		
+
 		loadData();
-		
+
 		//we should now have more data - make sure we do indeed.
 		testDataLength(items + items_2, items * peaks.length + items_2 * peaks_2.length);
-		
+
 		//test the first import more thoroughly...
 		testDataset(items, mzlen, peaks, tstart, tdelta, 2, 1, 1);
-		
+
 		//... and the second
 		testDataset(items_2, mzlen_2, peaks_2, tstart_2, tdelta_2, 3, 2, items + 1);
 	}
@@ -376,8 +368,8 @@ public class AMSDataSetImporterTest extends TestCase {
 	/**
 	 * Test import of three AMS datasets imported together 
 	 * (as though multiple rows of data were input in ImportAMSDataDialog) 
-	 */	
-	public void testCollectTableInfoBatch() {
+	 */
+	public void testCollectTableInfoBatch() throws Exception {
 		int items = 30;
 		int mzlen = 30;
 		int[] peaks = new int[]{4, 10, 11, 15, 24, 27};
@@ -398,17 +390,17 @@ public class AMSDataSetImporterTest extends TestCase {
 		long tstart_3 = 2304123400l;
 		long tdelta_3 = 800;
 		addData(items_3, mzlen_3, peaks_3, tstart_3, tdelta_3);
-		
+
 		loadData();
-		
+
 		//Test the length and content of data, as with sequential imports
-		testDataLength(items + items_2 + items_3, 
+		testDataLength(items + items_2 + items_3,
 				items * peaks.length + items_2 * peaks_2.length + items_3 * peaks_3.length);
 		testDataset(items, mzlen, peaks, tstart, tdelta, 2, 1, 1);
 		testDataset(items_2, mzlen_2, peaks_2, tstart_2, tdelta_2, 3, 2, items + 1);
 		testDataset(items_3, mzlen_3, peaks_3, tstart_3, tdelta_3, 4, 3, items + items_2 + 1);
 	}
-	
+
 	/**
 	 * Ensure that AMSAtomInfoDense, AtomMembership, DataSetMembers, and AMSAtomInfoSparse
 	 * 	have the correct number of rows
@@ -423,25 +415,25 @@ public class AMSDataSetImporterTest extends TestCase {
 			rs = con.createStatement().executeQuery("SELECT count(*) FROM AMSAtomInfoDense");
 			assertTrue(rs.next());
 			assertEquals(rs.getInt(1), items);
-			
+
 			rs = con.createStatement().executeQuery("SELECT count(*) FROM AtomMembership");
 			assertTrue(rs.next());
 			assertEquals(rs.getInt(1), items);
-			
+
 			rs = con.createStatement().executeQuery("SELECT count(*) FROM DataSetMembers");
 			assertTrue(rs.next());
 			assertEquals(rs.getInt(1), items);
-			
+
 			rs = con.createStatement().executeQuery("SELECT count(*) FROM AMSAtomInfoSparse");
 			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), numpeaks);			
+			assertEquals(rs.getInt(1), numpeaks);
 		}
 		catch (SQLException ex) {
 			ex.printStackTrace();
 			fail("Couldn't execute query to find length of tables");
-		}		
+		}
 	}
-	
+
 	/**
 	 * Test to see if the database contains information corresponding to a proper AMS import
 	 * 	by querying against the four tables particle information is written to.
@@ -454,90 +446,66 @@ public class AMSDataSetImporterTest extends TestCase {
 	 * @param OrigDataSetID the original dataset ID of the imported collection
 	 * @param AtomIDStart the starting atomID of the imported items
 	 */
-	private void testDataset(int items, int mzlen, int[] peaks, long tstart, long tdelta, 
-			int CollectionID, int OrigDataSetID, int AtomIDStart) {
+	private void testDataset(int items, int mzlen, int[] peaks, long tstart, long tdelta,
+							 int CollectionID, int OrigDataSetID, int AtomIDStart) throws Exception {
 		double[] peakVals = {0.1, 0.2, 0.3, 0.4, 0.5};
-		
+
 		Connection con = db.getCon();
 		ResultSet rs = null;
 		//Check dense atom info for ordering and timestamps
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM AMSAtomInfoDense WHERE AtomID >= " + AtomIDStart + 
-					" AND AtomID < " + (AtomIDStart + items));
-			
-			//check that timestamps are as expected 
-			//	(subtract a base time from that used by the calendar and that used by the datafiles)
-			long curt = tstart - 3114199800l;
-			for (int i = 0; i < items; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), i + AtomIDStart);
-				
-				Calendar c = Calendar.getInstance();
-				c.setTime(rs.getTimestamp(2));
-				assertEquals((c.getTimeInMillis() - 1034055000000l) / 1000, curt);
-				curt += tdelta;
-			}
-			
-			assertFalse(rs.next());
+		rs = con.createStatement().executeQuery(
+				"SELECT * FROM AMSAtomInfoDense WHERE AtomID >= " + AtomIDStart +
+						" AND AtomID < " + (AtomIDStart + items));
+
+		//check that timestamps are as expected
+		//	(subtract a base time from that used by the calendar and that used by the datafiles)
+		long curt = tstart - 3114199800l;
+		for (int i = 0; i < items; ++i) {
+			assertTrue(rs.next());
+			assertEquals(rs.getInt(1), i + AtomIDStart);
+
+			Calendar c = Calendar.getInstance();
+			c.setTime(TimeUtilities.iso8601ToDate(rs.getString(2)));
+			assertEquals((c.getTimeInMillis() - 1034055000000l) / 1000, curt);
+			curt += tdelta;
 		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Error while testing dense AMS atom table");
-		}
-		
+
+		assertFalse(rs.next());
+
 		//check for correct atom membership
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID);
-			
-			for (int i = 0; i < items; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), CollectionID);
-				assertEquals(rs.getInt(2), i + AtomIDStart);
-			}
-			
-			assertFalse(rs.next());
+		rs = con.createStatement().executeQuery(
+				"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID);
+
+		for (int i = 0; i < items; ++i) {
+			assertTrue(rs.next());
+			assertEquals(rs.getInt(1), CollectionID);
+			assertEquals(rs.getInt(2), i + AtomIDStart);
 		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Error while testing AMS atom<->collection membership");
-		}
-		
+
+		assertFalse(rs.next());
+
 		//check for the correct OrigDataSetID on each Atom
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID);
-			
-			for (int i = 0; i < items; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), OrigDataSetID);
-				assertEquals(rs.getInt(2), i + AtomIDStart);
-			}
+		rs = con.createStatement().executeQuery(
+				"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID);
+
+		for (int i = 0; i < items; ++i) {
+			assertTrue(rs.next());
+			assertEquals(rs.getInt(1), OrigDataSetID);
+			assertEquals(rs.getInt(2), i + AtomIDStart);
 		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Error while testing original AMS dataset membership");
-		}
-		
+
 		//check that correct peaks were imported
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM AMSAtomInfoSparse WHERE AtomID >= " + AtomIDStart + 
-					" AND AtomID < " + (AtomIDStart + items));
-			
-			for (int i = 0; i < items * peaks.length; ++i) {
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), i / peaks.length + AtomIDStart);
-				assertEquals(rs.getInt(2), peaks[i % peaks.length]);
-				
-				//the 1e-7 tolerance for double comparison is arbitrary
-				assertEquals(rs.getDouble(3), peakVals[i % peakVals.length], 1e-7);
-			}
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Error while testing AMS sparse data");
+		rs = con.createStatement().executeQuery(
+				"SELECT * FROM AMSAtomInfoSparse WHERE AtomID >= " + AtomIDStart +
+						" AND AtomID < " + (AtomIDStart + items));
+
+		for (int i = 0; i < items * peaks.length; ++i) {
+			assertTrue(rs.next());
+			assertEquals(rs.getInt(1), i / peaks.length + AtomIDStart);
+			assertEquals(rs.getInt(2), peaks[i % peaks.length]);
+
+			//the 1e-7 tolerance for double comparison is arbitrary
+			assertEquals(rs.getDouble(3), peakVals[i % peakVals.length], 1e-7);
 		}
 	}
 }
