@@ -63,6 +63,7 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
  * 2009-03-12
  * @author jtbigwoo
  */
+@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class CSVDataSetExporterTest extends TestCase {
 	CSVDataSetExporter exporter;
 	InfoWarehouse db;
@@ -99,9 +100,15 @@ public class CSVDataSetExporterTest extends TestCase {
 		assertTrue("Failure during exportToCSV in a normal export", result);
 		
 		BufferedReader reader = new BufferedReader(new FileReader(csvFile));
-		
-		assertEquals("****** Particle: One ******,,****** Particle: Two ******,,****** Particle: Three ******,,****** Particle: Four ******,,****** Particle: Five ******,,", reader.readLine());
-		assertEquals("Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,", reader.readLine());
+
+		StringBuilder expectedParticleLine = new StringBuilder();
+		StringBuilder expectedSpectrumLine = new StringBuilder();
+		for (int i=1; i <= 5; i++) {
+			expectedParticleLine.append("****** Particle: particle" + i + " ******,,");
+			expectedSpectrumLine.append("Negative Spectrum,,");
+		}
+		assertEquals(expectedParticleLine.toString(), reader.readLine());
+		assertEquals(expectedSpectrumLine.toString(), reader.readLine());
 		assertEquals("-30,0.00,-30,15.00,-30,15.00,-30,15.00,-30,15.00,", reader.readLine());
 		assertEquals("-29,0.00,-29,0.00,-29,0.00,-29,0.00,-29,0.00,", reader.readLine());
 		for (int i = 0; i < 28; i++)
@@ -110,7 +117,7 @@ public class CSVDataSetExporterTest extends TestCase {
 		assertEquals("0,0.00,0,0.00,0,0.00,0,0.00,0,0.00,", reader.readLine());
 		for (int i = 0; i < 30; i++)
 			reader.readLine();
-		assertEquals(null, reader.readLine());
+		assertNull(reader.readLine());
 	}
 	
 	public void testCollectionExportSmallMZ() throws Exception {
@@ -121,14 +128,21 @@ public class CSVDataSetExporterTest extends TestCase {
 		assertTrue("Failure during exportToCSV in a normal export", result);
 		
 		BufferedReader reader = new BufferedReader(new FileReader(csvFile));
-		
-		assertEquals("****** Particle: One ******,,****** Particle: Two ******,,****** Particle: Three ******,,****** Particle: Four ******,,****** Particle: Five ******,,", reader.readLine());
-		assertEquals("Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,Negative Spectrum,,", reader.readLine());
+
+		StringBuilder expectedParticleLine = new StringBuilder();
+		StringBuilder expectedSpectrumLine = new StringBuilder();
+		for (int i=1; i <= 5; i++) {
+			expectedParticleLine.append("****** Particle: particle" + i + " ******,,");
+			expectedSpectrumLine.append("Negative Spectrum,,");
+		}
+
+		assertEquals(expectedParticleLine.toString(), reader.readLine());
+		assertEquals(expectedSpectrumLine.toString(), reader.readLine());
 		assertEquals("-1,0.00,-1,0.00,-1,0.00,-1,0.00,-1,0.00,", reader.readLine());
 		assertEquals("Positive Spectrum,,Positive Spectrum,,Positive Spectrum,,Positive Spectrum,,Positive Spectrum,,", reader.readLine());
 		assertEquals("0,0.00,0,0.00,0,0.00,0,0.00,0,0.00,", reader.readLine());
 		assertEquals("1,0.00,1,0.00,1,0.00,1,0.00,1,0.00,", reader.readLine());
-		assertEquals(null, reader.readLine());
+		assertNull(reader.readLine());
 	}
 	
 	public void testBigCollectionExport() throws Exception {
@@ -138,15 +152,14 @@ public class CSVDataSetExporterTest extends TestCase {
 		Statement stmt = con.createStatement();
 		for (int i = 12; i < 140; i++)
 		{
-			stmt.executeUpdate("USE TestDB INSERT INTO ATOFMSAtomInfoDense VALUES (" + i + ",'9/2/2003 5:30:38 PM'," + i + ",0." + i + "," + i + ",'Orig file')\n");
-			stmt.executeUpdate("USE TestDB INSERT INTO AtomMembership VALUES(2," + i + ")\n");
-			stmt.executeUpdate("USE TestDB INSERT INTO InternalAtomOrder VALUES(" + i + ",2)\n");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (" + i + ",'2003-09-02 17:30:38'," + i + ",0." + i + "," + i + ",'Orig file')\n");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2," + i + ")\n");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(" + i + ",2)\n");
 		}
-		stmt.executeUpdate("USE TestDB INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-30,15,0.006,12)\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-20,15,0.006,12)\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES(139,0,15,0.006,12)\n" +
-				"INSERT INTO ATOFMSAtomInfoSparse VALUES(139,20,15,0.006,12)\n"
-		);
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-30,15,0.006,12)");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-20,15,0.006,12)");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,0,15,0.006,12)");
+		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,20,15,0.006,12)");
 		Collection coll = db.getCollection(2);
 		csvFile = File.createTempFile("test", ".csv");
 		result = exporter.exportToCSV(coll, csvFile.getPath(), 30);
