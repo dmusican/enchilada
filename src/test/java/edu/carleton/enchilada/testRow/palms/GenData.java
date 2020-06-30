@@ -40,7 +40,11 @@
  * ***** END LICENSE BLOCK ***** */
 package edu.carleton.enchilada.testRow.palms;
 
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -52,27 +56,10 @@ public class GenData {
 	//should messages be output when files are overwritten?
 	private boolean warn_overwrite;
 	//the location to save data
-	private static String THISLOC = "testRow"+File.separator+"PALMS"+File.separator+"";
+	private static Path THISLOC;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 	private File f;
-	
-	/**
-	 * Use for one-time generation of data
-	 * @param args	not used.
-	 */
-	public static void main(String[] args) {
-		GenData d = new GenData();
-		d.warn_overwrite = true;
 
-		int items = 5;
-		int mznum = 10;
-		int mzscale = 1;
-		long tstart = 3114199800l;
-		long tdelta = 600;
-		
-		d.writeData("Test", items, mznum, mzscale, tstart, tdelta, new int[]{2, 5, 6, 10});
-	}
-	
 	/**
 	 * Generate sample PALMS data
 	 * @param items	the number of PALMS items to write
@@ -85,27 +72,34 @@ public class GenData {
 	 */
 	public static String[] generate(
 			String[] fnames, int items, int mznum, int mzscale, int[] peaks, long tstart, long tdelta) {
-		GenData d = new GenData();
-		d.warn_overwrite = false;
-		d.writeData(fnames[0], items, mznum, mzscale, tstart, tdelta, peaks);
 
-		for (int i = 0; i < fnames.length; ++i)
-			fnames[i] = THISLOC + fnames[i] + ".txt";
-		
-		return fnames;
+		try {
+			THISLOC = Files.createTempDirectory("PALMS");
+
+			GenData d = new GenData();
+			d.warn_overwrite = false;
+			d.writeData(fnames[0], items, mznum, mzscale, tstart, tdelta, peaks);
+
+			for (int i = 0; i < fnames.length; ++i)
+				fnames[i] = THISLOC.resolve(fnames[i] + ".txt").toString();
+
+			return fnames;
+		} catch (IOException e) {
+			throw new ExceptionAdapter(e);
+		}
 	}
-	
+
 	/**
 	 * Get a PrintWriter that outputs to the specified file
 	 * @param fname the name of the file
 	 * @return a PrintWriter on file fname
 	 */
 	private PrintWriter getWriter(String fname) {
-		f = new File(THISLOC + fname);
-		
+		f = THISLOC.resolve(fname).toFile();
+
 		if (warn_overwrite && f.exists())
 			System.out.printf("Warning: file %s already exists; overwriting.\n", fname);
-		
+
 		try {
 			return new PrintWriter(new BufferedWriter(new FileWriter(f)));
 		}
@@ -115,7 +109,7 @@ public class GenData {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Write the 2D matrix data file for the PALMS test data
 	 * @param name	the dataset name (name and first line of file)
@@ -125,7 +119,7 @@ public class GenData {
 	 * @param tstart the starting time for particles
 	 * @param tdelta the change in time between particles
 	 * @param peaks	the m/z values at which to write non-negative values
-	 * 
+	 *
 	 */
 	public void writeData(String name, int items, int mznum, int mzscale, long tstart, long tdelta, int[] peaks) {
 		PrintWriter file = getWriter(name + ".txt");
@@ -154,7 +148,7 @@ public class GenData {
 		file.println("UNLIST (unlisted low mass peaks (fraction)");
 		file.println("UFO unidentified peaks (fraction)"); //Proof of alien life
 		for(int i = 1; i <= mznum; i++)
-			file.println("MS"+i+" (fraction)");			
+			file.println("MS"+i+" (fraction)");
 		int header2length = 13;
 		file.println(header2length);
 		for(int i = 0; i < header2length; i++)
@@ -197,16 +191,18 @@ public class GenData {
 						double randData = (int)(1000000*(j+1));
 						file.println(randData/1000000);
 						peaked = true;
-						}	
+					}
 				if (!peaked)
-						file.println(nothing);		
+					file.println(nothing);
 				peaked = false;
 			}
 			//End the particle line
 		}
 		try{Scanner test = new Scanner(f);
 			while(test.hasNext())
-			{System.out.println(test.nextLine());}
+			{
+				test.nextLine();
+			}
 			System.out.println("test");
 		}
 		catch(Exception e){}
