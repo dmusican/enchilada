@@ -113,7 +113,6 @@ public class TSImportTest extends TestCase {
 			int collectionID = 0;
 			Connection con = db.getCon();
 			PreparedStatement ps = con.prepareStatement(
-					"USE TestDB\n" +
 					"SELECT tsdense.AtomID, tsdense.Time, tsdense.Value, mem.CollectionID, coll.Name\n" +
 					"FROM TimeSeriesAtomInfoDense tsdense, \n" +
 					"AtomMembership mem, \n" +
@@ -137,7 +136,6 @@ public class TSImportTest extends TestCase {
 			rs.close();
 
 			rs = con.createStatement().executeQuery(
-					"USE TestDB \n" +
 					"SELECT count(*) \n" +
 					"FROM InternalAtomOrder " +
 					"WHERE CollectionID = " + collectionID);
