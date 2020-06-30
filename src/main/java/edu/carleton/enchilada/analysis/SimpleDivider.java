@@ -46,7 +46,7 @@
 package edu.carleton.enchilada.analysis;
 
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 /**
  * @author andersbe
@@ -62,7 +62,7 @@ public class SimpleDivider extends CollectionDivider {
 	 * @param name
 	 * @param comment
 	 */
-	public SimpleDivider(int cID, InfoWarehouse database) {
+	public SimpleDivider(int cID, Database database) {
 		super(cID, database, "halfandhalf", "testdivder");
 	}
 

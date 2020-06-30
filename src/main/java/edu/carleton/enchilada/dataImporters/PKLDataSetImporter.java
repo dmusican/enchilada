@@ -56,7 +56,6 @@ import javax.swing.SwingUtilities;
 
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.*;
 import edu.carleton.enchilada.gui.PKLTableModel;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
@@ -92,7 +91,7 @@ public class PKLDataSetImporter {
 	protected int positionInBatch, totalInBatch;
 	
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 	
 	/* Lock to make sure database is only accessed in one batch at a time */
 	private static Integer dbLock = new Integer(0);
@@ -115,13 +114,13 @@ public class PKLDataSetImporter {
 	 * Constructor.  Sets the particle table for the importer.
 	 * @param PKLTableModel - particle table model.
 	 */
-	public PKLDataSetImporter(PKLTableModel t, Window mf, InfoWarehouse db) {
+	public PKLDataSetImporter(PKLTableModel t, Window mf, Database db) {
 		table = t; //The gui table with multiple datasets
 		mainFrame = mf;
 		this.db = db;
 	}
 	
-	public PKLDataSetImporter(PKLTableModel t, Window mf, InfoWarehouse db, ProgressBarWrapper pbar) {
+	public PKLDataSetImporter(PKLTableModel t, Window mf, Database db, ProgressBarWrapper pbar) {
 		this(t, mf, db);
 		progressBar = pbar;
 	}

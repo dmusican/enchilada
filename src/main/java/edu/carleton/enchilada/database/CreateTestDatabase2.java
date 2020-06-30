@@ -45,29 +45,23 @@ package edu.carleton.enchilada.database;
 
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Connection;
-import java.util.ArrayList;
-
-import javax.swing.JOptionPane;
 
 /**
  * @author ritza
  */
 public class CreateTestDatabase2 {
-	public InfoWarehouse tempDB;
+	public Database tempDB;
 	Connection con;
 	private static final String dbname = "TestDB2";
 
 
 	public CreateTestDatabase2() {
 		Database.getDatabase(dbname).rebuildDatabase(dbname);
-		InfoWarehouse db = Database.getDatabase(dbname);
+		Database db = Database.getDatabase(dbname);
 		db.openConnection(dbname);
 		con = db.getCon();
 

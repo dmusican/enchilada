@@ -7,7 +7,7 @@ import java.io.*;
 
 import edu.carleton.enchilada.dataImporters.ATOFMSBatchTableModel;
 import edu.carleton.enchilada.dataImporters.ATOFMSDataSetImporter;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -88,7 +88,7 @@ public class ATOFMSBatchImportGUI {
 		final ProgressBarWrapper progressBar = 
 			new ProgressBarWrapper(parent, "Importing ATOFMS Datasets", 100);
 		progressBar.constructThis();
-		final InfoWarehouse dbRef = MainFrame.db;
+		final Database dbRef = MainFrame.db;
 		final SwingWorker worker = new SwingWorker(){
 			public Object construct(){
 					ATOFMSDataSetImporter dsi = new ATOFMSDataSetImporter(tab, parent, progressBar);

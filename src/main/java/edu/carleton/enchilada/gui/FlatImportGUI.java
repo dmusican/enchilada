@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 import edu.carleton.enchilada.dataImporters.*;
 import edu.carleton.enchilada.dataImporters.TSImport.UnsupportedFormatException;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 import edu.carleton.enchilada.errorframework.*;
 
@@ -26,7 +26,7 @@ public class FlatImportGUI {
 	"application and creating a custom format.";	
 
 
-	public FlatImportGUI(Frame parent, InfoWarehouse db) {
+	public FlatImportGUI(Frame parent, Database db) {
 		this.parent = parent;
 
 		/*FileDialog fileChooser = new FileDialog(this, 

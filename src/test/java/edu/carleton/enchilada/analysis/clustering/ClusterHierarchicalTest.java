@@ -49,7 +49,6 @@ import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.analysis.CollectionDivider;
 
 import edu.carleton.enchilada.database.CreateTestDatabase;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import junit.framework.TestCase;
 
@@ -61,7 +60,7 @@ import junit.framework.TestCase;
 public class ClusterHierarchicalTest extends TestCase {
 
     private ClusterHierarchical clusterer;
-    private InfoWarehouse db;
+    private Database db;
     String dbName = "TestDB";
     
     /*

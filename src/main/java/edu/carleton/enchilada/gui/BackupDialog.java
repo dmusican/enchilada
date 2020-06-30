@@ -45,7 +45,7 @@ package edu.carleton.enchilada.gui;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.*;
-import edu.carleton.enchilada.database.InfoWarehouse;
+
 import edu.carleton.enchilada.database.Database;
 
 import java.awt.*;
@@ -73,7 +73,7 @@ public class BackupDialog extends JDialog {
 	JButton restoreButton;
 	
 	JFrame owner;
-	InfoWarehouse db;
+	Database db;
 	
 	/**
 	 * Attempt to only accept .dat files for backup
@@ -112,7 +112,7 @@ public class BackupDialog extends JDialog {
 	 *		will have its data refreshed when a backup occurs if a MainFrame
 	 * @param db the database to backup or restore
 	 */
-	public BackupDialog(MainFrame owner, InfoWarehouse db) {
+	public BackupDialog(MainFrame owner, Database db) {
 		super(owner, "Backup Database", true);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		

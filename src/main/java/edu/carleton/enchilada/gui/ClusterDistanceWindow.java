@@ -42,6 +42,7 @@
  */
 package edu.carleton.enchilada.gui;
 
+import edu.carleton.enchilada.database.Database;
 import gnu.trove.iterator.TFloatIntIterator;
 import gnu.trove.map.hash.TFloatIntHashMap;
 
@@ -83,7 +84,6 @@ import edu.carleton.enchilada.chartlib.DistancePlot;
 import edu.carleton.enchilada.chartlib.ZoomableChart;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.NonZeroCursor;
 
 // Adaptation of ParticleAnalyzeWindow, visualizes distances between particles in a cluster and their mean
@@ -95,7 +95,7 @@ public class ClusterDistanceWindow extends JFrame
 implements ChangeListener, MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	
 	private JFrame parent;
-	private InfoWarehouse db;
+	private Database db;
 	
 	//GUI elements
 	private DistancePlot chart;
@@ -173,7 +173,7 @@ implements ChangeListener, MouseMotionListener, MouseListener, ActionListener, K
 	 * @param chart
 	 * @throws SQLException 
 	 */
-	public ClusterDistanceWindow(MainFrame parentFrame, CollectionTree cTree, InfoWarehouse db) throws SQLException {
+	public ClusterDistanceWindow(MainFrame parentFrame, CollectionTree cTree, Database db) throws SQLException {
 		super();
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);

@@ -40,8 +40,6 @@
 
 package edu.carleton.enchilada.analysis.clustering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,11 +48,9 @@ import java.util.ArrayList;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.NoSubCollectionException;
 import edu.carleton.enchilada.ATOFMS.Peak;
 import edu.carleton.enchilada.analysis.DistanceMetric;
-import edu.carleton.enchilada.analysis.clustering.ClusterQuery;
 
 /*
  * Created August 19, 2008
@@ -68,7 +64,7 @@ import edu.carleton.enchilada.analysis.clustering.ClusterQuery;
 public class ClusterQueryTest extends TestCase {
 	
 	private ClusterQuery qc;
-	private InfoWarehouse db;
+	private Database db;
 	String dbName = "testDB";
     Float d = 0.5f;
     int cID = 2;

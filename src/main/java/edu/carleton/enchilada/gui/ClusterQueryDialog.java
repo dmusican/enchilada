@@ -26,7 +26,7 @@ import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.clustering.Cluster;
 import edu.carleton.enchilada.analysis.clustering.ClusterQuery;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.*;
 
 
@@ -48,7 +48,7 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 	private ClusterTableModel clusterTableModel;
 	private int dataSetCount;
 	private static JFrame parent = null;
-	private InfoWarehouse db;
+	private Database db;
 	private CollectionTree cTree;
 	private boolean kCluster = false;
 	
@@ -60,7 +60,7 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 	 * @throws java.awt.HeadlessException From the constructor of 
 	 * JDialog.  
 	 */
-	public ClusterQueryDialog(JFrame owner, CollectionTree cTree, InfoWarehouse db) throws HeadlessException {
+	public ClusterQueryDialog(JFrame owner, CollectionTree cTree, Database db) throws HeadlessException {
 		super(owner, "Cluster with Chosen Centers", true);
 		parent = owner;
 		this.db = db;

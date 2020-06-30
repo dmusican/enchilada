@@ -7,7 +7,6 @@ import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.MainFrame;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -16,9 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 
 /**
  * Makes database work with SQLite
@@ -254,13 +251,13 @@ public class SQLiteDatabase extends Database {
             ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");
             throw new RuntimeException("Error in rebuilding database.");
         }
-        InfoWarehouse blankDb = Database.getDatabase("");
+        Database blankDb = Database.getDatabase("");
         blankDb.createDatabaseCommands(dbName);
 
         Scanner in = null;
         Connection con = null;
 
-        InfoWarehouse db = Database.getDatabase(dbName);
+        Database db = Database.getDatabase(dbName);
         try {
             db.openConnection(dbName);
             con = db.getCon();

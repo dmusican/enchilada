@@ -49,7 +49,7 @@ import java.util.Iterator;
 
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
@@ -78,8 +78,8 @@ public class Art2A extends Cluster
 	 * @param cID
 	 * @param database
 	 */
-	public Art2A(int cID, InfoWarehouse database, float v, float lr, 
-			int passes,  DistanceMetric dMetric, String comment, ClusterInformation c) {
+	public Art2A(int cID, Database database, float v, float lr,
+                 int passes, DistanceMetric dMetric, String comment, ClusterInformation c) {
 		super(cID, database, "Art2A,V=" + v + ",LR=" + lr +",Passes=" +
 				passes + ",DMetric=" + dMetric, comment, c.normalize);
 		parameterString = "Art2A,V=" + v + ",LR=" + lr +",Passes=" +

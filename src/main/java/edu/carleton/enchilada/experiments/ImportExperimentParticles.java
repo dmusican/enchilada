@@ -12,7 +12,6 @@ import java.util.*;
 
 import javax.swing.JOptionPane;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.ATOFMS.*;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
@@ -24,7 +23,7 @@ import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 public class ImportExperimentParticles {
 	private static int amplitude;
 	private ArrayList<ATOFMSParticle> particles;
-	private InfoWarehouse db;
+	private Database db;
 	
 	public ImportExperimentParticles() {
 		particles = new ArrayList<ATOFMSParticle>();

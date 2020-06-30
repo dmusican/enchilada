@@ -51,7 +51,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.zip.DataFormatException;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -62,7 +61,6 @@ import edu.carleton.enchilada.ATOFMS.CalInfo;
 import edu.carleton.enchilada.ATOFMS.ATOFMSParticle;
 import edu.carleton.enchilada.ATOFMS.PeakParams;
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
@@ -80,7 +78,7 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
  */
 public class ATOFMSDataSetImporterTest extends TestCase {
 	ATOFMSDataSetImporter importer;
-	InfoWarehouse db;
+	Database db;
 	ParTableModel table;
 	/*
 	 * @see TestCase#setUp()

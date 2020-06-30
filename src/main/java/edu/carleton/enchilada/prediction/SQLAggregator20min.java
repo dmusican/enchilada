@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.Scanner;
 
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 /*
  * Note: St.Louis min & max m/z values are (respectively) -1585 and 1691, so we
@@ -24,7 +23,7 @@ public class SQLAggregator20min {
 	// Set maxAtomId to 0 to run the whole thing
 	public static final int maxAtomId = 0;
 
-	private static InfoWarehouse db;
+	private static Database db;
 	private static Connection con;
 	private static int maxAtt = 604;          //the maximum number of attributes
 	private static int peakRange = 300;       //the abs of the max/min peak values

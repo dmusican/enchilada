@@ -46,7 +46,7 @@ package edu.carleton.enchilada.analysis;
 import java.util.Iterator;
 
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 /**
  * @author andersbe
@@ -68,11 +68,11 @@ public class PeakDivider extends CollectionDivider {
 	 * 						Resulting collection must contain
 	 */
 	public PeakDivider(
-			int cID, 
-			InfoWarehouse database, 
-			String name, 
-			String comment,
-			BinnedPeakList mustContain) {
+            int cID,
+            Database database,
+            String name,
+            String comment,
+            BinnedPeakList mustContain) {
 		super(cID, database, name, comment);
 		peaks = mustContain;
 	}

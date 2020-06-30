@@ -45,13 +45,7 @@ package edu.carleton.enchilada.database;
 
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-
-import javax.swing.JOptionPane;
 
 /**
  * @author ritza
@@ -63,7 +57,7 @@ public class CreateTestDatabase {
 	
 	public CreateTestDatabase() {
 		Database.getDatabase(dbname).rebuildDatabase(dbname);
-		InfoWarehouse db = Database.getDatabase(dbname);
+		Database db = Database.getDatabase(dbname);
 		db.openConnection(dbname);
 		con = db.getCon();
 

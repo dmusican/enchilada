@@ -52,7 +52,6 @@ import edu.carleton.enchilada.collection.Collection;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
 /**
@@ -63,7 +62,7 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
  */
 public class MSAnalyzeDataSetExporterTest extends TestCase {
 	MSAnalyzeDataSetExporter exporter;
-	InfoWarehouse db;
+	Database db;
 	File parFile;
 	File setFile;
 	

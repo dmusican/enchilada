@@ -59,7 +59,7 @@ import edu.carleton.enchilada.analysis.CollectionDivider;
 import edu.carleton.enchilada.analysis.PeakTransform;
 import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -130,8 +130,8 @@ public abstract class ClusterK extends Cluster {
 	 * @param comment - comment to insert
 	 * 
 	 */
-	public ClusterK(int cID, InfoWarehouse database, int k, 
-			String name, String comment, CentroidsApproach initialCentroids, ClusterInformation c)
+	public ClusterK(int cID, Database database, int k,
+					String name, String comment, CentroidsApproach initialCentroids, ClusterInformation c)
 	{
 		super(cID, database,name.concat(",K=" + k),comment, c.normalize);
 		this.k = k;

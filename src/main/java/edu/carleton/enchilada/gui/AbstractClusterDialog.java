@@ -15,22 +15,16 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import edu.carleton.enchilada.analysis.DistanceMetric;
-import edu.carleton.enchilada.analysis.clustering.Art2A;
-import edu.carleton.enchilada.analysis.clustering.Cluster;
-import edu.carleton.enchilada.analysis.clustering.ClusterHierarchical;
-import edu.carleton.enchilada.analysis.clustering.ClusterInformation;
 import edu.carleton.enchilada.analysis.clustering.ClusterK;
-import edu.carleton.enchilada.analysis.clustering.KMeans;
-import edu.carleton.enchilada.analysis.clustering.KMedians;
 
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 public abstract class AbstractClusterDialog extends JDialog implements ItemListener, ActionListener {
 
 	/* Declared variables */
 	protected CollectionTree cTree;
-	protected InfoWarehouse db;
+	protected Database db;
 	
 	protected JFrame parent;
 	protected JPanel algorithmCards, specificationCards, clusteringInfo; 

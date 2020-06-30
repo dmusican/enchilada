@@ -60,7 +60,7 @@ public class Collection implements Comparable{
 	private Collection parentCollection;
 	private boolean parentCollectionInitialized = false;
 	
-	private InfoWarehouse db = null;
+	private Database db = null;
 	private String datatype;
 	private AggregationOptions aggregationOptions;
 
@@ -71,7 +71,7 @@ public class Collection implements Comparable{
 	private int cachedContainsData = -1;
 	private int cachedSize = -1;
 	
-	public Collection(String type, int cID, InfoWarehouse database)
+	public Collection(String type, int cID, Database database)
 	{
 		collectionID = cID;
 		datatype = type;
@@ -79,7 +79,7 @@ public class Collection implements Comparable{
 		
 	}
 	
-	public Collection(String name, String type, int cID, InfoWarehouse database)
+	public Collection(String name, String type, int cID, Database database)
 	{
 		cachedName = name;
 		collectionID = cID;

@@ -50,8 +50,8 @@ import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.analysis.CollectionDivider;
 import edu.carleton.enchilada.analysis.SQLDivider;
 
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
 import java.awt.*;
@@ -84,7 +84,7 @@ implements ActionListener, ItemListener
 {
 	private JFrame parent;
 	private CollectionTree cTree;
-	private InfoWarehouse db;
+	private Database db;
 	
 	private JButton okButton; //Default button
 	private JButton cancelButton;
@@ -143,7 +143,7 @@ implements ActionListener, ItemListener
 	 * @param frame - the parent of the JDialog object.
 	 */
 	public QueryDialog(JFrame frame, CollectionTree cTree,
-			InfoWarehouse db, Collection collection) 
+                       Database db, Collection collection)
 	{
 		super(frame, "Query", false);
 		

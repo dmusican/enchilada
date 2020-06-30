@@ -55,7 +55,6 @@ import edu.carleton.enchilada.database.TimeUtilities;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.WriteException;
 import edu.carleton.enchilada.gui.AMSTableModel;
@@ -68,7 +67,7 @@ import edu.carleton.enchilada.testRow.ams.GenData;
  */
 public class AMSDataSetImporterTest extends TestCase {
 	AMSDataSetImporter importer;
-	InfoWarehouse db;
+	Database db;
 	AMSTableModel table;
 
 	JFrame mf;
@@ -170,7 +169,7 @@ public class AMSDataSetImporterTest extends TestCase {
 		System.runFinalization();
 		System.gc();
 
-		InfoWarehouse tempDB = Database.getDatabase();
+		Database tempDB = Database.getDatabase();
 		tempDB.openConnection();
 		Connection con = tempDB.getCon();
 		Database.dropDatabase("TestDB");

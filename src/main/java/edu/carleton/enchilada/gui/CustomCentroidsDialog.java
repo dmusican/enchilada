@@ -6,17 +6,14 @@ import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,15 +21,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableColumn;
-
-import edu.carleton.enchilada.analysis.BinnedPeakList;
-import edu.carleton.enchilada.analysis.DistanceMetric;
-import edu.carleton.enchilada.analysis.clustering.Centroid;
-import edu.carleton.enchilada.analysis.clustering.Cluster;
-import edu.carleton.enchilada.analysis.clustering.ClusterQuery;
-
-import edu.carleton.enchilada.database.InfoWarehouse;
-import edu.carleton.enchilada.errorframework.*;
 
 // This is pretty much a verbatim copy of ClusterQueryDialog, except it passes the centroids onto a clustering algorithm
 // Michael Murphy 2014

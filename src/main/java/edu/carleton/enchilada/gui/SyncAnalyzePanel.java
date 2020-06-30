@@ -17,7 +17,7 @@ public class SyncAnalyzePanel extends JPanel {
 	private MainFrame parentFrame;
 	private CollectionTree tree;
 	private Collection collectionToBaseOn;
-	private InfoWarehouse db;
+	private Database db;
 	private JScrollPane bottomPane;
 	private JComboBox firstSeq, secondSeq;
 	private SyncCollectionModel firstCollectionModel, secondCollectionModel;
@@ -45,8 +45,8 @@ public class SyncAnalyzePanel extends JPanel {
 	private static String[] comptypes = { " VAL: ", " SEQ: " };
 	private static String[] booleans = { " AND", " OR" };
 
-	public SyncAnalyzePanel(MainFrame parentFrame, InfoWarehouse db,
-			CollectionTree tree, Collection collectionToBaseOn) { 
+	public SyncAnalyzePanel(MainFrame parentFrame, Database db,
+                            CollectionTree tree, Collection collectionToBaseOn) {
 		
 		super(new BorderLayout());
 

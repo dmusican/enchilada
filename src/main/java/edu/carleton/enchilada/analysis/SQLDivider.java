@@ -43,7 +43,7 @@
  */
 package edu.carleton.enchilada.analysis;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 /**
  * SQLDivider implements the abstract methods of CollectionDivider.
@@ -70,8 +70,8 @@ public class SQLDivider extends CollectionDivider {
 	 * @param comment
 	 * @param where What you want after the WHERE
 	 */
-	public SQLDivider(int collectionID, InfoWarehouse database,
-					  String name, String comment, String where)
+	public SQLDivider(int collectionID, Database database,
+                      String name, String comment, String where)
 	{
 		super(collectionID, database, name, comment);
 		this.where = where;

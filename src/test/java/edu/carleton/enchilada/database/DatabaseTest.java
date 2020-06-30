@@ -73,8 +73,6 @@ import edu.carleton.enchilada.ATOFMS.Peak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
-import junit.runner.Version;
-import org.junit.Test;
 import org.sqlite.SQLiteException;
 
 /**
@@ -988,7 +986,7 @@ public class DatabaseTest extends TestCase {
 		assertTrue(Database.getDatabase(dbName).rebuildDatabase(dbName));
 		db.openConnection();
 
-		InfoWarehouse mainDB = Database.getDatabase();
+		Database mainDB = Database.getDatabase();
 		mainDB.openConnection();
 		assertTrue(mainDB.isPresent());
 		mainDB.closeConnection();
@@ -998,7 +996,7 @@ public class DatabaseTest extends TestCase {
 
 	public void testIsPresent() {
 		db.openConnection(dbName);
-		InfoWarehouse db = Database.getDatabase(dbName);
+		Database db = Database.getDatabase(dbName);
 		assertTrue(db.isPresent());
 		db = Database.getDatabase("shouldntexist");
 		assertFalse(db.isPresent());

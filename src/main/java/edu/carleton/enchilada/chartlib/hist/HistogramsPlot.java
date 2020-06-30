@@ -8,7 +8,6 @@ import javax.swing.*;
 
 import edu.carleton.enchilada.chartlib.*;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.externalswing.ProgressTask;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -56,11 +55,11 @@ public class HistogramsPlot extends Chart {
 	}
 	
 	
-	public static InfoWarehouse getDB() {
+	public static Database getDB() {
 		if (MainFrame.db != null) {
 			return MainFrame.db;
 		} else {
-			InfoWarehouse db = Database.getDatabase();
+			Database db = Database.getDatabase();
 			db.openConnection();
 			return db;
 		}

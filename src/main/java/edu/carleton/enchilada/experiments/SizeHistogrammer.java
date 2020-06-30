@@ -24,7 +24,7 @@ public class SizeHistogrammer {
 	 * @param args
 	 */
 	public static void main(String[] args) throws SQLException {
-		InfoWarehouse db = Database.getDatabase();
+		Database db = Database.getDatabase();
 		if (!db.openConnection()) throw new RuntimeException();
 		
 		Connection conn = db.getCon();

@@ -48,7 +48,8 @@
 package edu.carleton.enchilada.analysis.clustering;
 
 import java.util.ArrayList;
-import edu.carleton.enchilada.database.InfoWarehouse;
+
+import edu.carleton.enchilada.database.Database;
 
 /**
  * KMeans uses the mean to determine the new centroids.  
@@ -67,8 +68,8 @@ public class KMeans extends ClusterK
 	 * @param comment -comment to enter
 	 * @param initialCentroids - how to pick the initial centroids
 	 */
-	public KMeans(int cID, InfoWarehouse database, int k,
-			String name, String comment, ClusterK.CentroidsApproach initialCentroids, ClusterInformation c)
+	public KMeans(int cID, Database database, int k,
+                  String name, String comment, ClusterK.CentroidsApproach initialCentroids, ClusterInformation c)
 			{
 				super(cID, database, k, 
 						name.concat("KMeans"), comment, initialCentroids, c);

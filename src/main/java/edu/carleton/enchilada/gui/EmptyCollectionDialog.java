@@ -45,7 +45,7 @@ package edu.carleton.enchilada.gui;
 
 import javax.swing.*;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -62,14 +62,14 @@ public class EmptyCollectionDialog extends JDialog implements ActionListener
 	private JComboBox datatypeBox;
 	private int collectionID = -1;
 	private String collectionName = "";
-	private InfoWarehouse db;
+	private Database db;
 	
-	public EmptyCollectionDialog(JFrame parent, InfoWarehouse db) {
+	public EmptyCollectionDialog(JFrame parent, Database db) {
 		this(parent, "", true, db);
 	}
 	
 	public EmptyCollectionDialog (JFrame parent, String datatype,
-			boolean datatypeEditable, InfoWarehouse db)
+                                  boolean datatypeEditable, Database db)
 	{
 		super (parent,"Empty Collection", true);
 		this.db = db;
@@ -175,7 +175,7 @@ public class EmptyCollectionDialog extends JDialog implements ActionListener
 	 * @return true on success
 	 * @author shaferia
 	 */
-	public static boolean removeEmptyCollection(InfoWarehouse db, int id) {
+	public static boolean removeEmptyCollection(Database db, int id) {
 		boolean success = db.removeEmptyCollection(db.getCollection(id));
 		return success;
 	}

@@ -46,7 +46,7 @@ package edu.carleton.enchilada.gui;
 
 import javax.swing.*;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import gnu.trove.iterator.TFloatIntIterator;
@@ -59,7 +59,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeSet;
 
@@ -73,7 +72,7 @@ public class SizeExportDialog extends JDialog implements ActionListener
 	private JRadioButton rawButton;
 	private JRadioButton binnedButton;
 	private JButton csvDotDotDot;
-	private InfoWarehouse db;
+	private Database db;
 	private SizeHistogramWindow parent = null;
 	
 	private boolean raw = false;

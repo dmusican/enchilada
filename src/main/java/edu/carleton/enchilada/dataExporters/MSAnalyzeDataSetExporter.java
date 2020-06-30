@@ -52,7 +52,7 @@ import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.atom.ATOFMSAtomFromDB;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
@@ -63,13 +63,13 @@ public class MSAnalyzeDataSetExporter {
 	Window mainFrame;
 
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 
 	ProgressBarWrapper progressBar;
 
 	public static final String TITLE = "Exporting Data Set to MS-Analyze";
 
-	public MSAnalyzeDataSetExporter(Window mf, InfoWarehouse db, ProgressBarWrapper pbar) {
+	public MSAnalyzeDataSetExporter(Window mf, Database db, ProgressBarWrapper pbar) {
 		mainFrame = mf;
 		this.db = db;
 		progressBar = pbar;

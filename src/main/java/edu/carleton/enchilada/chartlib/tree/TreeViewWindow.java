@@ -4,6 +4,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import edu.carleton.enchilada.database.Database;
 import org.apache.commons.collections15.Transformer;
 
 import edu.carleton.enchilada.collection.Collection;
@@ -21,10 +22,8 @@ import java.util.Set;
 import edu.carleton.enchilada.chartlib.*;
 import edu.carleton.enchilada.chartlib.hist.HistogramMouseDisplay;
 import edu.carleton.enchilada.chartlib.hist.HistogramsPlot;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.uci.ics.jung.algorithms.layout.PolarPoint;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
-import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.Tree;
 import edu.uci.ics.jung.visualization.Layer;
@@ -48,7 +47,7 @@ import edu.uci.ics.jung.visualization.decorators.EllipseVertexShapeTransformer;
 
 public class TreeViewWindow extends JFrame {
 
-	private InfoWarehouse db;
+	private Database db;
 	
 	private JPanel buttonPanel;
 
@@ -81,7 +80,7 @@ public class TreeViewWindow extends JFrame {
 
 	private JTextField collectionNameField;
 	
-	public TreeViewWindow(final InfoWarehouse db, int collID) {
+	public TreeViewWindow(final Database db, int collID) {
 		super("Hierarchy Tree View");
 		this.db = db;
 

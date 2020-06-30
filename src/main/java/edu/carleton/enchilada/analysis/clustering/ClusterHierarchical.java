@@ -53,7 +53,7 @@ import edu.carleton.enchilada.analysis.CollectionDivider;
 import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.SubSampleCursor;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -85,8 +85,8 @@ public class ClusterHierarchical extends Cluster {
 	 * @param comment -comment to enter
 	 * @param mainFrame - the parent frame so we can create a progress bar
 	 */
-	public ClusterHierarchical(int cID, InfoWarehouse database,
-			String name, String comment, ClusterInformation c, JFrame mainFrame) 
+	public ClusterHierarchical(int cID, Database database,
+							   String name, String comment, ClusterInformation c, JFrame mainFrame)
 	{
 		super(cID, database, name.concat("Hierarchical, Clusters Ward's"), comment, c.normalize);
 		collectionID = cID;

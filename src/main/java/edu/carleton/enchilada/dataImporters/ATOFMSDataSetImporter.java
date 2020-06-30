@@ -44,7 +44,6 @@
  */
 package edu.carleton.enchilada.dataImporters;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
@@ -111,7 +110,7 @@ public class ATOFMSDataSetImporter {
 	protected Collection[] collections;
 	private final ATOFMSDataSetImporter thisRef;
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 	
 	/* Lock to make sure database is only accessed in one batch at a time */
 	//private static Integer dbLock = new Integer(0);
@@ -134,7 +133,7 @@ public class ATOFMSDataSetImporter {
 		thisRef = this;
 	}
 	
-	public ATOFMSDataSetImporter(ParTable t, Window mf, InfoWarehouse db,  ProgressBarWrapper progressBar) {
+	public ATOFMSDataSetImporter(ParTable t, Window mf, Database db, ProgressBarWrapper progressBar) {
 		this(t,mf,progressBar);
 		this.db = db;
 	}

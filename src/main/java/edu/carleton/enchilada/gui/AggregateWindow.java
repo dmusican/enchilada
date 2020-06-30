@@ -68,13 +68,13 @@ public class AggregateWindow extends JFrame implements ActionListener, ListSelec
 	private JRadioButton naDateRadio,eurDateRadio;
 	private JComboBox matchingCombo;
 	
-	private InfoWarehouse db;
+	private Database db;
 	private Hashtable<Collection, JPanel> cachedCollectionPanels;
 	private Collection[] collections;
 	
 	private JPanel centerPanel,timesPanel, dateRadioPanel;
 
-	public AggregateWindow(MainFrame parentFrame, InfoWarehouse db, Collection[] collections) {
+	public AggregateWindow(MainFrame parentFrame, Database db, Collection[] collections) {
 		super("Aggregate Collections");
 		
 		this.parentFrame = parentFrame;

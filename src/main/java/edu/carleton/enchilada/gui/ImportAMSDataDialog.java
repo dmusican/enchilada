@@ -22,7 +22,7 @@ import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 
 import edu.carleton.enchilada.dataImporters.AMSDataSetImporter;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.*;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
@@ -38,7 +38,7 @@ public class ImportAMSDataDialog extends JDialog implements ActionListener{
 	private static JFrame parent = null;
 	private boolean importedTogether = false;
 	private int parentID = 0; //default parent collection is root
-	private InfoWarehouse db;
+	private Database db;
 	
 	/**
 	 * Extends JDialog to form a modal dialogue box for importing 
@@ -49,7 +49,7 @@ public class ImportAMSDataDialog extends JDialog implements ActionListener{
 	 * @throws java.awt.HeadlessException From the constructor of 
 	 * JDialog.  
 	 */
-	public ImportAMSDataDialog(JFrame owner, InfoWarehouse db) throws HeadlessException {
+	public ImportAMSDataDialog(JFrame owner, Database db) throws HeadlessException {
 		// calls the constructor of the superclass (JDialog), sets the title and makes the
 		// dialog modal.  
 		super(owner, "Import AMS Datasets as Collections", true);

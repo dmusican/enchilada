@@ -49,7 +49,7 @@ import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 
 
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 /**
  * This table model goes straight to the database to lookup 
@@ -60,14 +60,14 @@ import edu.carleton.enchilada.database.InfoWarehouse;
  * @author andersbe
  */
 public class AtomTableModel extends AbstractTableModel {
-	InfoWarehouse db;
+	Database db;
 	int collectionID;
 	int lastCheckedRow = -1;
 	CollectionCursor curs;
 	/**
 	 * 
 	 */
-	public AtomTableModel(InfoWarehouse db, int collectionID) {
+	public AtomTableModel(Database db, int collectionID) {
 		super();
 		this.db = db;
 		this.collectionID = collectionID;

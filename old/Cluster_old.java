@@ -52,7 +52,6 @@ import java.util.regex.Pattern;
 
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;

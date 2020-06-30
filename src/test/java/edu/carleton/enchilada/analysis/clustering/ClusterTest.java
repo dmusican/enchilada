@@ -9,7 +9,6 @@ import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import junit.framework.TestCase;
 
 /**
@@ -22,7 +21,7 @@ import junit.framework.TestCase;
 // TODO: Add a test or two for createCenterAtoms
 public class ClusterTest extends TestCase{
 
-	private InfoWarehouse db;
+	private Database db;
 	private Cluster classToTest;
     String dbName = "TestDB";
 	

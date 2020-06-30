@@ -15,7 +15,6 @@ import java.util.Scanner;
 import javax.swing.SwingUtilities;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.*;
 import edu.carleton.enchilada.gui.AMSTableModel;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
@@ -46,7 +45,7 @@ public class AMSDataSetImporter {
 	protected int positionInBatch, totalInBatch;
 	
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 	
 	/* Lock to make sure database is only accessed in one batch at a time */
 	private static Integer dbLock = new Integer(0);
@@ -67,13 +66,13 @@ public class AMSDataSetImporter {
 	 * Constructor.  Sets the particle table for the importer.
 	 * @param amsTableModel - particle table model.
 	 */
-	public AMSDataSetImporter(AMSTableModel t, Window mf, InfoWarehouse db) {
+	public AMSDataSetImporter(AMSTableModel t, Window mf, Database db) {
 		table = t;
 		mainFrame = mf;
 		this.db = db;
 	}
 	
-	public AMSDataSetImporter(AMSTableModel t, Window mf, InfoWarehouse db, ProgressBarWrapper pbar) {
+	public AMSDataSetImporter(AMSTableModel t, Window mf, Database db, ProgressBarWrapper pbar) {
 		this(t, mf, db);
 		progressBar = pbar;
 	}

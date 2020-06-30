@@ -123,7 +123,7 @@ public class BothWayCursor implements CollectionCursor {
 
 		System.out.println("created db.");
 		
-		InfoWarehouse iw = Database.getDatabase("TestDB2");
+		Database iw = Database.getDatabase("TestDB2");
 		try {
 			iw.getCon();
 			iw.openConnection();

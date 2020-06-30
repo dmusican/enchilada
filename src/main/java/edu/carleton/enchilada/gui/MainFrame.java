@@ -71,7 +71,6 @@ import edu.carleton.enchilada.chartlib.hist.HistogramsWindow;
 import edu.carleton.enchilada.chartlib.tree.TreeViewWindow;
 import edu.carleton.enchilada.dataImporters.ATOFMSDataSetImporter;
 import edu.carleton.enchilada.dataImporters.FlatFileATOFMSDataSetImporter;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.VersionChecker;
 import edu.carleton.enchilada.database.DynamicTable;
@@ -156,7 +155,7 @@ public class MainFrame extends JFrame implements ActionListener
 	private JTable particlesTable = null;
 	private Vector<Vector<Object>> data = null;
 	
-	public static InfoWarehouse db;
+	public static Database db;
 	private JComponent infoPanel;
 	
 	private JTabbedPane collectionViewPanel;

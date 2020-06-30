@@ -4,6 +4,7 @@ package edu.carleton.enchilada.analysis.clustering;
  * Michael Murphy 2014, University of Toronto
  */
 
+import edu.carleton.enchilada.database.Database;
 import gnu.trove.iterator.TIntShortIterator;
 import gnu.trove.map.hash.TIntFloatHashMap;
 import gnu.trove.map.hash.TIntShortHashMap;
@@ -33,7 +34,6 @@ import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.database.CollectionCursor;
 import edu.carleton.enchilada.database.Database.ArrayCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 
 public class ClusterValidation {
@@ -62,7 +62,7 @@ public class ClusterValidation {
 		updateBox.setVisible(true);
 	}
 	
-	public static BinnedPeakList getClusterCentroid(InfoWarehouse db, Collection collection) {
+	public static BinnedPeakList getClusterCentroid(Database db, Collection collection) {
 		CollectionCursor curs = null;
 		
 		try {
@@ -84,7 +84,7 @@ public class ClusterValidation {
 	}
 	
 	public static void run(
-		final InfoWarehouse db,
+		final Database db,
 		final Collection parent, 
 		final DistanceMetric dMetric,
 		final boolean posNegNorm, 

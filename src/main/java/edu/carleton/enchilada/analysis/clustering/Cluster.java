@@ -53,8 +53,8 @@ import java.util.regex.Pattern;
 
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.database.CollectionCursor;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
@@ -111,8 +111,8 @@ public abstract class Cluster extends CollectionDivider {
 	 * @param name		A name to append to ",CLUST"
 	 * @param comment	A comment for the cluster.
 	 */
-	public Cluster(int cID, InfoWarehouse database, String name, 
-			String comment, boolean norm) {
+	public Cluster(int cID, Database database, String name,
+				   String comment, boolean norm) {
 		super(cID,database,name.concat(",CLUST"),comment);
 		folderName = "," + super.comment;
 		isNormalized = norm;

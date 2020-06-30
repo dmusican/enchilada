@@ -72,10 +72,10 @@ public class CollectionTree extends JPanel
 	private JTree tree; //Collection tree
 	private CollectionModel treeModel;
 
-	private InfoWarehouse db;
+	private Database db;
 	
 	private MainFrame parentFrame = null;
-	public CollectionTree(InfoWarehouse database, MainFrame pFrame, boolean forSynchronized) {
+	public CollectionTree(Database database, MainFrame pFrame, boolean forSynchronized) {
         super(new BorderLayout());
         
         String treeTitle = forSynchronized ? "Synchronized Time Series" : "Collections";

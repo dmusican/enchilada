@@ -3,7 +3,7 @@ package edu.carleton.enchilada.testing;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
-import edu.carleton.enchilada.database.InfoWarehouse;
+
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.gui.MainFrame;
 
@@ -17,7 +17,7 @@ import edu.carleton.enchilada.gui.MainFrame;
  */
 public class RawDataLoader {
 	//The database to import/export from
-	private InfoWarehouse db;
+	private Database db;
 	//a list of Enchilada's tables, created at run-time
 	private ArrayList<String> tables;
 	//the extension to add to saved bulk files
@@ -31,7 +31,7 @@ public class RawDataLoader {
 	 * @param args not used
 	 */
 	public static void main(String[] args) {
-		InfoWarehouse database = Database.getDatabase();
+		Database database = Database.getDatabase();
 		database.openConnection();
 		RawDataLoader load = new RawDataLoader(database, "C:\\test", LOAD);
 	}
@@ -42,7 +42,7 @@ public class RawDataLoader {
 	 * @param location the directory location to use
 	 * @param load the requested action: load or save the database?
 	 */
-	public RawDataLoader(InfoWarehouse db, String location, boolean load) {
+	public RawDataLoader(Database db, String location, boolean load) {
 		this.db = db;
 		tables = getTables();
 		

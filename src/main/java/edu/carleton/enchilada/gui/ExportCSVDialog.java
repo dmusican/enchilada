@@ -50,9 +50,7 @@ import javax.swing.table.TableModel;
 import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.dataExporters.CSVDataSetExporter;
-import edu.carleton.enchilada.dataExporters.MSAnalyzeDataSetExporter;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -73,7 +71,7 @@ public class ExportCSVDialog extends JDialog implements ActionListener
 	private JTextField csvFileField;
 	private JCheckBox onePerFileBox;
 	private JButton csvDotDotDot;
-	private InfoWarehouse db;
+	private Database db;
 	private JFrame parent = null;
 	private Collection collection = null;
 	private boolean exportAverages = false;
@@ -87,7 +85,7 @@ public class ExportCSVDialog extends JDialog implements ActionListener
 	 * @param exportAverages - if this is true, we call exportHierarchyToCSV which exports
 	 * the averages of all subcollections of the selected collection.
 	 */
-	public ExportCSVDialog(JFrame parent, InfoWarehouse db, Collection c, boolean exportAverages) {
+	public ExportCSVDialog(JFrame parent, Database db, Collection c, boolean exportAverages) {
 		super (parent,"Export " + (exportAverages ? "Hierarchy " : "") + "to CSV file", true);
 		this.db = db;
 		this.parent = parent;

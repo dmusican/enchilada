@@ -46,7 +46,7 @@ package edu.carleton.enchilada.gui;
 
 import javax.swing.*;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import gnu.trove.iterator.TFloatIntIterator;
@@ -73,7 +73,7 @@ public class ClusterDistanceExportDialog extends JDialog implements ActionListen
 	private JRadioButton binnedButton;
 	private JCheckBox centroidButton;
 	private JButton csvDotDotDot;
-	private InfoWarehouse db;
+	private Database db;
 	private ClusterDistanceWindow parent = null;
 	
 	private boolean raw = false;

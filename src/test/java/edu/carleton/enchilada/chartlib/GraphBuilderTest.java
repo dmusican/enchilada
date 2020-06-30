@@ -3,7 +3,6 @@ package edu.carleton.enchilada.chartlib;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.uci.ics.jung.graph.Graph;
 
 import junit.framework.TestCase;
@@ -17,7 +16,7 @@ import junit.framework.TestCase;
 public class GraphBuilderTest extends TestCase {
 	
 	GraphBuilder classToTest;
-	InfoWarehouse db;
+	Database db;
 	
 	protected void setUp() throws Exception {
         super.setUp();

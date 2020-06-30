@@ -55,7 +55,7 @@ import javax.swing.table.TableColumn;
 
 
 import edu.carleton.enchilada.dataImporters.ATOFMSDataSetImporter;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.*;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
@@ -75,7 +75,7 @@ public class ImportParsDialog extends JDialog implements ActionListener {
 	private int dataSetCount;
 	private JFrame parent = null;
 	private boolean importedTogether = false, showAdvancedOptions = false;
-	private InfoWarehouse db;
+	private Database db;
 	private int parentID = 0; //default parent collection is root
 	
 	/**
@@ -149,7 +149,7 @@ public class ImportParsDialog extends JDialog implements ActionListener {
 		setVisible(true);	
 	}
 	
-	public ImportParsDialog(JFrame owner, InfoWarehouse db) throws HeadlessException {
+	public ImportParsDialog(JFrame owner, Database db) throws HeadlessException {
 		this(owner);
 		this.db = db;
 	}
@@ -234,7 +234,7 @@ public class ImportParsDialog extends JDialog implements ActionListener {
 		if (source == okButton) {
 				final JDialog thisRef = this;
 				final CardLayout card = (CardLayout)(listPane.getLayout());
-				final InfoWarehouse dbRef = db;
+				final Database dbRef = db;
 				//construct everything
 				final ProgressBarWrapper progressBar = 
 					new ProgressBarWrapper(parent, ATOFMSDataSetImporter.title, 100);

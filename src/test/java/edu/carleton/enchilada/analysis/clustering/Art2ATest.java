@@ -15,13 +15,12 @@ import edu.carleton.enchilada.analysis.Normalizer;
 
 
 import edu.carleton.enchilada.database.CreateTestDatabase;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 
 public class Art2ATest extends TestCase{
 	  private Art2A art2a;
 	  private Art2A art2a2;
-	    private InfoWarehouse db;
+	    private Database db;
 	    String dbName = "TestDB";
 	    
 	    /*

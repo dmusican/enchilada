@@ -19,7 +19,7 @@ import java.util.Map.Entry;
 public class TSBulkInserterTest extends TestCase {
 	private TSBulkInserter ins;
 	
-	InfoWarehouse db;
+	Database db;
 	
 	
 	protected void setUp() throws Exception {

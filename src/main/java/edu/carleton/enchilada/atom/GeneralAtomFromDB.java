@@ -2,8 +2,8 @@ package edu.carleton.enchilada.atom;
 
 import java.util.ArrayList;
 
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 public class GeneralAtomFromDB {
 
@@ -12,9 +12,9 @@ public class GeneralAtomFromDB {
 	protected ArrayList<String> fieldValues;
 	protected String datatype;
 	protected int atomID;
-	protected InfoWarehouse db;
+	protected Database db;
 	
-	public GeneralAtomFromDB(int atomID,InfoWarehouse database) {
+	public GeneralAtomFromDB(int atomID, Database database) {
 		db = database;
 		this.atomID = atomID;
 		datatype = db.getAtomDatatype(atomID);

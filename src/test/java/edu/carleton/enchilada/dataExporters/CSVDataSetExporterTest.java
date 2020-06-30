@@ -53,7 +53,6 @@ import edu.carleton.enchilada.collection.Collection;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
 /**
@@ -66,7 +65,7 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class CSVDataSetExporterTest extends TestCase {
 	CSVDataSetExporter exporter;
-	InfoWarehouse db;
+	Database db;
 	File csvFile, secondCsvFile;
 	
 	public CSVDataSetExporterTest(String s) {

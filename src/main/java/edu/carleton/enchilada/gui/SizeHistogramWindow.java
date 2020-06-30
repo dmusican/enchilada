@@ -42,10 +42,10 @@
  */
 package edu.carleton.enchilada.gui;
 
+import edu.carleton.enchilada.database.Database;
 import gnu.trove.iterator.TFloatIntIterator;
 import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.map.hash.TFloatIntHashMap;
-import gnu.trove.map.hash.TIntFloatHashMap;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -68,20 +68,16 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
 
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.chartlib.DataPoint;
 import edu.carleton.enchilada.chartlib.Dataset;
-import edu.carleton.enchilada.chartlib.DistancePlot;
 import edu.carleton.enchilada.chartlib.SizePlot;
 import edu.carleton.enchilada.chartlib.ZoomableChart;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
-import edu.carleton.enchilada.database.NonZeroCursor;
 
 // Log-normal size binning of particles in collection
 // Michael Murphy 2014
@@ -93,7 +89,7 @@ public class SizeHistogramWindow extends JFrame
 implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	
 	private JFrame parent;
-	private InfoWarehouse db;
+	private Database db;
 	
 	//GUI elements
 	private SizePlot chart;
@@ -161,7 +157,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	 * @param chart
 	 * @throws SQLException 
 	 */
-	public SizeHistogramWindow(MainFrame parentFrame, CollectionTree cTree, InfoWarehouse db) throws SQLException {
+	public SizeHistogramWindow(MainFrame parentFrame, CollectionTree cTree, Database db) throws SQLException {
 		super();
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);

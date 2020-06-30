@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VersionChecker {
-	private InfoWarehouse db;
+	private Database db;
 	private File rebuildFile = new File("SQLServerRebuildDatabase.txt");
 	private String progVers;
 	private String dbVers;
@@ -40,7 +40,7 @@ public class VersionChecker {
 	 * This constructor uses your existing connection to the database.
 	 * @param db an OPEN database connection
 	 */
-	public VersionChecker(InfoWarehouse db) {
+	public VersionChecker(Database db) {
 		this.db = db;
 	}
 	

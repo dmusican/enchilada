@@ -52,7 +52,7 @@ import edu.carleton.enchilada.analysis.clustering.ClusterValidation;
 import edu.carleton.enchilada.analysis.clustering.ClusterValidation.SampleType;
 import edu.carleton.enchilada.analysis.clustering.ClusterValidation.ValidityTest;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -71,7 +71,7 @@ import java.util.ArrayList;
 public class ValidationDialog extends JDialog implements ActionListener
 {
 	private JFrame parent;
-	private InfoWarehouse db;
+	private Database db;
 	
 	private JButton okButton; //Default button
 	private JButton cancelButton;
@@ -100,7 +100,7 @@ public class ValidationDialog extends JDialog implements ActionListener
 	
 	public JDialog progressDialog;
 	
-	public ValidationDialog(JFrame frame, CollectionTree cTree, InfoWarehouse db) {
+	public ValidationDialog(JFrame frame, CollectionTree cTree, Database db) {
 		super(frame,"Cluster Validation", true);
 		parent = frame;
 		setSize(280,360);

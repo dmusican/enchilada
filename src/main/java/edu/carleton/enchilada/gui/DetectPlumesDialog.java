@@ -26,7 +26,7 @@ import javax.swing.JTextField;
 
 import edu.carleton.enchilada.collection.Collection;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 
 public class DetectPlumesDialog  extends JDialog implements ActionListener, ItemListener{
@@ -40,8 +40,8 @@ public class DetectPlumesDialog  extends JDialog implements ActionListener, Item
 	private JComboBox metricDropdown;
 	
 	private CollectionTree cTree;
-	private InfoWarehouse db;
-	public DetectPlumesDialog(MainFrame frame,CollectionTree cTree, InfoWarehouse db){
+	private Database db;
+	public DetectPlumesDialog(MainFrame frame, CollectionTree cTree, Database db){
 		super(frame,"Plume Detection Options", true);
 		parent = frame;
 		this.cTree = cTree;

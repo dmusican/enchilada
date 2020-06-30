@@ -49,20 +49,16 @@ package edu.carleton.enchilada.chartlib;
 import java.util.ArrayList;
 
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.uci.ics.jung.graph.DelegateTree;
-import edu.uci.ics.jung.graph.DirectedSparseGraph;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.graph.Tree;
-import edu.uci.ics.jung.graph.util.EdgeType;
 
 public class GraphBuilder {
 
 	Collection collection;
-	InfoWarehouse db;
+	Database db;
 	
-	public GraphBuilder(InfoWarehouse db, Collection coll) {
+	public GraphBuilder(Database db, Collection coll) {
 		this.collection = coll;
 		this.db = db;
 	}

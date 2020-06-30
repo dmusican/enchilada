@@ -45,7 +45,6 @@
  */
 package edu.carleton.enchilada.analysis;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -54,14 +53,11 @@ import java.util.Scanner;
 import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
 import java.sql.Connection;
 import java.sql.Statement;
-
-import java.io.File;
-import java.io.PrintWriter;
 
 /**
  * @author andersbe
@@ -97,7 +93,7 @@ public abstract class CollectionDivider {
 	/**
 	 * A pointer to an active InfoWarehouse
 	 */
-	protected InfoWarehouse db;
+	protected Database db;
 
 	/**
 	 * The id of the new collection which all subdivisions will
@@ -131,7 +127,7 @@ public abstract class CollectionDivider {
 	 * @param name		A name for the new host collection
 	 * @param comment	A comment for the collection
 	 */
-	public CollectionDivider(int collectionID, InfoWarehouse database, String name, String comment)
+	public CollectionDivider(int collectionID, Database database, String name, String comment)
 	{
 	    if (database == null)
 	        throw new IllegalArgumentException(

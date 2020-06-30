@@ -48,7 +48,6 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -60,9 +59,8 @@ import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
-import edu.carleton.enchilada.database.Database.BPLOnlyCursor;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.ExportCSVDialog;
@@ -81,7 +79,7 @@ public class CSVDataSetExporter {
 	Window mainFrame;
 
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 
 	ProgressBarWrapper progressBar;
 	
@@ -89,7 +87,7 @@ public class CSVDataSetExporter {
 
 	public static final String TITLE = "Exporting Data Set to File";
 
-	public CSVDataSetExporter(Window mf, InfoWarehouse db, ProgressBarWrapper pbar) {
+	public CSVDataSetExporter(Window mf, Database db, ProgressBarWrapper pbar) {
 		mainFrame = mf;
 		this.db = db;
 		progressBar = pbar;

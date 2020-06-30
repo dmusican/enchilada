@@ -110,7 +110,7 @@ import edu.carleton.enchilada.chartlib.Dataset;
 import edu.carleton.enchilada.chartlib.SpectrumPlot;
 import edu.carleton.enchilada.chartlib.ZoomableChart;
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 
 
@@ -145,7 +145,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	private JPanel bottomPanel;
 	
 	//Data elements
-	private InfoWarehouse db;
+	private Database db;
 	private Vector<Vector<Object>> particlesData;
 	private int curRow;
 	private Collection coll;
@@ -221,8 +221,8 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	 * Both begin empty.
 	 * @param chart
 	 */
-	public ParticleAnalyzeWindow(final InfoWarehouse db, JTable dt, int curRow,
-			Collection collection) {
+	public ParticleAnalyzeWindow(final Database db, JTable dt, int curRow,
+                                 Collection collection) {
 		super();
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -950,7 +950,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		
 		//Get OrigDataSet from database
 		
-		InfoWarehouse db = MainFrame.db;
+		Database db = MainFrame.db;
 		Connection con = db.getCon();
 		
 		try {

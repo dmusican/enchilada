@@ -1,7 +1,7 @@
 package edu.carleton.enchilada.gui;
 
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -23,11 +23,11 @@ public class MapValuesWindow extends JFrame implements ListSelectionListener, Ac
 	private MapRangesDataModel mapRangesDataModel;
 	private MapListModel savedMapData;
 	private Collection collection;
-	private InfoWarehouse db;
+	private Database db;
 	
 	private int selectedRow, selectedColumn;
 	
-	public MapValuesWindow(MainFrame parentFrame, InfoWarehouse db, Collection collection) {
+	public MapValuesWindow(MainFrame parentFrame, Database db, Collection collection) {
 		super("Set up Value Maps for: " + collection.getName());
 		
 		// Only Time Series should be mapped... (for now)

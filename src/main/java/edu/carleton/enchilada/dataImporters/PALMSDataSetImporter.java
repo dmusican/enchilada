@@ -55,7 +55,6 @@ import javax.swing.SwingUtilities;
 
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.*;
 import edu.carleton.enchilada.gui.PALMSTableModel;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
@@ -105,7 +104,7 @@ public class PALMSDataSetImporter {
 	protected int positionInBatch, totalInBatch;
 	
 	/* Database object */
-	InfoWarehouse db;
+	Database db;
 	
 	/* Lock to make sure database is only accessed in one batch at a time */
 	private static Integer dbLock = new Integer(0);
@@ -125,13 +124,13 @@ public class PALMSDataSetImporter {
 	 * Constructor.  Sets the particle table for the importer.
 	 * @param PALMSTableModel - particle table model.
 	 */
-	public PALMSDataSetImporter(PALMSTableModel t, Window mf, InfoWarehouse db) {
+	public PALMSDataSetImporter(PALMSTableModel t, Window mf, Database db) {
 		table = t; //The gui table with multiple datasets
 		mainFrame = mf;
 		this.db = db;
 	}
 	
-	public PALMSDataSetImporter(PALMSTableModel t, Window mf, InfoWarehouse db, ProgressBarWrapper pbar) {
+	public PALMSDataSetImporter(PALMSTableModel t, Window mf, Database db, ProgressBarWrapper pbar) {
 		this(t, mf, db);
 		progressBar = pbar;
 	}

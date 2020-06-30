@@ -52,7 +52,6 @@ import javax.swing.event.TableModelEvent;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.WriteException;
 import edu.carleton.enchilada.gui.PALMSTableModel;
@@ -65,7 +64,7 @@ import edu.carleton.enchilada.testRow.palms.GenData;
  */
 public class PALMSDataSetImporterTest extends TestCase {
 	PALMSDataSetImporter importer;
-	InfoWarehouse db;
+	Database db;
 	PALMSTableModel table;
 	
 	JFrame mf;
@@ -160,7 +159,7 @@ public class PALMSDataSetImporterTest extends TestCase {
 		System.runFinalization();
 		System.gc();
 
-		InfoWarehouse tempDB = Database.getDatabase();
+		Database tempDB = Database.getDatabase();
 		tempDB.openConnection();
 		Connection con = tempDB.getCon();
 		Database.dropDatabase("TestDB");

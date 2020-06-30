@@ -8,7 +8,8 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
+
 /**
  * Creates a time series CSV file with any number of rows.
  * Files created are stored in C:\temp\.  Cannot be used unless
@@ -20,7 +21,7 @@ import edu.carleton.enchilada.database.InfoWarehouse;
 public class CreateDummyCSV {
 	Calendar calendar;
 	Random random;
-	InfoWarehouse db;
+	Database db;
 	String filename;
 	PrintWriter timeseries;
 	SimpleDateFormat dateFormat;

@@ -12,24 +12,24 @@ public class Aggregator {
 	private JFrame parentFrame;
 	private String timeBasisSQLstring;
 	private boolean baseOnCollection;
-	private InfoWarehouse db;
+	private Database db;
 	
 	private Calendar start, end, interval;
 	private Collection basisCollection;
 	
-	private Aggregator(JFrame parentFrame, InfoWarehouse db, boolean baseOnCollection) {
+	private Aggregator(JFrame parentFrame, Database db, boolean baseOnCollection) {
 		this.parentFrame = parentFrame;
 		this.baseOnCollection = baseOnCollection;
 		this.db = db;
 	}
 	
-	public Aggregator(JFrame parentFrame, InfoWarehouse db, Collection basisCollection) {
+	public Aggregator(JFrame parentFrame, Database db, Collection basisCollection) {
 		this(parentFrame, db, true);
 		
 		this.basisCollection = basisCollection;
 	}
 	
-	public Aggregator(JFrame parentFrame, InfoWarehouse db, Calendar start, Calendar end, Calendar interval) {
+	public Aggregator(JFrame parentFrame, Database db, Calendar start, Calendar end, Calendar interval) {
 		this(parentFrame, db, false);
 		
 		this.start = start;

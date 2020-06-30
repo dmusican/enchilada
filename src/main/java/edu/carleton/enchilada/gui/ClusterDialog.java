@@ -45,8 +45,8 @@ package edu.carleton.enchilada.gui;
 
 import javax.swing.*;
 
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.PeakTransform;
@@ -79,8 +79,8 @@ public class ClusterDialog extends AbstractClusterDialog
 	 * 
 	 * @param frame - the parent JFrame of the JDialog object.
 	 */
-	public ClusterDialog(JFrame frame, CollectionTree cTree, 
-			InfoWarehouse db) {
+	public ClusterDialog(JFrame frame, CollectionTree cTree,
+                         Database db) {
 		super(frame,"Cluster",true);
 		parent = frame;
 		this.cTree = cTree;

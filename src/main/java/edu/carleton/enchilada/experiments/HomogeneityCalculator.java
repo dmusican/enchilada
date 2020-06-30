@@ -13,7 +13,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 
 /**
@@ -39,7 +38,7 @@ public class HomogeneityCalculator {
 		System.out.println("Enter collectionID: ");
 		int cID = sc.nextInt();
 		
-		InfoWarehouse db = Database.getDatabase();
+		Database db = Database.getDatabase();
 		db.openConnection();
 		
 		Connection con = db.getCon();
@@ -102,7 +101,7 @@ public class HomogeneityCalculator {
 		System.out.println("Enter collectionID: ");
 		int cID = sc.nextInt();
 		
-		InfoWarehouse db = Database.getDatabase();
+		Database db = Database.getDatabase();
 		db.openConnection();
 		
 		Connection con = db.getCon();

@@ -44,16 +44,14 @@
 package edu.carleton.enchilada.gui;
 
 import javax.swing.*;
-import javax.swing.border.*;
 
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.DynamicTable;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.clustering.*;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 
 /**
@@ -75,8 +73,8 @@ public class PreClusterDialog extends AbstractClusterDialog
 	 * 
 	 * @param frame - the parent JDialog of the JDialog object.
 	 */
-	public PreClusterDialog(JFrame frame, JDialog parent, CollectionTree cTree, 
-			InfoWarehouse db) {
+	public PreClusterDialog(JFrame frame, JDialog parent, CollectionTree cTree,
+                            Database db) {
 		super(frame,"Cluster",true);
 		this.parent = frame;
 		this.cTree = cTree;

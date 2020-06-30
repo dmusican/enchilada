@@ -10,7 +10,6 @@ import java.util.*;
 import javax.swing.JOptionPane;
 
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import junit.framework.TestCase;
@@ -23,8 +22,8 @@ public class HistogramDatasetTest extends TestCase {
 	private HistogramDataset[] baseHist, anotherBaseHist, compHist;
 	ArrayList<Integer> keep = new ArrayList<>();
 	private final int testMZ = 70;
-	private InfoWarehouse db;
-	private InfoWarehouse db2;
+	private Database db;
+	private Database db2;
 
 	protected void setUp() throws Exception {
 		super.setUp();

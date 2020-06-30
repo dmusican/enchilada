@@ -47,7 +47,7 @@ package edu.carleton.enchilada.analysis.clustering;
 import java.util.*;
 
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.PeakTransform;
@@ -66,8 +66,8 @@ public class KMedians extends ClusterK {
 	 * @param database
 	 * @param initialCentroids - how to pick the initial centroids
 	 */
-	public KMedians(int cID, InfoWarehouse database, int k,
-			String name, String comment, ClusterK.CentroidsApproach initialCentroids, ClusterInformation c)
+	public KMedians(int cID, Database database, int k,
+                    String name, String comment, ClusterK.CentroidsApproach initialCentroids, ClusterInformation c)
 	{
 		super(cID, database, k, 
 				name.concat("KMedians"), comment, initialCentroids, c);

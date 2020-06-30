@@ -27,14 +27,14 @@ public class TSBulkInserter {
 	private int numRowsAddedInBatch;
 	
 	
-	private InfoWarehouse db;
+	private Database db;
 	private Connection con;
 
 	/**
 	 * Create a new TSBulkInserter with an already-connected database.
 	 * @param db
 	 */
-	public TSBulkInserter(InfoWarehouse db) {
+	public TSBulkInserter(Database db) {
 		this.db = db;
 		setUp();
 	}

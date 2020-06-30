@@ -1,6 +1,5 @@
 package edu.carleton.enchilada.gui;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,7 +10,6 @@ import java.util.Calendar;
 import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.database.CreateTestDatabase2;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.TimeUtilities;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -24,7 +22,7 @@ import static junit.framework.TestCase.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AggregatorTest extends TestCase {
-	private InfoWarehouse db;
+	private Database db;
 	private Aggregator aggregator;
 	
 	public AggregatorTest(String aString)

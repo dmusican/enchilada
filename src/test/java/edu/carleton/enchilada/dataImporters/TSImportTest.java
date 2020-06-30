@@ -9,13 +9,12 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 
 public class TSImportTest extends TestCase {
 	private String taskFile;
-	private InfoWarehouse db;
+	private Database db;
 	private static final int NUM_PARTICLES = 5000;
 	private File tsFile;
 	private File tsExcelFormatFile;

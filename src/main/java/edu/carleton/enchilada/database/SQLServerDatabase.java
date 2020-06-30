@@ -48,13 +48,11 @@ package edu.carleton.enchilada.database;
 
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.MainFrame;
 
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 
 /**
  * Makes database work with SQL Server
@@ -83,7 +81,7 @@ public class SQLServerDatabase extends Database
 	}
 
 	/**
-	 * @see InfoWarehouse.java#isPresent()
+	 * @see Database.java#isPresent()
 	 */
 	public boolean isPresent() {
 		return isPresentImpl("EXEC sp_helpdb");

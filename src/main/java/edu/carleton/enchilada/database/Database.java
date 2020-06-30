@@ -87,7 +87,7 @@ import java.util.*;
  * Mass spectrum querying added by Michael Murphy, University of Toronto, 2013.
  * 
  */
-public abstract class Database implements InfoWarehouse {
+public abstract class Database {
     private static final String accessDBURLPrefix = "jdbc:odbc:Driver={Microsoft Access Driver (*.mdb)};DBQ=";
     private static final String accessDBURLSuffix = ";READONLY=false}";
 
@@ -117,7 +117,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @param dbname the name of the database to use (SpASMSdb, TestDB, etc)
 	 * @return an InfoWarehouse backed by a relational database
 	 */
-	public static InfoWarehouse getDatabase(String dbName) {
+	public static Database getDatabase(String dbName) {
 		return new SQLiteDatabase(dbName);
 	}
 	public String getDatabaseName(){
@@ -127,7 +127,7 @@ public abstract class Database implements InfoWarehouse {
 	 * Construct an instance of either SQLServerDatabase or MySQLDatabase
 	 * @return an InfoWarehouse backed by a relational database
 	 */
-	public static InfoWarehouse getDatabase() {
+	public static Database getDatabase() {
 		return new SQLiteDatabase();
 	}
 	
@@ -253,7 +253,40 @@ public abstract class Database implements InfoWarehouse {
 		else
 			return false;
 	}
-	
+
+	/**
+	 * Opens a connection to the database, flat file, memory structure,
+	 * or whatever you're working with.
+	 * @return true on success
+	 */
+	public abstract boolean openConnection();
+
+	/**
+	 * Opens a connection to the database, flat file, memory structure,
+	 * or whatever you're working with.
+	 * @return true on success
+	 */
+	public abstract boolean openConnectionNoDB();
+
+	/**
+	 * @return true if this resource is available for use
+	 */
+	public abstract boolean isPresent();
+
+	/**
+	 * Get the date format used by this InfoWarehouse
+	 * @return a DateFormat object that can format Dates inserted into this InfoWarehouse.
+	 */
+	public abstract DateFormat getDateFormat();
+
+	public abstract boolean openConnection(String dbName);
+
+	public abstract String getRebuildScriptFilename();
+
+	public abstract int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
+									   Collection collection,
+									   int datasetID, int nextID, boolean importing);
+
 	/**
 	 * Abstract representation of something that adds and executes batches.
 	 * Used since SQL Server can execute batches more quickly with StringBuilders -
@@ -635,7 +668,7 @@ public abstract class Database implements InfoWarehouse {
 			ErrorLogger.writeExceptionToLogAndPrompt(dbName, "Error rebuilding database (dropping, in particular).");
 			throw new RuntimeException("Error in rebuilding database.");
 		}
-		InfoWarehouse blankDb = Database.getDatabase("");
+		Database blankDb = Database.getDatabase("");
 		blankDb.createDatabaseCommands(dbName);
 
 		Scanner in = null;
@@ -643,7 +676,7 @@ public abstract class Database implements InfoWarehouse {
 
 		// Run all the queries in the SQLServerRebuildDatabase.txt file, which
 		// inserts all of the necessary tables.
-		InfoWarehouse db = Database.getDatabase(dbName);
+		Database db = Database.getDatabase(dbName);
 		try {
 			db.openConnection(dbName);
 			con = db.getCon();
@@ -688,7 +721,7 @@ public abstract class Database implements InfoWarehouse {
 		// already been created with a password of 'finally'. This user must have
 		// already been granted appropriate privileges for adding and dropping
 		// databases and tables.
-		InfoWarehouse blankDb = Database.getDatabase("");
+		Database blankDb = Database.getDatabase("");
 		try {
 			blankDb.openConnectionNoDB();
 			Statement stmt = blankDb.getCon().createStatement();
@@ -714,7 +747,7 @@ public abstract class Database implements InfoWarehouse {
 	 * @return
 	 */
 	public static boolean dropDatabase(String dbName) {
-		InfoWarehouse db = null;
+		Database db = null;
 		Connection con = null;
 		
 		// Connect to SQL Server independent of a particular database,
@@ -3307,7 +3340,7 @@ public abstract class Database implements InfoWarehouse {
 	 * info kept in memory.
 	 */
 	private class MemoryClusteringCursor extends ClusteringCursor {
-		InfoWarehouse db;
+		Database db;
 		boolean firstPass = true;
 		int position = -1;
 		
@@ -3846,11 +3879,11 @@ public abstract class Database implements InfoWarehouse {
 		private Statement stmt;
 		private String where;
 		public Collection collection;
-		InfoWarehouse db;
+		Database db;
 		/**
 		 * @param collectionID
 		 */
-		public SQLCursor(Collection col, String where, InfoWarehouse db) {
+		public SQLCursor(Collection col, String where, Database db) {
 			super(col);
 			collection = col;
 			this.where = where;
@@ -4058,7 +4091,7 @@ public abstract class Database implements InfoWarehouse {
 	 * info kept in memory.
 	 */
 	public class MemoryBinnedCursor extends BinnedCursor {
-		InfoWarehouse db;
+		Database db;
 		boolean firstPass = true;
 		int position = -1;
 		

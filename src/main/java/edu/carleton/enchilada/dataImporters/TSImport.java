@@ -11,7 +11,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.TSBulkInserter;
 
@@ -44,7 +43,7 @@ public class TSImport{
 	private int status = TSImport.NORMAL;
 	public int choice;
 	
-	private InfoWarehouse db;
+	private Database db;
 	
 	private Frame parent;
 	
@@ -69,7 +68,7 @@ public class TSImport{
 	//the task file
 	public String tf;
     
-    public TSImport(InfoWarehouse db, Frame parent, boolean interactive) {
+    public TSImport(Database db, Frame parent, boolean interactive) {
     	super();
     	this.parent = parent;
     	this.db = db;
@@ -384,7 +383,7 @@ public class TSImport{
     }
 
     public static void main(String[] args) {
-    	InfoWarehouse db = Database.getDatabase(MainFrame.dbname);
+    	Database db = Database.getDatabase(MainFrame.dbname);
     	db.openConnection();
     	
     	TSImport t = new TSImport(db, null, true);

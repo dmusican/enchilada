@@ -9,7 +9,7 @@ import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.CollectionDivider;
 import edu.carleton.enchilada.analysis.DistanceMetric;
 
-import edu.carleton.enchilada.database.InfoWarehouse;
+import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 
 /**
@@ -25,11 +25,11 @@ public class ClusterQuery extends Cluster {
 	int collectionID;
 	private ArrayList<String> centroidFilenames; //original filenames of the centroids
 	DistanceMetric distanceMetric = DistanceMetric.EUCLIDEAN_SQUARED;
-	public ClusterQuery(int cID, InfoWarehouse database, String name, String comment, boolean norm) {
+	public ClusterQuery(int cID, Database database, String name, String comment, boolean norm) {
 		super(cID, database, name, comment, norm);
 		// TODO Auto-generated constructor stub
 	}
-	public ClusterQuery(int cID, InfoWarehouse database, String name, String comment, boolean norm, ArrayList<String> filenames, Float d) {
+	public ClusterQuery(int cID, Database database, String name, String comment, boolean norm, ArrayList<String> filenames, Float d) {
 		super(cID, database, name, comment, norm);
 		distance = d;
 		centroids = new ArrayList<Centroid>();

@@ -7,7 +7,6 @@ import edu.carleton.enchilada.ATOFMS.PeakParams;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.CollectionCursor;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
@@ -32,7 +31,7 @@ import javax.swing.JOptionPane;
 public class PeakListCursorExperiment {
 	private static int amplitude;
 	private ArrayList<ATOFMSParticle> particles;
-	public InfoWarehouse db;
+	public Database db;
 	private DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
 	public PeakListCursorExperiment() {

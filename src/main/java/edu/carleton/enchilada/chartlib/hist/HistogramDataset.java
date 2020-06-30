@@ -12,7 +12,6 @@ import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
 import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.collection.Collection;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.Database.BPLOnlyCursor;
 
@@ -40,7 +39,7 @@ public class HistogramDataset {
 	public static HistogramDataset[] analyseCollection(int collID, Color c) 
 		throws SQLException
 	{
-		InfoWarehouse db = HistogramsPlot.getDB();
+		Database db = HistogramsPlot.getDB();
 		Collection coll = db.getCollection(collID);
 		if (! coll.getDatatype().equals("ATOFMS")) 
 			throw new IllegalArgumentException("Spectrum Plots only work " +

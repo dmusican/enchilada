@@ -66,7 +66,6 @@ import javax.swing.SwingUtilities;
 
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.SQLServerDatabase;
-import edu.carleton.enchilada.database.InfoWarehouse;
 
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -154,7 +153,7 @@ public class DBUnitDialog extends JFrame implements ActionListener{
 	}
 	public void actionPerformed(ActionEvent e)
 	{
-		final InfoWarehouse db = Database.getDatabase(databaseName);
+		final Database db = Database.getDatabase(databaseName);
 		db.openConnection();
 		
 		//Open database connection:

@@ -49,7 +49,6 @@ import edu.carleton.enchilada.collection.Collection;
 
 import edu.carleton.enchilada.dataExporters.MSAnalyzeDataSetExporter;
 import edu.carleton.enchilada.database.Database;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.externalswing.SwingWorker;
@@ -67,11 +66,11 @@ public class ExportMSAnalyzeDialog extends JDialog implements ActionListener
 	private JButton parDotDotDot;
 	private JTextField accessFileField;
 	private JButton accessDotDotDot;
-	private InfoWarehouse db;
+	private Database db;
 	private JFrame parent = null;
 	private Collection collection = null;
 	
-	public ExportMSAnalyzeDialog(JFrame parent, InfoWarehouse db, Collection c) {
+	public ExportMSAnalyzeDialog(JFrame parent, Database db, Collection c) {
 		super (parent,"Export to MS-Analyze", true);
 		this.db = db;
 		this.parent = parent;

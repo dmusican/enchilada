@@ -59,7 +59,7 @@ import javax.swing.event.EventListenerList;
  */
 public class CollectionModel implements TreeModel {
 	private Collection root = null;
-	private InfoWarehouse db = null;
+	private Database db = null;
 	private boolean forSynchronized;
 	
 	private EventListenerList listenerList;
@@ -68,7 +68,7 @@ public class CollectionModel implements TreeModel {
 	/**
 	 * 
 	 */
-	public CollectionModel(InfoWarehouse database, boolean sync) {
+	public CollectionModel(Database database, boolean sync) {
 		super();
 		db = database;
 		forSynchronized = sync;

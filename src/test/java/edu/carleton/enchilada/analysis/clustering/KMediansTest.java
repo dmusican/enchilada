@@ -13,14 +13,13 @@ import edu.carleton.enchilada.analysis.Normalizer;
 
 
 import edu.carleton.enchilada.database.CreateTestDatabase;
-import edu.carleton.enchilada.database.InfoWarehouse;
 import edu.carleton.enchilada.database.Database;
 import junit.framework.TestCase;
 
 public class KMediansTest extends TestCase {
 
 	    private KMedians kmedians;
-	    private InfoWarehouse db;
+	    private Database db;
 	    String dbName = "TestDB";
 	    
 	    /*
