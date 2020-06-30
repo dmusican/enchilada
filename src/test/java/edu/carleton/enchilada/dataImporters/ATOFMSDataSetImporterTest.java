@@ -189,11 +189,12 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 		String dir = System.getProperty("user.dir");
 
 		assertEquals(1,rs.getInt(1));
-		assertEquals("2004-08-04 15:39:13.0",rs.getString(2));
+		assertEquals("2004-08-04 15:39:13",rs.getString(2));
 		assertEquals(1.031E-6,rs.getFloat(3), 0.0001);
 		assertEquals(0.0,rs.getFloat(4), 0.0001);
 		assertEquals(3129,rs.getInt(5));
-		assertEquals(dir + "\\testRow\\b\\b-040804153913-00001.amz",rs.getString(6));
+		String fileLocation = Paths.get(dir,"testRow","b","b-040804153913-00001.amz").toString();
+		assertEquals(fileLocation, rs.getString(6));
 		
 		while (rs.next()) {
 			rowCount++;
@@ -292,24 +293,11 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 	public void testReadParFileAndCreateEmptyCollection() {
 		try {
 			importer.parFile = new File((String)table.getValueAt(0,1));
-			ATOFMSParticle.currCalInfo = new CalInfo("testRow\\b\\cal.cal", true);
+			Path calFilePath = Paths.get("testRow","b","cal.cal");
+			ATOFMSParticle.currCalInfo = new CalInfo(calFilePath.toString(), true);
 			ATOFMSParticle.currPeakParams = new PeakParams(10, 20, .1f, .5f);
-		}
-		catch (java.io.IOException ex) {
-			fail("Couldn't set necessary files to create empty collection");
-		}
-		
-		try {
 			importer.readParFileAndCreateEmptyCollection();
-		}
-		catch (java.io.IOException ex) {
-			fail();
-		}
-		catch (DataFormatException ex) {
-			fail();
-		}
-		
-		try {
+
 			Connection con = db.getCon();
 			
 			ResultSet rs = con.createStatement().executeQuery(
@@ -334,21 +322,13 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 			
 			assertFalse(rs.next());
 			rs.close();
-		}
-		catch (SQLException ex) {
-			ex.printStackTrace();
-			fail("Couldn't analyze success of readParFileAndCreateEmptyCollection");
-		}
-		
-		try {
-			ATOFMSParticle.currCalInfo = new CalInfo("testRow\\b\\cal.cal", false);
+
+			ATOFMSParticle.currCalInfo = new CalInfo(calFilePath.toString(), false);
 			importer.readParFileAndCreateEmptyCollection();
+
 		}
-		catch (java.io.IOException ex) {
-			fail();
-		}
-		catch (DataFormatException ex) {
-			fail();
+		catch (Exception ex) {
+			throw new ExceptionAdapter(ex);
 		}
 		
 		try {
