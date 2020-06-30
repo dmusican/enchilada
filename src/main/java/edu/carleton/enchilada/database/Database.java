@@ -4721,22 +4721,8 @@ public abstract class Database implements InfoWarehouse {
 			stmt.executeUpdate("CREATE TABLE IF NOT EXISTS tmpatoms " + "" +
 					"(NewAtomID INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 					" Time DateTime, \n MZLocation int, \n Value real, \n UNIQUE (MZLocation,Time));\n");
-			// Need to add a row then remove it so can update the autoincrement
-			// https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
-//			stmt.executeUpdate("INSERT INTO tmpatoms (Time, MZLocation, Value) VALUES (NULL, NULL, NULL)");
 			stmt.executeUpdate("DELETE FROM tmpatoms");
-
-
-			// Set the autoincrement to start at the max atom id
-			// https://stackoverflow.com/a/692871
-			int nextID = getNextID();
-			// SQLite tracks last sequence number added
-			int sqlLiteSequenceNumber = nextID-1;
-			System.out.println("NextID = " + nextID);
-			stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + sqlLiteSequenceNumber + " WHERE name='tmpatoms'");
-			stmt.executeUpdate("\n" +
-					"INSERT INTO sqlite_sequence (name,seq) SELECT 'tmpatoms', " + sqlLiteSequenceNumber + " WHERE NOT EXISTS \n" +
-					"           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);");
+			setNextAtomID(getNextID());
 
 			// create the root collection
 
@@ -4749,152 +4735,23 @@ public abstract class Database implements InfoWarehouse {
 					System.err.println("Collections need to overlap times in order to be aggregated.");
 					return false;
 				}
-				int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
 
-				// if length actually is 0, do nothing
-				if (mzValues.length != 0) {
-
-
-					//This code does all of the joins in SQL.
-
-					// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
-					// collects the sum of the Height/Area over all atoms at a given Time and for a specific m/z
-					stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
-							"SELECT BinnedTime, AIS.PeakLocation AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
-							"FROM temp.TimeBins TB\n" +
-							"JOIN ATOFMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
-							"GROUP BY BinnedTime,AIS.PeakLocation\n"+
-							"ORDER BY Location, BinnedTime;\n");
-
-
-					// build 2 child collections - one for particle counts time-series,
-					// one for M/Z values time-series.
-					int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
-					int mzPeakLoc, mzCollectionID;
-					// for each mz value specified, make a new child collection and populate it.
-					for (int j = 0; j < mzValues.length; j++) {
-						if(progressBar.wasTerminated()){
-							throw new InterruptedException();
-						}
-						mzPeakLoc = mzValues[j];
-						mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
-						progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
-						stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-								"select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = "+mzPeakLoc+"\n" +
-								"ORDER BY NewAtomID;\n");
-						stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-								"select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = "+mzPeakLoc+
-								" ORDER BY NewAtomID;\n");
-					}
-
-					// if the user tried to cancel, STOP
-					if(progressBar.wasTerminated()){
-						throw new InterruptedException();
-					}
-					progressBar.increment("  Executing Queries...");
-					// if the particle count is selected, produce that time series as well.
-					// NOTE:  QUERY HAS CHANGED DRASTICALLY SINCE GREG'S IMPLEMENTATION!!!
-					// it now tracks number of particles instead of sum of m/z particles.
-					//System.out.println("Statement: "+sql.toString());
-					progressBar.setIndeterminate(true);
-					long start = System.currentTimeMillis();
-					stmt.executeBatch();
-					long stop = System.currentTimeMillis();
-					System.out.println("executed in "+(stop-start)+" milliseconds.");
-
-				}
-
-				stmt.clearBatch();
-				stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + (getNextID()-1) + " WHERE name='tmpatoms'");
-				stmt.executeUpdate("DELETE FROM tmpatoms");
-				if (options.produceParticleCountTS) {
-					int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
-					stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
-							"SELECT BinnedTime, COUNT(AtomID) AS IDCount FROM temp.TimeBins TB\n"+
-							"GROUP BY BinnedTime\n"+
-							"ORDER BY BinnedTime;\n");
-					stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-							"select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
-					stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " (AtomID, Time, Value) \n" +
-							"select NewAtomID, Time, Value from tmpatoms;\n");
-
-					progressBar.increment("  " + collectionName + ", Particle Counts");
-					long start = System.currentTimeMillis();
-					stmt.executeBatch();
-					long stop = System.currentTimeMillis();
-					System.out.println("executed in "+(stop-start)+" milliseconds.");
-				}
-				// if the user tried to cancel, STOP
-				if(progressBar.wasTerminated()){
-					throw new InterruptedException();
-				}
-
+				aggreateATOFMSUpdate(progressBar, rootCollectionID, mzValues, collectionName, options);
 
 				/* IF DATATYPE IS TIME SERIES */
 			} else if (curColl.getDatatype().equals("TimeSeries")) {
-				stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
-						"select BinnedTime, " + options.getGroupMethodStr() + "(AID.Value) AS Value \n" +
-						"from temp.TimeBins TB \n" +
-						"join TimeSeriesAtomInfoDense AID on (TB.AtomID = AID.AtomID) \n"+
-						"group by BinnedTime \n" +
-						"order by BinnedTime;\n");
-
-				int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
-				stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-						"select " + newCollectionID + ", NewAtomID from tmpatoms;\n");
-
-				stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-						"select NewAtomID, Time, Value from tmpatoms;\n");
-				progressBar.increment("  " + collectionName);
-				stmt.executeBatch();
+				aggregateTimeSeriesUpdate(progressBar, rootCollectionID, collectionName, options);
 			}
 			/* IF DATATYPE IS AMS */
 			else if (curColl.getDatatype().equals("AMS")) {
-				if (mzValues == null) {
+				if (mzValues == null || mzValues.length == 0) {
 					ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Collection: " + collectionName + " doesn't have any peak data to aggregate");
 					System.err.println("Collection: " + collectionID + "  doesn't have any peak data to aggregate");
 					System.err.println("Collections need to overlap times in order to be aggregated.");
 					return false;
-				} else if (mzValues.length == 0) {
-					ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Collection: " + collectionName + " doesn't have any peak data to aggregate");
-					System.err.println("Collection: " + collectionID + "  doesn't have any peak data to aggregate");
-					System.err.println("Collections need to overlap times in order to be aggregated.");
-				} else {
-					//create and insert MZ Values into temporary #mz table.
-					stmt.addBatch("DROP TABLE IF EXISTS temp.mz;\n");
-					stmt.addBatch("CREATE TEMPORARY TABLE mz (Value INT);\n");
-					for (int mzValue : mzValues) {
-						stmt.addBatch("INSERT INTO temp.mz VALUES(" + mzValue + ");\n");
-					}
-					// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
-					stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
-							"SELECT BinnedTime, MZ.Value AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
-							"FROM temp.TimeBins TB\n" +
-							"JOIN AMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
-							"JOIN temp.mz MZ on (abs(AIS.PeakLocation - MZ.Value) < "+options.peakTolerance+")\n"+
-							"GROUP BY BinnedTime,MZ.Value\n"+
-							"ORDER BY Location, BinnedTime;\n");
-
-					// build 2 child collections - one for time series, one for M/Z values.
-					int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
-					int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
-					int mzPeakLoc, mzCollectionID;
-					// for each mz value specified, make a new child collection and populate it.
-					for (int j = 0; j < mzValues.length; j++) {
-						mzPeakLoc = mzValues[j];
-						mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
-						progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
-						stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-								"select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = "+mzPeakLoc+"\n" +
-								"ORDER BY NewAtomID;\n");
-						stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-								"select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = "+mzPeakLoc+
-								" ORDER BY NewAtomID;\n");
-					}
-					stmt.addBatch("DROP TABLE temp.mz;\n");
-					progressBar.increment("  Executing M/Z Queries...");
-					stmt.executeBatch();
 				}
+
+				aggregateAMSUpdate(progressBar, rootCollectionID, mzValues, collectionName, options);
 			}
 
 			stmt.close();
@@ -4910,6 +4767,163 @@ public abstract class Database implements InfoWarehouse {
 			}
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception aggregating collection: " + collectionName);
 			throw new ExceptionAdapter(e);
+		}
+	}
+
+	private void setNextAtomID(int nextID) throws SQLException {
+		Statement stmt = con.createStatement();
+		// SQLite stores the last sequence number added, so need to subtract one
+		// https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
+		int sqlLiteSequenceNumber = nextID - 1;
+		stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + sqlLiteSequenceNumber + " WHERE name='tmpatoms'");
+		stmt.executeUpdate("\n" +
+				"INSERT INTO sqlite_sequence (name,seq) SELECT 'tmpatoms', " + sqlLiteSequenceNumber + " WHERE NOT EXISTS \n" +
+				"           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);");
+	}
+
+	private void aggregateAMSUpdate(ProgressBarWrapper progressBar, int rootCollectionID, int[] mzValues,
+									String collectionName, AggregationOptions options) throws SQLException {
+		//create and insert MZ Values into temporary #mz table.
+		Statement stmt = con.createStatement();
+
+		stmt.addBatch("DROP TABLE IF EXISTS temp.mz;\n");
+		stmt.addBatch("CREATE TEMPORARY TABLE mz (Value INT);\n");
+		for (int mzValue : mzValues) {
+			stmt.addBatch("INSERT INTO temp.mz VALUES(" + mzValue + ");\n");
+		}
+		// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
+		stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
+				"SELECT BinnedTime, MZ.Value AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
+				"FROM temp.TimeBins TB\n" +
+				"JOIN AMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
+				"JOIN temp.mz MZ on (abs(AIS.PeakLocation - MZ.Value) < "+options.peakTolerance+")\n"+
+				"GROUP BY BinnedTime,MZ.Value\n"+
+				"ORDER BY Location, BinnedTime;\n");
+
+		// build 2 child collections - one for time series, one for M/Z values.
+		int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
+		int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
+		int mzPeakLoc, mzCollectionID;
+		// for each mz value specified, make a new child collection and populate it.
+		for (int j = 0; j < mzValues.length; j++) {
+			mzPeakLoc = mzValues[j];
+			mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
+			progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
+			stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+					"select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = "+mzPeakLoc+"\n" +
+					"ORDER BY NewAtomID;\n");
+			stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+					"select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = "+mzPeakLoc+
+					" ORDER BY NewAtomID;\n");
+		}
+		stmt.addBatch("DROP TABLE temp.mz;\n");
+		progressBar.increment("  Executing M/Z Queries...");
+		stmt.executeBatch();
+	}
+
+	private void aggregateTimeSeriesUpdate(ProgressBarWrapper progressBar, int rootCollectionID, String collectionName,
+										   AggregationOptions options) throws SQLException {
+		Statement stmt = con.createStatement();
+
+		stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
+				"select BinnedTime, " + options.getGroupMethodStr() + "(AID.Value) AS Value \n" +
+				"from temp.TimeBins TB \n" +
+				"join TimeSeriesAtomInfoDense AID on (TB.AtomID = AID.AtomID) \n"+
+				"group by BinnedTime \n" +
+				"order by BinnedTime;\n");
+
+		int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
+		stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+				"select " + newCollectionID + ", NewAtomID from tmpatoms;\n");
+
+		stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+				"select NewAtomID, Time, Value from tmpatoms;\n");
+		progressBar.increment("  " + collectionName);
+		stmt.executeBatch();
+	}
+
+	private void aggreateATOFMSUpdate(ProgressBarWrapper progressBar, int rootCollectionID, int[] mzValues,
+									  String collectionName, AggregationOptions options)
+			throws SQLException, InterruptedException {
+		int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
+		Statement stmt = con.createStatement();
+
+		// if length actually is 0, do nothing
+		if (mzValues.length != 0) {
+
+
+			//This code does all of the joins in SQL.
+
+			// went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
+			// collects the sum of the Height/Area over all atoms at a given Time and for a specific m/z
+			stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
+					"SELECT BinnedTime, AIS.PeakLocation AS Location,"+options.getGroupMethodStr()+"(PeakHeight) AS PeakHeight \n"+
+					"FROM temp.TimeBins TB\n" +
+					"JOIN ATOFMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n"+
+					"GROUP BY BinnedTime,AIS.PeakLocation\n"+
+					"ORDER BY Location, BinnedTime;\n");
+
+
+			// build 2 child collections - one for particle counts time-series,
+			// one for M/Z values time-series.
+			int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
+			int mzPeakLoc, mzCollectionID;
+			// for each mz value specified, make a new child collection and populate it.
+			for (int j = 0; j < mzValues.length; j++) {
+				if(progressBar.wasTerminated()){
+					throw new InterruptedException();
+				}
+				mzPeakLoc = mzValues[j];
+				mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
+				progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
+				stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+						"select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = "+mzPeakLoc+"\n" +
+						"ORDER BY NewAtomID;\n");
+				stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+						"select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = "+mzPeakLoc+
+						" ORDER BY NewAtomID;\n");
+			}
+
+			// if the user tried to cancel, STOP
+			if(progressBar.wasTerminated()){
+				throw new InterruptedException();
+			}
+			progressBar.increment("  Executing Queries...");
+			// if the particle count is selected, produce that time series as well.
+			// NOTE:  QUERY HAS CHANGED DRASTICALLY SINCE GREG'S IMPLEMENTATION!!!
+			// it now tracks number of particles instead of sum of m/z particles.
+			//System.out.println("Statement: "+sql.toString());
+			progressBar.setIndeterminate(true);
+			long start = System.currentTimeMillis();
+			stmt.executeBatch();
+			long stop = System.currentTimeMillis();
+			System.out.println("executed in "+(stop-start)+" milliseconds.");
+
+		}
+
+		stmt.clearBatch();
+		setNextAtomID(getNextID());
+		stmt.executeUpdate("DELETE FROM tmpatoms");
+		if (options.produceParticleCountTS) {
+			int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
+			stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
+					"SELECT BinnedTime, COUNT(AtomID) AS IDCount FROM temp.TimeBins TB\n"+
+					"GROUP BY BinnedTime\n"+
+					"ORDER BY BinnedTime;\n");
+			stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+					"select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
+			stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " (AtomID, Time, Value) \n" +
+					"select NewAtomID, Time, Value from tmpatoms;\n");
+
+			progressBar.increment("  " + collectionName + ", Particle Counts");
+			long start = System.currentTimeMillis();
+			stmt.executeBatch();
+			long stop = System.currentTimeMillis();
+			System.out.println("executed in "+(stop-start)+" milliseconds.");
+		}
+		// if the user tried to cancel, STOP
+		if(progressBar.wasTerminated()){
+			throw new InterruptedException();
 		}
 	}
 
