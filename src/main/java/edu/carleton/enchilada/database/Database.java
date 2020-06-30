@@ -4563,7 +4563,6 @@ public abstract class Database implements InfoWarehouse {
 		System.out.println("collection: "+c.getCollectionID()+"\nstart: "+start.getTimeInMillis()+"\nend: "+end.getTimeInMillis()+"\ninterval: "+interval.getTimeInMillis());
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Calendar increment = (Calendar) start.clone();
-		System.out.println("Increment = " + increment);
 		int counter = 0;
 		try (
 			Statement stmt = con.createStatement();
@@ -4574,13 +4573,6 @@ public abstract class Database implements InfoWarehouse {
 			PreparedStatement timeBinsInsertStmt = con.prepareStatement("INSERT INTO temp.TimeBins VALUES (?, ?);");
 			counter++;
 			// get all times from collection to bin.
-			String query = "SELECT AID.AtomID, Time \n" +
-					"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
-					"InternalAtomOrder IAO \n" +
-					"WHERE IAO.AtomID = AID.AtomID\n" +
-					"AND CollectionID = " + c.getCollectionID() + "\n" +
-					"ORDER BY Time;\n";
-			System.out.println(query);
 			ResultSet collectionRS = stmt1.executeQuery("SELECT AID.AtomID, Time \n" +
 					"FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
 					"InternalAtomOrder IAO \n" +
@@ -4593,7 +4585,6 @@ public abstract class Database implements InfoWarehouse {
 			int atomID = collectionRS.getInt(1);
 			Date collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 			Date basisTime = increment.getTime();
-			System.out.println("Basis time = " + basisTime);
 			Date nextTime = null;
 			boolean next = true;
 
@@ -4604,11 +4595,9 @@ public abstract class Database implements InfoWarehouse {
 					break;
 				else {
 					atomID = collectionRS.getInt(1);
-					System.out.println("COLLECTIONTIME = " + collectionTime);
 					collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 				}
 			}
-			System.out.println("INTERVAL = " + interval);
 			// while the next time bin is legal...
 			while (next) {
 				increment.add(Calendar.DATE, interval.get(Calendar.DATE) - 1);
@@ -4616,11 +4605,9 @@ public abstract class Database implements InfoWarehouse {
 				increment.add(Calendar.MINUTE, interval.get(Calendar.MINUTE));
 				increment.add(Calendar.SECOND, interval.get(Calendar.SECOND));
 				nextTime = increment.getTime();
-				System.out.println("NEXTTIME = " + nextTime + " " + collectionTime);
 				while (next && nextTime.compareTo((Date) collectionTime) > 0) {
 					timeBinsInsertStmt.setInt(1, atomID);
 					timeBinsInsertStmt.setString(2, dateFormat.format(basisTime));
-					System.out.println("abcdef " + atomID + " " + dateFormat.format(basisTime));
 					timeBinsInsertStmt.addBatch();
 					//stmt.executeUpdate("INSERT INTO temp.TimeBins VALUES ("+atomID+",'"+dateFormat.format(basisTime)+"');");
 					counter++;
