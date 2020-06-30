@@ -17,9 +17,12 @@ import edu.carleton.enchilada.database.TimeUtilities;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 import static junit.framework.TestCase.assertEquals;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AggregatorTest extends TestCase {
 	private InfoWarehouse db;
 	private Aggregator aggregator;
@@ -35,22 +38,15 @@ public class AggregatorTest extends TestCase {
 		db = Database.getDatabase("TestDB2");
 	}
 	
-	protected void tearDown()
+	protected void tearDown() throws Exception
 	{
+		super.tearDown();
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			db = Database.getDatabase("");
-			db.openConnection();
-			Connection con = db.getCon();
-			//con.createStatement().executeUpdate("DROP DATABASE TestDB2");
-			con.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		System.runFinalization();
+		System.gc();
+		Database.dropDatabase("TestDB2");
 	}
-	
+
 	class FauxMainFrame extends MainFrame {
 		public FauxMainFrame() {
 			super();
@@ -71,7 +67,6 @@ public class AggregatorTest extends TestCase {
 	 */
 	private void testAggregation(final Aggregator aggregator, final Collection[] collections, 
 			final Test test) {
-		db.openConnection("TestDB2");
 		final ProgressBarWrapper progressBar =
 			aggregator.createAggregateTimeSeriesPrepare(collections);
 		
@@ -185,12 +180,12 @@ public class AggregatorTest extends TestCase {
 		Test test = new Test() {
 			public void run(int CollectionID) throws SQLException {
 				Statement stmt = db.getCon().createStatement();
-				
+
 				// check number of collections:
 				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;\n");
 				assertTrue(rs.next());
 				assertEquals(rs.getInt(1),35);
-				
+
 				// check ATOFMS m/z collection:
 				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
 						" WHERE CollectionID = 13 ORDER BY AtomID;\n");
@@ -201,14 +196,14 @@ public class AggregatorTest extends TestCase {
 				assertTrue(rs.next());
 				assertEquals(rs.getInt(1),37);
 				assertFalse(rs.next());
-				
+
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 						"TimeSeriesAtomInfoDense WHERE AtomID = 35;");
 				rs.next();
 				assertEquals("2003-09-02 17:30:31", rs.getString(1));
 				assertEquals(12, rs.getInt(2));
 				assertFalse(rs.next());
-				
+
 				// check TimeSeries collection:
 				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
 				" WHERE CollectionID = 29 ORDER BY AtomID;\n");
@@ -223,14 +218,14 @@ public class AggregatorTest extends TestCase {
 				assertTrue(rs.next());
 				assertEquals(71, rs.getInt(1));
 				assertFalse(rs.next());
-				
+
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 						"TimeSeriesAtomInfoDense WHERE AtomID = 67;");
 				assertTrue(rs.next());
 				assertEquals("2003-09-02 17:30:30", rs.getString(1));
 				assertEquals(rs.getInt(2),0);
 				assertFalse(rs.next());
-				
+
 				// check AMS m/z collections:
 				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
 				" WHERE CollectionID = 32 ORDER BY AtomID;\n");
@@ -243,7 +238,7 @@ public class AggregatorTest extends TestCase {
 				assertTrue(rs.next());
 				assertEquals(rs.getInt(1),75);
 				assertFalse(rs.next());
-				
+
 				rs = stmt.executeQuery("SELECT Time, Value FROM " +
 				"TimeSeriesAtomInfoDense WHERE AtomID = 72;");
 				assertTrue(rs.next());
@@ -311,7 +306,7 @@ public class AggregatorTest extends TestCase {
 	 * for ATOFMS, AMS, and TimeSeries data.
 	 * @author shaferia
 	 */
-	public void testIntervalAggregation() {
+	public void testIntervalAggregation() throws Exception {
 		Calendar start;
 		Calendar end;
 		Calendar interval;

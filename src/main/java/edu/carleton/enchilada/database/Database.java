@@ -728,9 +728,7 @@ public abstract class Database implements InfoWarehouse {
 			db.dropDatabaseCommands();
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(db.getName(),"Error dropping database.");
-			System.err.println("Error in dropping database.");
-			e.printStackTrace();
-			return false;
+			throw new ExceptionAdapter(e);
 		} finally {
 			if (db != null)
 				db.closeConnection();

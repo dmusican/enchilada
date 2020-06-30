@@ -157,19 +157,14 @@ public class PALMSDataSetImporterTest extends TestCase {
 	
 	protected void tearDown() {
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			
-			InfoWarehouse tempDB = Database.getDatabase();
-			tempDB.openConnection();
-			Connection con = tempDB.getCon();
-			tempDB.dropDatabaseCommands();
-			tempDB.closeConnection();
-		} catch (SQLException e) {
-			throw new ExceptionAdapter(e);
-		}
-				
+		System.runFinalization();
+		System.gc();
+
+		InfoWarehouse tempDB = Database.getDatabase();
+		tempDB.openConnection();
+		Connection con = tempDB.getCon();
+		Database.dropDatabase("TestDB");
+
 		for (String s : deleteFiles)
 			(new File(s)).delete();
 	

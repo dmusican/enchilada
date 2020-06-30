@@ -173,8 +173,7 @@ public class AMSDataSetImporterTest extends TestCase {
 		InfoWarehouse tempDB = Database.getDatabase();
 		tempDB.openConnection();
 		Connection con = tempDB.getCon();
-		tempDB.dropDatabaseCommands();
-		tempDB.closeConnection();
+		Database.dropDatabase("TestDB");
 		for (String s : deleteFiles)
 			(new File(s)).delete();
 

@@ -154,26 +154,22 @@ public class SPASSDataSetImporterTest extends TestCase {
 			fail("Error in importing test SPASS data");
 		}
 	}
-	
+
 	protected void tearDown() {
 		db.closeConnection();
-		try {
-			System.runFinalization();
-			System.gc();
-			
-			InfoWarehouse tempDB = Database.getDatabase();
-			tempDB.openConnection();
-			Connection con = tempDB.getCon();
-			tempDB.closeConnection();
-			tempDB.dropDatabaseCommands();
-		} catch (SQLException e) {
-			throw new ExceptionAdapter(e);
-		}
-				
+		System.runFinalization();
+		System.gc();
+
+		InfoWarehouse tempDB = Database.getDatabase();
+		tempDB.openConnection();
+		Connection con = tempDB.getCon();
+		tempDB.closeConnection();
+		Database.dropDatabase("TestDB");
+
 		for (String s : deleteFiles)
 			(new File(s)).delete();
-	
-		if (dataLoaded) {	
+
+		if (dataLoaded) {
 			mf.dispose();
 		}
 		table = null;
