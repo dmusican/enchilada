@@ -4586,13 +4586,14 @@ public abstract class Database implements InfoWarehouse {
 					"InternalAtomOrder IAO \n" +
 					"WHERE IAO.AtomID = AID.AtomID\n" +
 					"AND CollectionID = " + c.getCollectionID() + "\n" +
-					"ORDER BY Time;\n");
+					"ORDER BY Time, AID.AtomID;\n");
 
 			// initialize first values:
 			collectionRS.next();
 			int atomID = collectionRS.getInt(1);
 			Date collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 			Date basisTime = increment.getTime();
+			System.out.println("Basis time = " + basisTime);
 			Date nextTime = null;
 			boolean next = true;
 
@@ -4603,10 +4604,11 @@ public abstract class Database implements InfoWarehouse {
 					break;
 				else {
 					atomID = collectionRS.getInt(1);
+					System.out.println("COLLECTIONTIME = " + collectionTime);
 					collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
 				}
 			}
-			System.out.println(interval);
+			System.out.println("INTERVAL = " + interval);
 			// while the next time bin is legal...
 			while (next) {
 				increment.add(Calendar.DATE, interval.get(Calendar.DATE) - 1);
@@ -4721,13 +4723,21 @@ public abstract class Database implements InfoWarehouse {
 					" Time DateTime, \n MZLocation int, \n Value real, \n UNIQUE (MZLocation,Time));\n");
 			// Need to add a row then remove it so can update the autoincrement
 			// https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
-			stmt.executeUpdate("INSERT INTO tmpatoms (Time, MZLocation, Value) VALUES (NULL, NULL, NULL)");
+//			stmt.executeUpdate("INSERT INTO tmpatoms (Time, MZLocation, Value) VALUES (NULL, NULL, NULL)");
 			stmt.executeUpdate("DELETE FROM tmpatoms");
 
 
 			// Set the autoincrement to start at the max atom id
-			// https://stackoverflow.com/a/692871/490329
-			stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + getNextID() + " WHERE name='tmpatoms'");
+			// https://stackoverflow.com/a/692871
+			int nextID = getNextID();
+			// SQLite tracks last sequence number added
+			int sqlLiteSequenceNumber = nextID-1;
+			System.out.println("NextID = " + nextID);
+			stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + sqlLiteSequenceNumber + " WHERE name='tmpatoms'");
+			stmt.executeUpdate("\n" +
+					"INSERT INTO sqlite_sequence (name,seq) SELECT 'tmpatoms', " + sqlLiteSequenceNumber + " WHERE NOT EXISTS \n" +
+					"           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);");
+
 			// create the root collection
 
 			// Create and Populate #atoms table with appropriate information.

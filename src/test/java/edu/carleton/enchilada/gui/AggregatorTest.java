@@ -332,7 +332,7 @@ public class AggregatorTest extends TestCase {
 				rs = db.getCon().createStatement().executeQuery(
 					"SELECT COUNT(*) FROM AtomMembership WHERE CollectionID > 5");
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), 37);
+				assertEquals(37, rs.getInt(1));
 				
 				//check proper collections hierarchy
 				rs = db.getCon().createStatement().executeQuery(
@@ -390,11 +390,11 @@ public class AggregatorTest extends TestCase {
 				rs = db.getCon().createStatement().executeQuery(
 						"SELECT AtomID FROM AtomMembership WHERE CollectionID = 7 ORDER BY AtomID");
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),31);
+				assertEquals(31, rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),32);
+				assertEquals(32,  rs.getInt(1));
 				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),33);
+				assertEquals(33, rs.getInt(1));
 				assertFalse(rs.next());
 				
 				//check for the new collection
@@ -414,13 +414,13 @@ public class AggregatorTest extends TestCase {
 				rs = db.getCon().createStatement().executeQuery(
 						"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33) ORDER BY Time");
 				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:33.0");
+				assertEquals(rs.getString(1),"2003-09-02 17:30:33");
 				assertEquals(rs.getDouble(2),0.9,1e-5);
 				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:34.0");
+				assertEquals(rs.getString(1),"2003-09-02 17:30:34");
 				assertEquals(rs.getDouble(2),0.6,1e-5);
 				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:35.0");
+				assertEquals(rs.getString(1),"2003-09-02 17:30:35");
 				assertEquals(rs.getDouble(2),1.5,1e-5);
 				assertFalse(rs.next());
 			}
@@ -481,8 +481,8 @@ public class AggregatorTest extends TestCase {
 				//	and the dense information times for the items
 				rs = db.getCon().createStatement().executeQuery(
 						"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33,34,35) ORDER BY Time");
-				String[] times = {"2003-09-02 17:30:32.0", "2003-09-02 17:30:32.0", "2003-09-02 17:30:32.0",
-						"2003-09-02 17:30:34.0", "2003-09-02 17:30:35.0"};
+				String[] times = {"2003-09-02 17:30:32", "2003-09-02 17:30:32", "2003-09-02 17:30:32",
+						"2003-09-02 17:30:34", "2003-09-02 17:30:35"};
 				int[] values = {2, 1, 0, 1, 1};
 				for (int i = 0; i < 5; ++i) {
 					rs.next();
