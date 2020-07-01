@@ -62,6 +62,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Set;
@@ -183,6 +185,8 @@ public class MainFrame extends JFrame implements ActionListener
 	private int currCollection;
 
 	public static String dbname = "SpASMSdb";
+	public static Path userDataLocation = Paths.get(System.getProperty("user.home"), "enchilada");
+
 	/**
 	 * Constructor.  Creates and shows the GUI.	 
 	 */

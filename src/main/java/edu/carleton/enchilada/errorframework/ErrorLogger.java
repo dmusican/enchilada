@@ -1,5 +1,8 @@
 package edu.carleton.enchilada.errorframework;
 
+import com.sun.tools.javac.Main;
+import edu.carleton.enchilada.gui.MainFrame;
+
 import java.awt.Component;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -34,16 +38,19 @@ public class ErrorLogger {
 	public static File dir; 
 	public static File file; 
 	public static boolean error = false;
+	public static final Path errorPath = MainFrame.userDataLocation.resolve("ErrorLogs");
 	
 	/**
 	 * Writes the exception to the log timestamped with that particular day's 
 	 * date.  The logs are in errorframework/ErrorLogs directory.
 	 * @param type - type of error (SQLServer, Importing, etc.)
 	 * @param message - message to write to log.
+	 * @return whether or not it succeeded
 	 */
-	public static void writeExceptionToLog(String type, String message){
-		file = new File("errorframework"+File.separator+"ErrorLogs"+File.separator+"ErrorLog"+constructDate()+".txt");
-		
+	public static boolean writeExceptionToLog(String type, String message){
+		file = ErrorLogger.errorPath.resolve("ErrorLog"+constructDate()+".txt").toFile();
+//		file = new File("errorframework"+File.separator+"ErrorLogs"+File.separator+"ErrorLog"+constructDate()+".txt");
+
 		try {
 			if (!file.exists())
 				initializeLog();
@@ -52,9 +59,10 @@ public class ErrorLogger {
 			writer.write(constructTime()+" : "+type+" Error: "+message+"\n");
 			writer.close();
 		} catch (IOException e) {
-			System.err.println("Error writing to "+file.toString());
 			e.printStackTrace();
+			return false;
 		}
+		return true;
 	}
 
 	/**
@@ -62,10 +70,11 @@ public class ErrorLogger {
 	 * date.  The logs are in errorframework/ErrorLogs directory.
 	 * @param type - type of error (SQLServer, Importing, etc.)
 	 * @param message - message to write to log.
+	 * @return whether or not write to log succeeded
 	 */
-	public static void writeExceptionToLogAndPrompt(String type, String message){
-		writeExceptionToLog(type,message);
+	public static boolean writeExceptionToLogAndPrompt(String type, String message){
 		error=true;
+		return writeExceptionToLog(type,message);
 	}
 
 	/**
@@ -76,8 +85,16 @@ public class ErrorLogger {
 	 */
 	private static void initializeLog() throws IOException {
 		System.out.println("initializing log and deleting the oldest file.");
-		
-		dir = new File("errorframework"+File.separator+"ErrorLogs");
+
+		dir = errorPath.toFile();
+
+		// Verify that path for error log exists
+		if (!dir.exists()) {
+			boolean success = dir.mkdirs();
+			if (!success)
+				throw new RuntimeException("Failed to make directory to store database.");
+		}
+
 		File[] files = dir.listFiles();
 		if (files != null && files.length == 10) {
 			File oldestFile = files[0];
@@ -91,7 +108,7 @@ public class ErrorLogger {
 			oldestFile.delete();
 		}
 		
-		file = new File("errorframework"+File.separator+"ErrorLogs"+File.separator+"ErrorLog"+constructDate()+".txt");
+		file = errorPath.resolve("ErrorLog"+constructDate()+".txt").toFile();
 		System.out.println("Generating new error log: " + file.toString());
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		writer.write("ErrorLog: started @ "+constructDate()+"\n");

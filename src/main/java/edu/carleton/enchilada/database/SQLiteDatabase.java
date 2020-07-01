@@ -24,8 +24,7 @@ public class SQLiteDatabase extends Database {
     //This isn't used anymore. Safe for deletion.
     private static int instance = 0;
     // TODO: change path to something more permanent
-    private static final Path dbPath =
-        Paths.get(System.getProperty("user.home"), "enchilada", "sqlitedata");
+    private static final Path dbPath = MainFrame.userDataLocation.resolve("sqlitedata");
 
     /**
      * Connect to the database using default settings, or overriding them with
