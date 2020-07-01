@@ -219,23 +219,26 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	/**
 	 * Makes a new panel containing a zoomable chart and a table of values.
 	 * Both begin empty.
-	 * @param chart
 	 */
 	public ParticleAnalyzeWindow(final Database db, JTable dt, int curRow,
                                  Collection collection) {
 		super();
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		
+
 		// Do one-time loading of ion signature information from file, db
 		if (cachedNegIons == null) {
 			cachedPosIons = new ArrayList<LabelingIon>();
 			cachedNegIons = new ArrayList<LabelingIon>();
-			buildLabelSigs(labelingDir + "/pion-sigs.txt", cachedPosIons);
-			buildLabelSigs(labelingDir + "/nion-sigs.txt", cachedNegIons);
-		
+			try {
+				buildBothLabelSigs(cachedPosIons, cachedNegIons);
+			} catch (FileNotFoundException e) {
+				ErrorLogger.writeExceptionToLog("Signature file",e.getMessage());
+				System.err.println("Signature file not found!");
+			}
+
 			numIonRows = Math.max(cachedPosIons.size(), cachedNegIons.size());
-			
+
 			db.syncWithIonsInDB(cachedPosIons, cachedNegIons);
 		}
 
@@ -528,25 +531,6 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		centerPanel.add(nextPrevPanel, BorderLayout.SOUTH);
 	}
 	
-	private void buildLabelSigs(String fileName, ArrayList<LabelingIon> ionListToBuild) {
-		File f = new File(fileName);
-		
-		try {
-			Scanner s = new Scanner(f);
-			while (s.hasNext()) {
-				LabelingIon ion = new LabelingIon(s.nextLine());
-				if (ion.isValid())
-					ionListToBuild.add(ion);
-			}
-			
-			s.close();
-		} catch (FileNotFoundException e) {
-			System.err.println("Signature file: " + f.getAbsolutePath() + " not found!");
-		}
-	}
-	
-	
-
 	/**
 	 * Sets the chart to display a new set of peaks.
 	 * @param newPeaks The new peaks to display.
@@ -1307,4 +1291,25 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		}
 		
 	}
+
+	public static void buildBothLabelSigs(ArrayList<LabelingIon> cachedPosIons, ArrayList<LabelingIon> cachedNegIons)
+			throws FileNotFoundException {
+		buildLabelSigs(labelingDir + "/pion-sigs.txt", cachedPosIons);
+		buildLabelSigs(labelingDir + "/nion-sigs.txt", cachedNegIons);
+	}
+
+	private static void buildLabelSigs(String fileName, ArrayList<LabelingIon> ionListToBuild)
+			throws FileNotFoundException {
+		File f = new File(fileName);
+
+		Scanner s = new Scanner(f);
+		while (s.hasNext()) {
+			LabelingIon ion = new LabelingIon(s.nextLine());
+			if (ion.isValid())
+				ionListToBuild.add(ion);
+		}
+
+		s.close();
+	}
+
 }
