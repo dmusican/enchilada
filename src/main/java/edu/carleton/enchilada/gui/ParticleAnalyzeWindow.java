@@ -62,6 +62,10 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -110,6 +114,7 @@ import edu.carleton.enchilada.chartlib.ZoomableChart;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 
 
 /**
@@ -178,7 +183,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	private static final int DEFAULT_XMAX = 300;
 	
 	private static double labelingThreshold = .5;
-	private static String labelingDir = "labeling";
+	public static Path labelingDir = MainFrame.userDataLocation.resolve("labeling");
 
 	// Object to hold sync-lock to make sure that any calls to Lei's external labeling
 	// code are synchronized (since only one spectrum can be labeled at a time)
@@ -205,15 +210,39 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 						System.out.println("Error! Value: " + val + " isn't a number. Using '.5' as a label threshold.");
 					}
 				}
-				else if (tag.equalsIgnoreCase("labeling_dir:")) { labelingDir = val; }
+				else if (tag.equalsIgnoreCase("labeling_dir:")) { labelingDir = Paths.get(val); }
 			}
 			scan.close();
+
+			copyLabelingFilesOutOfResources();
 		} catch (FileNotFoundException e) { 
 			// Don't worry if the file doesn't exist... 
 			// just go on with the default values 
 		}
 	}
-	
+
+	// Copy files as needed into user labeling directory
+	public static void copyLabelingFilesOutOfResources() {
+		// Verify that path for database exists
+		if (!labelingDir.toFile().exists()) {
+			boolean success = labelingDir.toFile().mkdirs();
+			if (!success)
+				throw new RuntimeException("Failed to make directory to store labeling info.");
+		}
+
+		try {
+			String[] filesToCopy = {"pion-sigs.txt", "nion-sigs.txt", "run.bat", "spectrum.exe"};
+			for (String fileToCopy : filesToCopy) {
+				Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/" + fileToCopy),
+						labelingDir.resolve(fileToCopy), StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (IOException e) {
+			throw new ExceptionAdapter(e);
+		}
+
+	}
+
+
 	/**
 	 * Makes a new panel containing a zoomable chart and a table of values.
 	 * Both begin empty.
@@ -1129,15 +1158,14 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 					ArrayList<LabelingIon> negWrittenIons = new ArrayList<LabelingIon>();
 					ArrayList<LabelingIon> posWrittenIons = new ArrayList<LabelingIon>();
 					try {
-						writeSpectrum(labelingDir + "/spc_positive.txt", posPeaks);
-						writeSpectrum(labelingDir + "/spc_negative.txt", negPeaks);
+						writeBothSpectra(posPeaks, negPeaks);
 						writeSignature(labelingDir + "/temp_pion-sigs.txt", posIons, posWrittenIons);
 						writeSignature(labelingDir + "/temp_nion-sigs.txt", negIons, negWrittenIons);
 						
 						// Run labeling program:
 						
 						ProcessBuilder pb = new ProcessBuilder(System.getProperty("user.dir") + "/" + labelingDir + "/run.bat");
-						pb.directory(new File(labelingDir));
+						pb.directory(labelingDir.toFile());
 						Process p = pb.start();
 		
 					    BufferedReader br =
@@ -1198,17 +1226,8 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 			
 			numRunningThreads--;
 		}
-		
-		private void writeSpectrum(String spectrumFileName, ArrayList<Peak> peaks) throws FileNotFoundException {
-			PrintStream writer = new PrintStream(new File(spectrumFileName));
-			writer.println("1");
-			for (Peak p : peaks)
-				writer.printf("%d %d ", (int) Math.round(Math.abs(p.massToCharge)), (int) p.value);
-			writer.print("-1");
-			writer.close();
-		}
-			
-		private void writeSignature(String sigFileName, ArrayList<LabelingIon> masterIonList, ArrayList<LabelingIon> writtenIons) 
+
+		private void writeSignature(String sigFileName, ArrayList<LabelingIon> masterIonList, ArrayList<LabelingIon> writtenIons)
 		throws FileNotFoundException {
 			PrintStream writer = new PrintStream(new File(sigFileName));
 			for (LabelingIon ion : masterIonList) {
@@ -1313,5 +1332,20 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		}
 		s.close();
 	}
+
+	public static void writeBothSpectra(ArrayList<Peak> posPeaks, ArrayList<Peak> negPeaks) throws FileNotFoundException {
+		writeSpectrum(labelingDir + "/spc_positive.txt", posPeaks);
+		writeSpectrum(labelingDir + "/spc_negative.txt", negPeaks);
+	}
+
+	private static void writeSpectrum(String spectrumFileName, ArrayList<Peak> peaks) throws FileNotFoundException {
+		PrintStream writer = new PrintStream(new File(spectrumFileName));
+		writer.println("1");
+		for (Peak p : peaks)
+			writer.printf("%d %d ", (int) Math.round(Math.abs(p.massToCharge)), (int) p.value);
+		writer.print("-1");
+		writer.close();
+	}
+
 
 }
