@@ -5544,32 +5544,29 @@ public abstract class Database {
 		}
 	}
 	
-	public void saveAtomRemovedIons(int atomID, ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons) {
-		String sqlStr =
-			"DECLARE @removedIons TABLE ( IonID int ) \n";
-		
-		for (LabelingIon ion : posIons)
-			if (!ion.isChecked())
-				sqlStr += "insert @removedIons values (" + ion.ionID + ") \n";
-		
-		for (LabelingIon ion : negIons)
-			if (!ion.isChecked())
-				sqlStr += "insert @removedIons values (" + ion.ionID + ") \n";
-		
-		sqlStr += "delete from AtomIonSignaturesRemoved where AtomID = " + atomID + "\n\n";
-		sqlStr += 
-			"insert AtomIonSignaturesRemoved (AtomID, IonID) \n" +
-			"select " + atomID + ", IonID from @removedIons";
-		
-		try {
-			Statement stmt = con.createStatement();
-			stmt.execute(sqlStr);
-			stmt.close();
-		} catch (SQLException e){
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception saving removed Ion data.");
-			System.err.println("Error saving removed Ion data.");
-			e.printStackTrace();
-		}	
+	public void saveAtomRemovedIons(int atomID, ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons)
+			throws SQLException {
+		try (Statement stmt = con.createStatement();) {
+			stmt.executeUpdate("delete from AtomIonSignaturesRemoved where AtomID = " + atomID);
+
+			try (PreparedStatement pstmt = con.prepareStatement(
+					"INSERT INTO AtomIonSignaturesRemoved (AtomID, IonID) VALUES (?, ?)");) {
+				pstmt.setInt(1, atomID);
+				for (LabelingIon ion : posIons)
+					if (!ion.isChecked()) {
+						pstmt.setInt(2, ion.ionID);
+						pstmt.addBatch();
+					}
+				for (LabelingIon ion : negIons)
+					if (!ion.isChecked()) {
+						pstmt.setInt(2, ion.ionID);
+						pstmt.addBatch();
+					}
+				con.setAutoCommit(false);
+				pstmt.executeBatch();
+				con.setAutoCommit(true);
+			}
+		}
 	}
 	
 	public void buildAtomRemovedIons(int atomID, ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons) {

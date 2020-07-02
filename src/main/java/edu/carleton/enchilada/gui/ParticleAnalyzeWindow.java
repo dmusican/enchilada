@@ -351,7 +351,13 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				db.saveAtomRemovedIons(atomID, posIons, negIons);
+				try {
+					db.saveAtomRemovedIons(atomID, posIons, negIons);
+				} catch (SQLException throwables) {
+					ErrorLogger.writeExceptionToLog("Database","Unable to save removed ions.");
+					System.err.println("Unable to save removed ions.");
+					throwables.printStackTrace();
+				}
 			}
 		});
 	}
@@ -850,7 +856,13 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		else if (source == specButton)
 			displaySpectrum();
 		else if (source == prevButton || source == nextButton) {
-			db.saveAtomRemovedIons(atomID, posIons, negIons);
+			try {
+				db.saveAtomRemovedIons(atomID, posIons, negIons);
+			} catch (SQLException throwables) {
+				ErrorLogger.writeExceptionToLog("Database","Unable to save removed ions.");
+				System.err.println("Unable to save removed ions.");
+				throwables.printStackTrace();
+			}
 			if (source == prevButton)
 				showPreviousParticle();
 			else

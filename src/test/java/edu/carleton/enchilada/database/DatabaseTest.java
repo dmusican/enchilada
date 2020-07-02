@@ -47,6 +47,7 @@
 package edu.carleton.enchilada.database;
 
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
+import edu.carleton.enchilada.gui.LabelingIon;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
@@ -2407,5 +2408,11 @@ public class DatabaseTest extends TestCase {
 	public void testSyncWithIonsInDB() throws SQLException {
 		db.openConnection(dbName);
 		db.syncWithIonsInDB(new ArrayList<>(), new ArrayList<>());
+	}
+
+	public void testSaveAtomRemovedIons() throws SQLException {
+		db.openConnection(dbName);
+		db.saveAtomRemovedIons(10, new ArrayList<>(), new ArrayList<>());
+
 	}
 }
