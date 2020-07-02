@@ -5498,39 +5498,39 @@ public abstract class Database {
 		return plumes;
 	}
 	
-	public void syncWithIonsInDB(ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons) {
-		String sqlStr =
-			"SET NOCOUNT ON \n" + 
-			"DECLARE @sigs TABLE ( \n" +
-			"    Name varchar(8000), \n" +
-			"    IsPositive bit \n" +
-			")";
-		
-		for (LabelingIon ion : posIons)
-			sqlStr += "insert @sigs values ('" + ion.name + "', 1) \n";
-		
-		for (LabelingIon ion : negIons)
-			sqlStr += "insert @sigs values ('" + ion.name + "', 0) \n";
-		
-		// Add any new ions from file into database
-		sqlStr += 
-			"insert IonSignature (Name, IsPositive) \n" +
-			"select S.Name, S.IsPositive \n" +
-			"from @sigs S \n" +
-			"left outer join IonSignature IONS on (S.Name = IONS.Name and S.IsPositive = IONS.IsPositive) \n" +
-			"where IONS.IonID IS NULL \n\n" +
-			
-			// And then get all IonIDs in signature file back for later use...
-			"select IONS.IonID, IONS.Name, IONS.IsPositive \n" +
-			"from @sigs S \n" +
-			"join IonSignature IONS on (S.Name = IONS.Name and S.IsPositive = IONS.IsPositive) \n" + 
-			
-			"SET NOCOUNT OFF";
-		
-		try {
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery(sqlStr);
-			
+	public void syncWithIonsInDB(ArrayList<LabelingIon> posIons, ArrayList<LabelingIon> negIons) throws SQLException {
+		try (Statement stmt = con.createStatement();) {
+
+			stmt.executeUpdate("CREATE TEMPORARY TABLE sigs ( \n" +
+							"    Name varchar(8000), \n" +
+							"    IsPositive bit \n" +
+							")");
+
+			try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO temp.sigs VALUES(?,?)");) {
+				con.setAutoCommit(false);
+				for (LabelingIon ion : posIons) {
+					pstmt.setString(1, ion.name);
+					pstmt.setInt(2, 1);
+				}
+				for (LabelingIon ion : negIons) {
+					pstmt.setString(1, ion.name);
+					pstmt.setInt(2, 0);
+				}
+				pstmt.addBatch();
+				con.setAutoCommit(true);
+			}
+
+			// Add any new ions from file into database
+			stmt.executeUpdate("INSERT INTO IonSignature (Name, IsPositive) \n" +
+							"select S.Name, S.IsPositive \n" +
+							"from temp.sigs S \n" +
+							"left outer join IonSignature IONS on (S.Name = IONS.Name and S.IsPositive = IONS.IsPositive) \n" +
+							"where IONS.IonID IS NULL \n\n");
+
+			ResultSet rs = stmt.executeQuery("select IONS.IonID, IONS.Name, IONS.IsPositive \n" +
+							"from temp.sigs S \n" +
+							"join IonSignature IONS on (S.Name = IONS.Name and S.IsPositive = IONS.IsPositive) \n");
+
 			while (rs.next()) {
 				ArrayList<LabelingIon> arrToLookThrough = rs.getBoolean("IsPositive") ? posIons : negIons;
 				String ionName = rs.getString("Name");
@@ -5539,13 +5539,8 @@ public abstract class Database {
 						ion.ionID = rs.getInt("IonID");
 				}
 			}
-			
+
 			rs.close();
-			stmt.close();
-		} catch (SQLException e){
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception retrieving Ion data.");
-			System.err.println("Error retrieving Ion data.");
-			e.printStackTrace();
 		}
 	}
 	

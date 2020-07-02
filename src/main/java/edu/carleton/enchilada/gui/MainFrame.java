@@ -58,10 +58,14 @@ import edu.carleton.enchilada.collection.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -193,7 +197,7 @@ public class MainFrame extends JFrame implements ActionListener
 	public MainFrame()
 	{
 		super("Enchilada");
-		
+
 		/* "If you are going to set the look and feel, you should do it as the 
 		 * very first step in your application. Otherwise you run the risk of 
 		 * initializing the Java look and feel regardless of what look and feel 

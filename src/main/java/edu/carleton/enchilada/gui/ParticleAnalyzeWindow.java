@@ -58,12 +58,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -223,7 +221,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	public ParticleAnalyzeWindow(final Database db, JTable dt, int curRow,
                                  Collection collection) {
 		super();
-		
+
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
 		// Do one-time loading of ion signature information from file, db
@@ -239,7 +237,13 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 
 			numIonRows = Math.max(cachedPosIons.size(), cachedNegIons.size());
 
-			db.syncWithIonsInDB(cachedPosIons, cachedNegIons);
+			try {
+				db.syncWithIonsInDB(cachedPosIons, cachedNegIons);
+			} catch (SQLException e){
+				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception retrieving Ion data.");
+				System.err.println("Error retrieving Ion data.");
+				e.printStackTrace();
+			}
 		}
 
 		// Fill in this window's array of ions. Note: most data is cached
@@ -1294,21 +1298,19 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 
 	public static void buildBothLabelSigs(ArrayList<LabelingIon> cachedPosIons, ArrayList<LabelingIon> cachedNegIons)
 			throws FileNotFoundException {
-		buildLabelSigs(labelingDir + "/pion-sigs.txt", cachedPosIons);
-		buildLabelSigs(labelingDir + "/nion-sigs.txt", cachedNegIons);
+		buildLabelSigs(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/pion-sigs.txt"), cachedPosIons);
+		buildLabelSigs(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/nion-sigs.txt"), cachedNegIons);
 	}
 
-	private static void buildLabelSigs(String fileName, ArrayList<LabelingIon> ionListToBuild)
+	private static void buildLabelSigs(InputStream inputStream, ArrayList<LabelingIon> ionListToBuild)
 			throws FileNotFoundException {
-		File f = new File(fileName);
 
-		Scanner s = new Scanner(f);
+		Scanner s = new Scanner(inputStream);
 		while (s.hasNext()) {
 			LabelingIon ion = new LabelingIon(s.nextLine());
 			if (ion.isValid())
 				ionListToBuild.add(ion);
 		}
-
 		s.close();
 	}
 

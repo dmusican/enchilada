@@ -2403,4 +2403,9 @@ public class DatabaseTest extends TestCase {
 		assertEquals(3f, bpl.getAreaAt(306));
 
 	}
+
+	public void testSyncWithIonsInDB() throws SQLException {
+		db.openConnection(dbName);
+		db.syncWithIonsInDB(new ArrayList<>(), new ArrayList<>());
+	}
 }
