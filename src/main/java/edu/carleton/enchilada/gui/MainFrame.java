@@ -1580,7 +1580,7 @@ public class MainFrame extends JFrame implements ActionListener
 		Vector<Object> columns = new Vector<Object>(colnames.size());
 		for (int i = 0; i < colnames.size(); i++) {
 			String temp = colnames.get(i);
-			temp = temp.substring(1,temp.length()-1);
+//			temp = temp.substring(1,temp.length()-1);
 			columns.add(temp);
 		}
 		
