@@ -463,7 +463,11 @@ public class AMSDataSetImporterTest extends TestCase {
 			assertEquals(rs.getInt(1), i + AtomIDStart);
 
 			Calendar c = Calendar.getInstance();
-			c.setTime(TimeUtilities.iso8601ToDate(rs.getString(2)));
+			String dateRead = rs.getString(2);
+			System.out.println("Date read = " + dateRead);
+			c.setTime(TimeUtilities.iso8601ToDate(dateRead));
+			System.out.println("Expected = " + (c.getTimeInMillis() - 1034055000000l) / 1000);
+			System.out.println("Actual = " + curt);
 			assertEquals((c.getTimeInMillis() - 1034055000000l) / 1000, curt);
 			curt += tdelta;
 		}
