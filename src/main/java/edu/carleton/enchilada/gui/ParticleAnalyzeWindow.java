@@ -192,6 +192,8 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	private static ArrayList<LabelingIon> cachedNegIons;
 	private static ArrayList<LabelingIon> cachedPosIons;
 	private static int numIonRows;
+
+	private static String processingLabelsText;
 	
 	static {
 		File f = new File("config.ini");
@@ -215,6 +217,9 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 			scan.close();
 
 			copyLabelingFilesOutOfResources();
+
+			processingLabelsText = "Processing labels...";
+
 		} catch (FileNotFoundException e) { 
 			// Don't worry if the file doesn't exist... 
 			// just go on with the default values 
@@ -489,7 +494,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		labelText = new JTextPane();
 		labelText.setEditable(false);
 		labelText.setContentType("text/html");			
-		labelText.setText("Processing labels...");
+		labelText.setText(processingLabelsText);
 		
 		labelScrollPane = new JScrollPane(labelText);
 		
@@ -1153,7 +1158,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		public void run() {
 			// Only one thread at a time should run...
 			synchronized (labelLock) {
-				labelText.setText("Processing labels...");
+				labelText.setText(processingLabelsText);
 				if (numRunningThreads == 1) {
 					ArrayList<LabelingIon> negWrittenIons = new ArrayList<>();
 					ArrayList<LabelingIon> posWrittenIons = new ArrayList<>();
@@ -1176,11 +1181,19 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 
 			// Run labeling program:
 
-			Process p = getLabelingProcess();
-			BufferedReader br =
-				new BufferedReader(new InputStreamReader(p.getInputStream()));
+			try {
+				Process p = getLabelingProcess();
+				BufferedReader br =
+						new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-			while (br.readLine() != null) {}
+				while (br.readLine() != null) {
+				}
+			} catch (IOException e) {
+				// Labeling executable only works under Windows, so propagate this error only if this is a Windows OS.
+				if (System.getProperty("os.name").toLowerCase().contains("win")) {
+					throw e;
+				}
+			}
 
 			// And read in its output:
 

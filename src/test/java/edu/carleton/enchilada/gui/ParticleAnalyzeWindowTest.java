@@ -33,6 +33,8 @@ public class ParticleAnalyzeWindowTest {
 
     @Test
     public void getLabelingProcess() throws IOException {
-        ParticleAnalyzeWindow.getLabelingProcess();
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            ParticleAnalyzeWindow.getLabelingProcess();
+        }
     }
 }
