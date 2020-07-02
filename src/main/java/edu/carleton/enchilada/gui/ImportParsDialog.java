@@ -272,12 +272,10 @@ public class ImportParsDialog extends JDialog implements ActionListener {
 					public Object construct(){
 						dsi.collectTableInfo();
 						for(int i=0;i<dsi.getNumCollections();i++){
-							dbRef.beginTransaction();
 							try{
 								dsi.collectRowInfo();
 								if(progressBar.wasTerminated())
 									throw new InterruptedException();
-								dbRef.commitTransaction();
 							} catch (InterruptedException e2){
 								dbRef.rollbackTransaction();
 							}catch (DisplayException e1) {
