@@ -162,9 +162,7 @@ public abstract class Database {
 	
 	public void clearCache(){
 		try {
-			Statement stmt = con.createStatement();
-			stmt.executeUpdate("dbcc freeproccache");
-			System.out.println("db cache cleared");
+			// Removed entirely for SQLite
 		}
 		catch (Exception e1) {
 			System.out.println("Error clearing the database cache.");
