@@ -1317,14 +1317,14 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 
 	public static void buildBothLabelSigs(ArrayList<LabelingIon> cachedPosIons, ArrayList<LabelingIon> cachedNegIons)
 			throws FileNotFoundException {
-		buildLabelSigs(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/pion-sigs.txt"), cachedPosIons);
-		buildLabelSigs(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/nion-sigs.txt"), cachedNegIons);
+		buildLabelSigs(ParticleAnalyzeWindow.labelingDir.resolve("pion-sigs.txt").toFile(), cachedPosIons);
+		buildLabelSigs(ParticleAnalyzeWindow.labelingDir.resolve("nion-sigs.txt").toFile(), cachedNegIons);
 	}
 
-	private static void buildLabelSigs(InputStream inputStream, ArrayList<LabelingIon> ionListToBuild)
+	private static void buildLabelSigs(File spectrumFile, ArrayList<LabelingIon> ionListToBuild)
 			throws FileNotFoundException {
 
-		Scanner s = new Scanner(inputStream);
+		Scanner s = new Scanner(spectrumFile);
 		while (s.hasNext()) {
 			LabelingIon ion = new LabelingIon(s.nextLine());
 			if (ion.isValid())
