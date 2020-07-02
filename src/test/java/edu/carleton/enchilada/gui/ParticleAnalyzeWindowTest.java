@@ -3,6 +3,7 @@ package edu.carleton.enchilada.gui;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -28,5 +29,10 @@ public class ParticleAnalyzeWindowTest {
         for (String fileToCopy : filesToCopy) {
             assertTrue(ParticleAnalyzeWindow.labelingDir.resolve(fileToCopy).toFile().exists());
         }
+    }
+
+    @Test
+    public void getLabelingProcess() throws IOException {
+        ParticleAnalyzeWindow.getLabelingProcess();
     }
 }

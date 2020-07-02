@@ -187,7 +187,7 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 
 	// Object to hold sync-lock to make sure that any calls to Lei's external labeling
 	// code are synchronized (since only one spectrum can be labeled at a time)
-	private static Object labelLock = new Object();
+	private static final Object labelLock = new Object();
 	
 	private static ArrayList<LabelingIon> cachedNegIons;
 	private static ArrayList<LabelingIon> cachedPosIons;
@@ -1155,68 +1155,10 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 			synchronized (labelLock) {
 				labelText.setText("Processing labels...");
 				if (numRunningThreads == 1) {
-					ArrayList<LabelingIon> negWrittenIons = new ArrayList<LabelingIon>();
-					ArrayList<LabelingIon> posWrittenIons = new ArrayList<LabelingIon>();
+					ArrayList<LabelingIon> negWrittenIons = new ArrayList<>();
+					ArrayList<LabelingIon> posWrittenIons = new ArrayList<>();
 					try {
-						writeBothSpectra(posPeaks, negPeaks);
-						writeSignature(labelingDir + "/temp_pion-sigs.txt", posIons, posWrittenIons);
-						writeSignature(labelingDir + "/temp_nion-sigs.txt", negIons, negWrittenIons);
-						
-						// Run labeling program:
-						
-						ProcessBuilder pb = new ProcessBuilder(System.getProperty("user.dir") + "/" + labelingDir + "/run.bat");
-						pb.directory(labelingDir.toFile());
-						Process p = pb.start();
-		
-					    BufferedReader br =
-					    	new BufferedReader(new InputStreamReader(p.getInputStream()));
-		
-					    while (br.readLine() != null) {}
-					    
-					    // And read in its output:
-					    
-					    foundPosIons = new Hashtable<LabelingIon, Double>();
-					    foundNegIons = new Hashtable<LabelingIon, Double>();
-						
-					    Scanner s = new Scanner(new File(labelingDir + "/label_positive.txt"));
-					    if (s.hasNext()) {
-						    s.nextLine();
-							String[] tokens = s.nextLine().split(" ");
-		
-							for (int i = 0; i <  tokens.length / 2; i++) { 
-								foundPosIons.put(posWrittenIons.get(Integer.parseInt(tokens[2 * i])), 
-										Double.parseDouble(tokens[2 * i + 1]));
-		
-							}
-					    }
-						s.close();
-						
-					    s = new Scanner(new File(labelingDir + "/label_negative.txt"));
-						if (s.hasNext()) {
-							s.nextLine();
-							String[] tokens = s.nextLine().split(" ");
-		
-							for (int i = 0; i <  tokens.length / 2; i++) { 
-								foundNegIons.put(negWrittenIons.get(Integer.parseInt(tokens[2 * i])), 
-										Double.parseDouble(tokens[2 * i + 1]));
-		
-							}
-						}
-						s.close();
-		
-						hasValidLabels = true;
-
-						// Other threads could have already started...
-						// Only update label window if this is the only (last) one.
-						if (numRunningThreads == 1)
-							callbackWindow.setLabels();
-						
-						new File(labelingDir + "/spc_positive.txt").delete();
-						new File(labelingDir + "/spc_negative.txt").delete();
-						new File(labelingDir + "/temp_pion-sigs.txt").delete();
-						new File(labelingDir + "/temp_nion-sigs.txt").delete();
-						new File(labelingDir + "/label_negative.txt").delete();
-						new File(labelingDir + "/label_positive.txt").delete();
+						labelSpectra(negWrittenIons, posWrittenIons);
 					} 
 					catch (IOException e) { e.printStackTrace(); }
 				} else {
@@ -1225,6 +1167,65 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 			}
 			
 			numRunningThreads--;
+		}
+
+		public void labelSpectra(ArrayList<LabelingIon> negWrittenIons, ArrayList<LabelingIon> posWrittenIons) throws IOException {
+			writeBothSpectra(posPeaks, negPeaks);
+			writeSignature(labelingDir + "/temp_pion-sigs.txt", posIons, posWrittenIons);
+			writeSignature(labelingDir + "/temp_nion-sigs.txt", negIons, negWrittenIons);
+
+			// Run labeling program:
+
+			Process p = getLabelingProcess();
+			BufferedReader br =
+				new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			while (br.readLine() != null) {}
+
+			// And read in its output:
+
+			foundPosIons = new Hashtable<LabelingIon, Double>();
+			foundNegIons = new Hashtable<LabelingIon, Double>();
+
+			Scanner s = new Scanner(new File(labelingDir + "/label_positive.txt"));
+			if (s.hasNext()) {
+				s.nextLine();
+				String[] tokens = s.nextLine().split(" ");
+
+				for (int i = 0; i <  tokens.length / 2; i++) {
+					foundPosIons.put(posWrittenIons.get(Integer.parseInt(tokens[2 * i])),
+							Double.parseDouble(tokens[2 * i + 1]));
+
+				}
+			}
+			s.close();
+
+			s = new Scanner(new File(labelingDir + "/label_negative.txt"));
+			if (s.hasNext()) {
+				s.nextLine();
+				String[] tokens = s.nextLine().split(" ");
+
+				for (int i = 0; i <  tokens.length / 2; i++) {
+					foundNegIons.put(negWrittenIons.get(Integer.parseInt(tokens[2 * i])),
+							Double.parseDouble(tokens[2 * i + 1]));
+
+				}
+			}
+			s.close();
+
+			hasValidLabels = true;
+
+			// Other threads could have already started...
+			// Only update label window if this is the only (last) one.
+			if (numRunningThreads == 1)
+				callbackWindow.setLabels();
+
+			new File(labelingDir + "/spc_positive.txt").delete();
+			new File(labelingDir + "/spc_negative.txt").delete();
+			new File(labelingDir + "/temp_pion-sigs.txt").delete();
+			new File(labelingDir + "/temp_nion-sigs.txt").delete();
+			new File(labelingDir + "/label_negative.txt").delete();
+			new File(labelingDir + "/label_positive.txt").delete();
 		}
 
 		private void writeSignature(String sigFileName, ArrayList<LabelingIon> masterIonList, ArrayList<LabelingIon> writtenIons)
@@ -1239,7 +1240,13 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 			writer.close();	
 		}
 	}
-	
+
+	public static Process getLabelingProcess() throws IOException {
+		ProcessBuilder pb = new ProcessBuilder(labelingDir.resolve("run.bat").toString());
+		pb.directory(labelingDir.toFile());
+		return pb.start();
+	}
+
 	/**
 	 * Handles the data for the table.
 	 * @author sulmanj
