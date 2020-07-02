@@ -1165,7 +1165,9 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 					try {
 						labelSpectra(negWrittenIons, posWrittenIons);
 					} 
-					catch (IOException e) { e.printStackTrace(); }
+					catch (IOException e) {
+						e.printStackTrace();
+					}
 				} else {
 					System.out.println("Thread never ran... num queued: " + numRunningThreads);
 				}
@@ -1195,50 +1197,58 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 				}
 			}
 
+
 			// And read in its output:
 
 			foundPosIons = new Hashtable<LabelingIon, Double>();
 			foundNegIons = new Hashtable<LabelingIon, Double>();
 
-			Scanner s = new Scanner(new File(labelingDir + "/label_positive.txt"));
-			if (s.hasNext()) {
-				s.nextLine();
-				String[] tokens = s.nextLine().split(" ");
+			try {
+				Scanner s = new Scanner(new File(labelingDir + "/label_positive.txt"));
+				if (s.hasNext()) {
+					s.nextLine();
+					String[] tokens = s.nextLine().split(" ");
 
-				for (int i = 0; i <  tokens.length / 2; i++) {
-					foundPosIons.put(posWrittenIons.get(Integer.parseInt(tokens[2 * i])),
-							Double.parseDouble(tokens[2 * i + 1]));
+					for (int i = 0; i < tokens.length / 2; i++) {
+						foundPosIons.put(posWrittenIons.get(Integer.parseInt(tokens[2 * i])),
+								Double.parseDouble(tokens[2 * i + 1]));
 
+					}
+				}
+				s.close();
+
+				s = new Scanner(new File(labelingDir + "/label_negative.txt"));
+				if (s.hasNext()) {
+					s.nextLine();
+					String[] tokens = s.nextLine().split(" ");
+
+					for (int i = 0; i < tokens.length / 2; i++) {
+						foundNegIons.put(negWrittenIons.get(Integer.parseInt(tokens[2 * i])),
+								Double.parseDouble(tokens[2 * i + 1]));
+
+					}
+				}
+				s.close();
+
+				hasValidLabels = true;
+
+				// Other threads could have already started...
+				// Only update label window if this is the only (last) one.
+				if (numRunningThreads == 1)
+					callbackWindow.setLabels();
+
+				new File(labelingDir + "/spc_positive.txt").delete();
+				new File(labelingDir + "/spc_negative.txt").delete();
+				new File(labelingDir + "/temp_pion-sigs.txt").delete();
+				new File(labelingDir + "/temp_nion-sigs.txt").delete();
+				new File(labelingDir + "/label_negative.txt").delete();
+				new File(labelingDir + "/label_positive.txt").delete();
+			} catch (IOException e) {
+				// Above should work on Windows; spectrum executable doesn't work otherwise
+				if (System.getProperty("os.name").toLowerCase().contains("win")) {
+					throw e;
 				}
 			}
-			s.close();
-
-			s = new Scanner(new File(labelingDir + "/label_negative.txt"));
-			if (s.hasNext()) {
-				s.nextLine();
-				String[] tokens = s.nextLine().split(" ");
-
-				for (int i = 0; i <  tokens.length / 2; i++) {
-					foundNegIons.put(negWrittenIons.get(Integer.parseInt(tokens[2 * i])),
-							Double.parseDouble(tokens[2 * i + 1]));
-
-				}
-			}
-			s.close();
-
-			hasValidLabels = true;
-
-			// Other threads could have already started...
-			// Only update label window if this is the only (last) one.
-			if (numRunningThreads == 1)
-				callbackWindow.setLabels();
-
-			new File(labelingDir + "/spc_positive.txt").delete();
-			new File(labelingDir + "/spc_negative.txt").delete();
-			new File(labelingDir + "/temp_pion-sigs.txt").delete();
-			new File(labelingDir + "/temp_nion-sigs.txt").delete();
-			new File(labelingDir + "/label_negative.txt").delete();
-			new File(labelingDir + "/label_positive.txt").delete();
 		}
 
 		private void writeSignature(String sigFileName, ArrayList<LabelingIon> masterIonList, ArrayList<LabelingIon> writtenIons)
