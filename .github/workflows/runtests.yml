@@ -26,4 +26,4 @@ jobs:
           mvn --no-transfer-progress clean assembly:single
           jpackage --input target/ --name Enchilada --main-jar enchilada-1.0-SNAPSHOT-jar-with-dependencies.jar
           ls
-          
+
