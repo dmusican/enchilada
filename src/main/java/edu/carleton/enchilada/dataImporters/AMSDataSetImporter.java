@@ -6,11 +6,7 @@ import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Scanner;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 import edu.carleton.enchilada.collection.Collection;
@@ -55,7 +51,7 @@ public class AMSDataSetImporter {
 	private Calendar convertedCalendar;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private final float SEC_PER_YEAR  = 31556926;
-	
+
 	private Scanner readData; // for reading the dataset;
 	
 	//the parent collection to import into
@@ -67,6 +63,7 @@ public class AMSDataSetImporter {
 	 * @param amsTableModel - particle table model.
 	 */
 	public AMSDataSetImporter(AMSTableModel t, Window mf, Database db) {
+		startCalendar.setTimeZone(TimeZone.getTimeZone("America/Chicago"));
 		table = t;
 		mainFrame = mf;
 		this.db = db;
