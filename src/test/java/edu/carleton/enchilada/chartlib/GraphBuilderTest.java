@@ -23,7 +23,7 @@ public class GraphBuilderTest extends TestCase {
         
 		new CreateTestDatabase();
 		db = Database.getDatabase("TestDB");
-		db.openConnection("TestDB");
+		db.openConnection();
 	}
 
 	public void testBuildSimpleGraph() {

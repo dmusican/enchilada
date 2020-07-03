@@ -83,7 +83,7 @@ public class ClusterQueryTest extends TestCase {
         
         new CreateTestDatabase();
 		db = Database.getDatabase("TestDB");
-		db.openConnection("TestDB");
+		db.openConnection();
 
 		tempDir = Files.createTempDirectory("enchilada-testClust-q");
 		par1 = tempDir.resolve("par1.txt");

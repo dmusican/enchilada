@@ -43,8 +43,8 @@ public class HistogramDatasetTest extends TestCase {
 		//Open database connection:
 	   db = Database.getDatabase("TestDB");
 	   db2 = Database.getDatabase("TestDB2");
-	   db.openConnection("TestDB");
-	   db2.openConnection("TestDB2");
+	   db.openConnection();
+	   db2.openConnection();
 	   Connection con = db.getCon();
 	   Connection con2 = db2.getCon();
 	   con.setAutoCommit(false);

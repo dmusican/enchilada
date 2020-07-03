@@ -105,7 +105,7 @@ public class AMSDataSetImporterTest extends TestCase {
 			}
 		}
 		db = Database.getDatabase("TestDB");
-		assertTrue(db.openConnection("TestDB"));
+		assertTrue(db.openConnection());
 
 		curRow = 0;
 		deleteFiles = new Vector<String>();

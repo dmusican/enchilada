@@ -45,11 +45,7 @@ public class ImportExperimentParticles {
 
 		//Open database connection:
 		db = Database.getDatabase("TestDB");
-		db.openConnection("TestDB");
-		Connection con = db.getCon();
-
-
-
+		db.openConnection();
 
 		ATOFMSParticle.currPeakParams = new PeakParams(30,30,0.01f,.50f);
 		try {

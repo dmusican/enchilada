@@ -79,7 +79,7 @@ public class CSVDataSetExporterTest extends TestCase {
 		new CreateTestDatabase();
 		
 		db = (Database) Database.getDatabase("TestDB");
-		if (! db.openConnection("TestDB")) {
+		if (! db.openConnection()) {
 			throw new Exception("Couldn't open DB con");
 		}
 		JFrame mf = new JFrame();

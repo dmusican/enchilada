@@ -58,7 +58,7 @@ public class CreateTestDatabase {
 	public CreateTestDatabase() {
 		Database.getDatabase(dbname).rebuildDatabase(dbname);
 		Database db = Database.getDatabase(dbname);
-		db.openConnection(dbname);
+		db.openConnection();
 		con = db.getCon();
 
 		generateDynamicTables();

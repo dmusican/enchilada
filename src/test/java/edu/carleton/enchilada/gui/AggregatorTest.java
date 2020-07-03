@@ -170,7 +170,7 @@ public class AggregatorTest extends TestCase {
 	 *
 	 */
 	public void testCreateAggregateTimeSeries(){
-		db.openConnection("TestDB2");
+		db.openConnection();
 
 		aggregator = new Aggregator(null, db, db.getCollection(2));
 		Collection[] collections = {db.getCollection(2),
@@ -256,7 +256,7 @@ public class AggregatorTest extends TestCase {
 	 *
 	 */
 	public void testParentAggregation() {
-		db.openConnection("TestDB2");		
+		db.openConnection();		
 		
 		aggregator = new Aggregator(null, db, db.getCollection(2));
 		Collection[] collections1 = {db.getCollection(2)};
@@ -273,7 +273,7 @@ public class AggregatorTest extends TestCase {
 		};
 		testAggregation(aggregator, collections1, test1);
 		
-		db.openConnection("TestDB2");
+		db.openConnection();
 		aggregator = new Aggregator(null, db, db.getCollection(3));
 		Collection[] collections2 = {db.getCollection(3)};
 		Test test2 = new Test() {
@@ -311,7 +311,7 @@ public class AggregatorTest extends TestCase {
 		Collection[] collections;
 		Test test;
 		
-		db.openConnection("TestDB2");
+		db.openConnection();
 		
 		//for ATOFMS
 		start = getDate(9, 2, 2003, 5+12, 30, 32);
@@ -368,7 +368,7 @@ public class AggregatorTest extends TestCase {
 		
 		tearDown();
 		setUp();
-		db.openConnection("TestDB2");
+		db.openConnection();
 		
 		//for TimeSeries
 		start = getDate(9, 2, 2003, 5+12, 30, 32);
@@ -424,7 +424,7 @@ public class AggregatorTest extends TestCase {
 		
 		tearDown();
 		setUp();
-		db.openConnection("TestDB2");
+		db.openConnection();
 		
 		//for AMS
 		start = getDate(9, 2, 2003, 5+12, 30, 32);
@@ -504,7 +504,7 @@ public class AggregatorTest extends TestCase {
 		Collection[] collections;
 		Test test;
 		
-		db.openConnection("TestDB2");
+		db.openConnection();
 
 		// changes the time between particles from one second to one day
 		spreadOutParticlesInTime();

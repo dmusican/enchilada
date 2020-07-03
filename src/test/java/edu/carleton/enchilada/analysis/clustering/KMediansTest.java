@@ -29,7 +29,7 @@ public class KMediansTest extends TestCase {
 	        super.setUp();
 	        new CreateTestDatabase();
 			db = Database.getDatabase("TestDB");
-			db.openConnection("TestDB");
+			db.openConnection();
 			
 	        int cID = 2;
 	        int k = 2;

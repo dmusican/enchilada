@@ -62,7 +62,7 @@ public class CreateTestDatabase2 {
 	public CreateTestDatabase2() {
 		Database.getDatabase(dbname).rebuildDatabase(dbname);
 		Database db = Database.getDatabase(dbname);
-		db.openConnection(dbname);
+		db.openConnection();
 		con = db.getCon();
 
 	    try {

@@ -30,7 +30,7 @@ public class ClusterTest extends TestCase{
         
 		new CreateTestDatabase();
 		db = Database.getDatabase("TestDB");
-		db.openConnection("TestDB");
+		db.openConnection();
 		
         int cID = 2;
         int k = 2;

@@ -52,7 +52,7 @@ public class PeakListCursorExperiment {
 
 		//Open database connection:
 		db = Database.getDatabase("TestDB");
-		db.openConnection("TestDB");
+		db.openConnection();
 		Connection con = db.getCon();
 
 

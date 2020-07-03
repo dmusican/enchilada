@@ -128,7 +128,7 @@ public class DatabaseTest extends TestCase {
 	public void testGetImmediateSubcollections() {
 	
 		
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		ArrayList<Integer> test = db.getImmediateSubCollections(db.getCollection(0));
 
@@ -153,7 +153,7 @@ public class DatabaseTest extends TestCase {
 	
 	
 	public void testCreateEmptyCollectionAndDataset() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		int[] ids = db.createEmptyCollectionAndDataset("ATOFMS", 0,
 				"dataset",  "comment", "'mCalFile', 'sCalFile', 12, 20, 0.005, 0");
@@ -195,7 +195,7 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testCreateEmptyCollection() {
-		db.openConnection(dbName);
+		db.openConnection();
 		int collectionID = db.createEmptyCollection("ATOFMS", 0,"Collection",  "collection","");
 		try {
 			Connection con = db.getCon();
@@ -227,7 +227,7 @@ public class DatabaseTest extends TestCase {
 	
 	public void testRenameCollection() throws SQLException
 	{
-		db.openConnection(dbName);
+		db.openConnection();
 		int collectionID = db.createEmptyCollection("ATOFMS", 0,"Collection",  "collection","");
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
@@ -262,7 +262,7 @@ public class DatabaseTest extends TestCase {
 	 * @throws SQLException 
 	 */
 	public void testUpdateInternalAtomOrder() throws SQLException{
-		db.openConnection("TestDB");
+		db.openConnection();
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
 		stmt.executeUpdate("INSERT INTO Collections VALUES  (7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')");
@@ -296,7 +296,7 @@ public class DatabaseTest extends TestCase {
 		 * setup collection 7 (atoms 22, 23, 24) and 8 (atoms 25, 26, 27)
 		 * as children of 2
 		 */
-		db.openConnection(dbName);
+		db.openConnection();
 		Connection con = db.getCon();
 		Statement stmt = con.createStatement();
 		stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7, 22)");
@@ -353,7 +353,7 @@ public class DatabaseTest extends TestCase {
 	 *
 	 */
 	public void testCopyCollection() throws Exception {
-		db.openConnection(dbName);
+		db.openConnection();
 
 		int newLocation = db.copyCollection(db.getCollection(3),db.getCollection(2));
 
@@ -446,7 +446,7 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testMoveCollection() {
-		db.openConnection(dbName);
+		db.openConnection();
 		assertTrue(db.moveCollection(db.getCollection(3),db.getCollection(2)));
 		try {
 			Connection con = db.getCon();
@@ -489,7 +489,7 @@ public class DatabaseTest extends TestCase {
 	 * @author jtbigwoo 
 	 */
 	public void testMoveCollectionTwice() {
-		db.openConnection(dbName);
+		db.openConnection();
 		assertTrue(db.moveCollection(db.getCollection(4), db.getCollection(3)));
 		assertTrue(db.moveCollection(db.getCollection(3),db.getCollection(2)));
 		try {
@@ -532,7 +532,7 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testInsertATOFMSParticle() {
-		db.openConnection(dbName);
+		db.openConnection();
 		final String filename = "'ThisFile'";
 		final String dateString = "'1983-01-19 05:05:00.0'";
 		final float laserPower = (float)0.01191983;
@@ -642,7 +642,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetNextId(){
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		assertTrue(db.getNextID() >= 0);
 	
@@ -651,7 +651,7 @@ public class DatabaseTest extends TestCase {
 	
 	public void testOrphanAndAdopt() throws Exception {
 
-		db.openConnection(dbName);
+		db.openConnection();
 		//Insert 5,21 into the database to tell if an error occurs when an item
 		//is present in a parent and its child
 
@@ -709,7 +709,7 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testRecursiveDelete() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 
 
 		ArrayList<Integer> atomIDs = new ArrayList<Integer>();
@@ -901,7 +901,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetCollectionName(){
-		db.openConnection(dbName);
+		db.openConnection();
 
 		assertEquals("One", db.getCollectionName(2));
 		assertEquals("Two", db.getCollectionName(3));
@@ -912,7 +912,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetCollectionComment(){
-		db.openConnection(dbName);
+		db.openConnection();
 
 		assertEquals("one", db.getCollectionComment(2));
 		assertEquals("two", db.getCollectionComment(3));
@@ -923,7 +923,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetCollectionSize(){
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		final String filename = "'FirstFile'";
 		final String dateString = "'1983-01-19 05:05:00.0'";
@@ -944,7 +944,7 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testGetAllDescendedAtoms(){
-		db.openConnection(dbName);
+		db.openConnection();
 		
 //		case of one child collection
 		int[] expected = {16,17,18,19,20,21};
@@ -996,7 +996,7 @@ public class DatabaseTest extends TestCase {
 
 
 	public void testIsPresent() {
-		db.openConnection(dbName);
+		db.openConnection();
 		Database db = Database.getDatabase(dbName);
 		assertTrue(db.isPresent());
 		db = Database.getDatabase("shouldntexist");
@@ -1010,7 +1010,7 @@ public class DatabaseTest extends TestCase {
 	
 
 	public void ignoreTestExportToMSAnalyzeDatabase() {
-		db.openConnection(dbName);
+		db.openConnection();
 		final ProgressBarWrapper progressBar = 
 			new ProgressBarWrapper(null, "Exporting to MS-Analyze",100);
 		progressBar.constructThis();
@@ -1044,7 +1044,7 @@ public class DatabaseTest extends TestCase {
 	 *
 	 */
 	public void testAddAndDeleteAtom() {
-		db.openConnection(dbName);
+		db.openConnection();
 		db.atomBatchInit();
 		assertTrue(db.deleteAtomBatch(1,db.getCollection(1)));
 		db.atomBatchExecute();
@@ -1057,7 +1057,7 @@ public class DatabaseTest extends TestCase {
 	 *
 	 */
 	public void testAddAndDeleteAtomBatch() {
-		db.openConnection(dbName);
+		db.openConnection();
 		db.atomBatchInit();
 		assertTrue(db.deleteAtomsBatch("1",db.getCollection(1)));
 		assertTrue(db.addAtomBatch(1,1));
@@ -1073,7 +1073,7 @@ public class DatabaseTest extends TestCase {
 	 */
 //	public void testBatchMemoryProblem() {
 //		try {
-//			db.openConnection(dbName);
+//			db.openConnection();
 //			db.atomBatchInit();
 //			Random rand = new Random();
 //			for (int i = 0; i < 100000; i++) {
@@ -1091,14 +1091,14 @@ public class DatabaseTest extends TestCase {
 //	}
 	
 	public void testCheckAtomParent() {
-		db.openConnection(dbName);
+		db.openConnection();
 		assertTrue(db.checkAtomParent(1,2));
 		assertFalse(db.checkAtomParent(1,4));
 		db.closeConnection();
 	}
 	
 	public void testGetAndSetCollectionDescription() {
-		db.openConnection(dbName);
+		db.openConnection();
 		String description = db.getCollectionDescription(2);
 		assertTrue(db.setCollectionDescription(db.getCollection(2),"new description"));
 		assertEquals("new description", db.getCollectionDescription(2));
@@ -1114,7 +1114,7 @@ public class DatabaseTest extends TestCase {
 	} */
 	
 	public void testGetPeaks() {
-		db.openConnection(dbName);
+		db.openConnection();
 		Peak peak = db.getPeaks("ATOFMS",2).get(0);
 		assertEquals(15, ((ATOFMSPeak) peak).area);
 		assertEquals(0.006f, ((ATOFMSPeak) peak).relArea);
@@ -1123,21 +1123,21 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testGetAtomDatatype() {
-		db.openConnection(dbName);
+		db.openConnection();
 		assertEquals("ATOFMS", db.getAtomDatatype(2));
 		assertEquals("Datatype2", db.getAtomDatatype(18));
 		db.closeConnection();
 	}
 	
 	public void testGetParticleInfoOnlyCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getAtomInfoOnlyCursor(db.getCollection(2));
 		testCursor(curs);
 		db.closeConnection();
 	}
 	
 	public void testGetSQLAtomIDCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getSQLCursor(db.getCollection(2), "ATOFMSAtomInfoDense.AtomID != 50");
 		testCursor(curs);
 
@@ -1176,27 +1176,27 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetSQLCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getSQLCursor(db.getCollection(2), "ATOFMSAtomInfoDense.AtomID != 20");
 		testCursor(curs);
 		db.closeConnection();
 	}
 	
 	public void testGetPeakCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getPeakCursor(db.getCollection(2));
 		testCursor(curs);
 		db.closeConnection();
 	}
 	
 	public void testGetBinnedCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getBinnedCursor(db.getCollection(2));
 		testCursor(curs);
 		db.closeConnection();
 	}
 	public void testBPLOnlyCursor() throws Exception {
-		db.openConnection(dbName);
+		db.openConnection();
 		BPLOnlyCursor curs;
 		try {
 			curs = db.getBPLOnlyCursor(db.getCollection(2));
@@ -1208,7 +1208,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	public void testGetMemoryBinnedCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		Collection c = db.getCollection(2);
 		MemoryBinnedCursor curs = db.getMemoryBinnedCursor(c);
 		testCursor(curs);	
@@ -1216,7 +1216,7 @@ public class DatabaseTest extends TestCase {
 	}
 	
 	public void testGetRandomizedCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = db.getRandomizedCursor(db.getCollection(2));	
 		testCursor(curs);	
 
@@ -1277,7 +1277,7 @@ public class DatabaseTest extends TestCase {
 	// it's much more convenient to test it here since this is where the
 	// other cursor tests are.
 	public void testSubSampleCursor() {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = new SubSampleCursor(
 				db.getRandomizedCursor(db.getCollection(2)),0,5);	
 		testCursor(curs);	
@@ -1287,7 +1287,7 @@ public class DatabaseTest extends TestCase {
 	
 	
 	public void testSubSampleCursor2() throws Exception {
-		db.openConnection(dbName);
+		db.openConnection();
 		CollectionCursor curs = new SubSampleCursor(
 				db.getRandomizedCursor(db.getCollection(2)),0,10);	
 
@@ -1445,7 +1445,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testAddCenterAtom() throws Exception {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		assertTrue(db.addCenterAtom(2, 3));
 		
@@ -1513,7 +1513,7 @@ public class DatabaseTest extends TestCase {
 	 * @throws SQLException 
 	 */
 	public void testAddSingleInternalAtomToTable() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		//test adding to end
 		db.addSingleInternalAtomToTable(6, 2);
@@ -1577,7 +1577,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testAggregateColumn() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		int[] intsraw = {1,2,3,4,5};
 		ArrayList<Integer> ints = new ArrayList<Integer>();
@@ -1610,7 +1610,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testCreateIndex() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		assertTrue(db.createIndex("ATOFMS", "Size, LaserPower"));
 		assertTrue(db.createIndex("ATOFMS", "Size, Time"));
@@ -1653,7 +1653,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetATOFMSFileName() {
-		db.openConnection(dbName);
+		db.openConnection();
 
 		assertEquals(db.getATOFMSFileName(1), "particle1");
 		assertEquals(db.getATOFMSFileName(11), "particle11");
@@ -1690,7 +1690,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetCollectionDatatype() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		String[] expectedDatatypes = {"ATOFMS", "ATOFMS", "Datatype2", "Datatype2", "Datatype2"};
 		for (int i = 0; i < expectedDatatypes.length; ++i)
@@ -1711,7 +1711,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetCollectionIDsWithAtoms() {
-		db.openConnection(dbName);
+		db.openConnection();
 
 		ArrayList<Integer> colls = new ArrayList<Integer>();
 		for (int i = 0; i < 20; ++i)
@@ -1739,7 +1739,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetColNames() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		//Test Metadata given by database (from ResultSetMetaData) 
 		//	against hardcoded MetaData in database
@@ -1775,7 +1775,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetColNamesAndTypes() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 
 		//ugh... java.sql.Type isn't an enum.
 		//Manually map the int types in the fake enum to String type values
@@ -1826,7 +1826,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetDatabaseVersion() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		try {
 			//Read version information from the database rebuild file
@@ -1886,7 +1886,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetKnownDatatypes() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		ArrayList<String> types = db.getKnownDatatypes();
 		assertTrue(types.contains("AMS"));
@@ -1918,7 +1918,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetMaxMinDateInCollections() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		//test with default data
 		Collection[] colls = new Collection[1];
@@ -2001,7 +2001,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetPrimaryKey() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		ArrayList<String> ret = db.getPrimaryKey("ATOFMS", DynamicTable.DataSetInfo);
 		assertNotNull(ret);
@@ -2037,7 +2037,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetRepresentedCluster() {
-		db.openConnection(dbName);
+		db.openConnection();
 		db.addCenterAtom(2, 2);
 		db.addCenterAtom(6, 3);
 	
@@ -2068,7 +2068,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetAllDescendantCollections() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		java.util.Set<Integer> subcolls = db.getAllDescendantCollections(2, true);		
 		assertEquals(subcolls.size(), 1);
@@ -2111,7 +2111,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testContainsDatatype() {
-		db.openConnection(dbName);
+		db.openConnection();
 
 		assertTrue(db.containsDatatype("AMS"));
 		assertTrue(db.containsDatatype("ATOFMS"));
@@ -2165,7 +2165,7 @@ public class DatabaseTest extends TestCase {
 
 		int datasetid = 100;
 		int nextAtomID = 100;
-		db.openConnection(dbName);
+		db.openConnection();
 		Database.Data_bulkBucket bkts = db.getDatabulkBucket(tables);
 
 		ArrayList<String> sparse_arraylist = new ArrayList<>();
@@ -2180,7 +2180,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		
 		//check ATOFMS dense data
-		db.openConnection(dbName);
+		db.openConnection();
 		Statement stmt = db.getCon().createStatement();
 		ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoDense where AtomID = 100" );
 		assertTrue(rs.next());
@@ -2197,7 +2197,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 
 		//check ATOFMS sparse data
-		db.openConnection(dbName);
+		db.openConnection();
 		// First one
 		stmt = db.getCon().createStatement();
 		rs = stmt.executeQuery(";\n" + "SELECT * FROM ATOFMSAtomInfoSparse where PeakLocation = 23.0" );
@@ -2250,7 +2250,7 @@ public class DatabaseTest extends TestCase {
 		
 		int datasetid = 100;
 		int nextAtomID = 100;
-		db.openConnection(dbName);
+		db.openConnection();
 		Database.Data_bulkBucket bkts = db.getDatabulkBucket(tables);
 
 		ArrayList<String> ams_sparse_arraylist = new ArrayList<>();
@@ -2265,7 +2265,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		
 		//check AMS dense data
-		db.openConnection(dbName);
+		db.openConnection();
 		Statement stmt = db.getCon().createStatement();
 		ResultSet rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoDense where AtomID = 100" );
 		assertTrue(rs.next());
@@ -2276,7 +2276,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 
 		//check AMS sparse data
-		db.openConnection(dbName);
+		db.openConnection();
 		// First one
 		stmt = db.getCon().createStatement();
 		rs = stmt.executeQuery(";\n" + "SELECT * FROM AMSAtomInfoSparse where PeakLocation = 14.0" );
@@ -2302,7 +2302,7 @@ public class DatabaseTest extends TestCase {
 	 * @author shaferia
 	 */
 	public void testGetCollection() {
-		db.openConnection(dbName);
+		db.openConnection();
 		
 		Collection c = db.getCollection(0);
 		assertEquals(c.getDatatype(), "root");
@@ -2341,7 +2341,7 @@ public class DatabaseTest extends TestCase {
 		String manual = " INSERT INTO Collections VALUES "+
 		"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
 
-		db.openConnection(dbName);
+		db.openConnection();
 		con = db.getCon();
 		try
 		{
@@ -2391,7 +2391,7 @@ public class DatabaseTest extends TestCase {
 		Collection c;
 		BinnedPeakList bpl;
 
-		db.openConnection(dbName);
+		db.openConnection();
 		con = db.getCon();
 
 		bpl = db.getAveragePeakListForCollection(db.getCollection(2));
@@ -2406,12 +2406,12 @@ public class DatabaseTest extends TestCase {
 	}
 
 	public void testSyncWithIonsInDB() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 		db.syncWithIonsInDB(new ArrayList<>(), new ArrayList<>());
 	}
 
 	public void testSaveAtomRemovedIons() throws SQLException {
-		db.openConnection(dbName);
+		db.openConnection();
 		db.saveAtomRemovedIons(10, new ArrayList<>(), new ArrayList<>());
 
 	}

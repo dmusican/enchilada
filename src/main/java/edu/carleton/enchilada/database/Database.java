@@ -277,8 +277,6 @@ public abstract class Database {
 	 */
 	public abstract DateFormat getDateFormat();
 
-	public abstract boolean openConnection(String dbName);
-
 	public abstract String getRebuildScriptFilename();
 
 	public abstract int insertParticle(String dense, java.util.Collection<ATOFMSPeak> sparse,
@@ -676,7 +674,7 @@ public abstract class Database {
 		// inserts all of the necessary tables.
 		Database db = Database.getDatabase(dbName);
 		try {
-			db.openConnection(dbName);
+			db.openConnection();
 			con = db.getCon();
 			in = new Scanner(new File(db.getRebuildScriptFilename()));
 			String query = "";

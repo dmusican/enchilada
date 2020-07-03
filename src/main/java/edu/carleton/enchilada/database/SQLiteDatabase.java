@@ -67,17 +67,10 @@ public class SQLiteDatabase extends Database {
      */
     public boolean openConnection() {
         return openConnectionImpl(
-                "jdbc:sqlite:" + dbPath.resolve(MainFrame.dbname),
+                "jdbc:sqlite:" + dbPath.resolve(database),
                 "SpASMS",
                 "finally");
     }
-    public boolean openConnection(String s) {
-        return openConnectionImpl(
-                "jdbc:sqlite:" + dbPath.resolve(s),
-                "SpASMS",
-                "finally");
-    }
-
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
                 "jdbc:sqlite:" + dbPath.resolve(MainFrame.dbname),
@@ -153,7 +146,7 @@ public class SQLiteDatabase extends Database {
             try {
                 // Need to close previous connections in order to drop table
                 closeConnection();
-                openConnection(database);
+                openConnection();
                 Statement stmt = con.createStatement();
                 String query = "DROP TABLE IF EXISTS newCollection;";
                 stmt.execute(query);
@@ -258,7 +251,7 @@ public class SQLiteDatabase extends Database {
 
         Database db = Database.getDatabase(dbName);
         try {
-            db.openConnection(dbName);
+            db.openConnection();
             con = db.getCon();
             Statement stmt = con.createStatement();
 
