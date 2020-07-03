@@ -140,7 +140,6 @@ public class AMSDataSetImporter {
 		BigInteger prevBigInt = null, temp = null;
 		while (readTimeSeries.hasNext()) {
 			tempStr = readTimeSeries.next();
-			System.out.println("ttttt " + tempStr);
 			if (tempStr.indexOf('.') != -1) {
 				tempStr = tempStr.substring(0,tempStr.indexOf('.'));
 				bigInt = new BigInteger(""+tempStr);
@@ -152,7 +151,6 @@ public class AMSDataSetImporter {
 			if (prevBigInt == null) {
 				prevBigInt = bigInt;
 				convertedCalendar = (Calendar) startCalendar.clone();
-				System.out.println("AAAAAAADEBUGGGGGG " + convertedCalendar.getTime().toString());
 				while (bigInt.compareTo(maxInt) == 1) {
 					convertedCalendar.add(Calendar.SECOND, Integer.MAX_VALUE);
 					bigInt = bigInt.subtract(maxInt);
@@ -165,7 +163,6 @@ public class AMSDataSetImporter {
 				convertedCalendar.add(Calendar.SECOND, temp.intValue());
 				prevBigInt = bigInt;
 			}
-			System.out.println("DEBUGGGGGG " + convertedCalendar.getTime().toString());
 			timeSeries.add(convertedCalendar.getTime());
 		}
 		readTimeSeries.close();

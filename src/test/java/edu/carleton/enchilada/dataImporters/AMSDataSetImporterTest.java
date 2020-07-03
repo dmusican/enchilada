@@ -459,21 +459,14 @@ public class AMSDataSetImporterTest extends TestCase {
 
 		//check that timestamps are as expected
 		//	(subtract a base time from that used by the calendar and that used by the datafiles)
-		System.out.println(TimeUtilities.dateToIso8601(new Date(3114199800l)));
-		System.out.println(TimeUtilities.dateToIso8601(new Date(tstart)));
-		System.out.println(TimeUtilities.dateToIso8601(new Date(1034055000000l)));
 		long curt = tstart - 3114199800l;
 		for (int i = 0; i < items; ++i) {
 			assertTrue(rs.next());
 			assertEquals(rs.getInt(1), i + AtomIDStart);
 
 			Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"));
-			System.out.println(c.getTimeInMillis());
 			String dateRead = rs.getString(2);
-			System.out.println("Date read = " + dateRead);
 			c.setTime(TimeUtilities.iso8601ToDate(dateRead));
-			System.out.println("Expected = " + (c.getTimeInMillis() - 1034055000000l) / 1000);
-			System.out.println("Actual = " + curt);
 			assertEquals((c.getTimeInMillis() - 1034055000000l) / 1000, curt);
 			curt += tdelta;
 		}
