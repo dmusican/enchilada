@@ -58,9 +58,7 @@ import edu.carleton.enchilada.collection.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.net.URISyntaxException;
@@ -69,12 +67,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.Vector;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import edu.carleton.enchilada.chartlib.hist.HistogramsWindow;
 import edu.carleton.enchilada.chartlib.tree.TreeViewWindow;
+import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.dataImporters.ATOFMSDataSetImporter;
 import edu.carleton.enchilada.dataImporters.FlatFileATOFMSDataSetImporter;
 import edu.carleton.enchilada.database.Database;
@@ -406,21 +404,31 @@ public class MainFrame extends JFrame implements ActionListener
 	public void actionPerformed(ActionEvent e)
 	{
 		Object source = e.getSource();
-		
+
+		InputStream gitProperties = MainFrame.class.getResourceAsStream("/git.properties");
+		String versionInfo = "Devel " + LocalDateTime.now().toString();
+		if (gitProperties != null) {
+			Properties prop = new Properties();
+			try {
+				prop.load(gitProperties);
+				versionInfo = prop.getProperty("git.commit.id.abbrev") + " " +
+						prop.getProperty("git.build.time");
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+
 		if (source == aboutItem) {
 			JOptionPane.showMessageDialog(this, "EDAM Enchilada\n" +
 					"is supported by NSF ITR Grant IIS-0326328.\n" +
-					"For support, please contact dmusican@carleton.edu.\n" +
-					"Software Version jul-2014\n" +
-					"Additions by Michael Murphy, University of Toronto"
-//					+"Carleton Contributors:\n" +
-//					"Anna Ritz, Ben Anderson, Leah Steinberg,\n" +
-//					"Thomas Smith, Deborah Gross, Jamie Olson,\n" +
-//					"Janara Christensen, David Musicant, Jon Sulman\n" +
-//					"Sami Benzaid, Emma Turetsky, Jeff Rzeszotarski,\n +"
-//					"Rob Atlas, Tom Bigwood\n" +
-//					"Madison Contributors:\n"
-					);
+					"For support, please visit https://github.com/dmusican/enchilada/\n" +
+					"Software Version " + versionInfo + "\n" +
+					"\nDevelopers:\n" +
+					"Anna Ritz, Ben Anderson, Leah Steinberg,\n" +
+					"Thomas Smith, Deborah Gross, Jamie Olson,\n" +
+					"Janara Christensen, David Musicant, Jon Sulman\n" +
+					"Sami Benzaid, Emma Turetsky, Jeff Rzeszotarski,\n" +
+					"Rob Atlas, Tom Bigwood, Michael Murphy\n");
 		}
 		
 		else if (source == outputItem) {
