@@ -1814,6 +1814,7 @@ public abstract class Database {
 		} catch (SQLException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception updating AtomMembership table.");
 			System.err.println("Exception updating membership table");
+			e.printStackTrace();
 			throw new ExceptionAdapter(e);
 		}
 		return true;
