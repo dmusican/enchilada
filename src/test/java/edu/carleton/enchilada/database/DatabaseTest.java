@@ -1001,11 +1001,6 @@ public class DatabaseTest extends TestCase {
 		assertTrue(db.isPresent());
 		db = Database.getDatabase("shouldntexist");
 		assertFalse(db.isPresent());
-		
-		//uses default database
-		db = Database.getDatabase();
-		assertTrue(db.isPresent());
-		db.closeConnection();
 	}
 	
 
