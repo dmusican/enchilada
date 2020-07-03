@@ -24,8 +24,8 @@ jobs:
       - name: Build install
         run: |
           mvn --no-transfer-progress clean assembly:single
-          jpackage --input target/ --name Enchilada --main-jar enchilada-1.0-SNAPSHOT-jar-with-dependencies.jar
+          jpackage --input target/ --name Enchilada --main-jar enchilada-2.0-SNAPSHOT-jar-with-dependencies.jar
           ls --icon enchilada-icon.png --app-version 2.0-SNAPSHOT-${GITHUB-SHA::8}
           ls
-          
+
 
