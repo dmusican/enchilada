@@ -135,7 +135,7 @@ public class GenData {
 		file.print("Filename\t");
 		file.print("Date\t");
 		file.print("Acquisition #\t");
-		file.print("Diameter\t");
+//		file.print("Diameter\t");
 		//Peak positions
 		for (int i = mzmin; i <= mzmax; i++)
 			file.print(i+"\t");
