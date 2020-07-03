@@ -108,6 +108,9 @@
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <runOrder>alphabetical</runOrder>
+          </configuration>
           <version>2.22.1</version>
         </plugin>
         <plugin>
