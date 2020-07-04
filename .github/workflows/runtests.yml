@@ -24,8 +24,8 @@ jobs:
 #        with:
 #          run: |
 #            mvn --no-transfer-progress test
-#      - name: Build jar
-#        run: mvn --no-transfer-progress clean assembly:single
+      - name: Build jar
+        run: mvn --no-transfer-progress clean assembly:single
       - name: Get project version
 #        if: matrix.os != 'windows-latest'
         run: echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -36,8 +36,9 @@ jobs:
 #          $OTHER_VERSION=3
 #          echo $OTHER_VERSION
       - name: Show project version
-        run: echo here-it-is-$PROJECT_VERSION
-#          jpackage --input target/ --name Enchilada --main-jar enchilada-2.0-SNAPSHOT-jar-with-dependencies.jar --icon enchilada-icon.png --app-version 2.0-SNAPSHOT-${GITHUB_SHA::8}
-#          ls
+        run: |
+          echo here-it-is-$PROJECT_VERSION
+          jpackage --input target/ --name Enchilada --main-jar enchilada-$PROJECT_VERSION-jar-with-dependencies.jar --icon enchilada-icon.png --app-version $PROJECT_VERSION
+          ls
 
 
