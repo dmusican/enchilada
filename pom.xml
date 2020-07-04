@@ -79,8 +79,17 @@
       <version>4.0.0</version>
       <type>maven-plugin</type>
     </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-release-plugin</artifactId>
+      <version>3.0.0-M1</version>
+      <type>maven-plugin</type>
+    </dependency>
   </dependencies>
 
+  <scm>
+    <developerConnection>scm:git:https://github.com/dmusican/enchilada/</developerConnection>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -100,6 +109,11 @@
           <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
           <generateGitPropertiesFile>true</generateGitPropertiesFile><!-- somehow necessary. otherwise the variables are not available in the pom -->
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.0.0-M1</version>
       </plugin>
     </plugins>
 
