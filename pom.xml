@@ -6,7 +6,7 @@
 
   <groupId>edu.carleton.enchilada</groupId>
   <artifactId>enchilada</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>1.98.0</version>
 
   <name>enchilada</name>
   <!-- FIXME change it to the project's website -->
@@ -81,15 +81,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-release-plugin</artifactId>
-      <version>3.0.0-M1</version>
+      <artifactId>maven-help-plugin</artifactId>
+      <version>3.2.0</version>
       <type>maven-plugin</type>
     </dependency>
   </dependencies>
 
-  <scm>
-    <developerConnection>scm:git:https://github.com/dmusican/enchilada/</developerConnection>
-  </scm>
   <build>
     <plugins>
       <plugin>

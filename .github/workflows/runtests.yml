@@ -24,7 +24,9 @@ jobs:
       - name: Build install
         run: |
           mvn --no-transfer-progress clean assembly:single
-          jpackage --input target/ --name Enchilada --main-jar enchilada-2.0-SNAPSHOT-jar-with-dependencies.jar --icon enchilada-icon.png --app-version 2.0-SNAPSHOT-${GITHUB_SHA::8}
-          ls
+          echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo here-it-is-$PROJECT_VERSION
+#          jpackage --input target/ --name Enchilada --main-jar enchilada-2.0-SNAPSHOT-jar-with-dependencies.jar --icon enchilada-icon.png --app-version 2.0-SNAPSHOT-${GITHUB_SHA::8}
+#          ls
 
 
