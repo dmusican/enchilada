@@ -28,7 +28,10 @@ jobs:
         run: echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
       - name: Get project version windows
         if: matrix.os == 'windows-latest'
-        run: echo ::set-env name=PROJECT_VERSION::abc
+        run: |
+          echo ::set-env name=PROJECT_VERSION::abc
+          $OTHER_VERSION=3
+          echo $OTHER_VERSION
       - name: Show project version
         run: echo here-it-is-$PROJECT_VERSION
 #          jpackage --input target/ --name Enchilada --main-jar enchilada-2.0-SNAPSHOT-jar-with-dependencies.jar --icon enchilada-icon.png --app-version 2.0-SNAPSHOT-${GITHUB_SHA::8}
