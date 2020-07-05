@@ -72,8 +72,21 @@ jobs:
           echo here-it-is-$PROJECT_VERSION
           jpackage --input target/ --name Enchilada --main-jar enchilada-$PROJECT_VERSION-jar-with-dependencies.jar --icon enchilada-icon.png --app-version $PROJECT_VERSION
           ls
-          echo ::set-output name=JAR_FILENAME::$(ls *.jar)
-          echo $JAR_FILENAME
+      - name: Get install file for Linux
+        if: ${{ matrix.os }}=='ubuntu-latest'
+        run: |
+          echo ::set-output name=OUTPUT_FILENAME::$(ls *.deb)
+          echo $OUTPUT_FILENAME
+      - name: Get install file for Mac
+        if: ${{ matrix.os }}=='macos-latest'
+        run: |
+          echo ::set-output name=OUTPUT_FILENAME::$(ls *.dmg)
+          echo $OUTPUT_FILENAME
+      - name: Get install file for Windows
+        if: ${{ matrix.os }}=='windows-latest'
+        run: |
+          echo ::set-output name=OUTPUT_FILENAME::$(ls *.exe)
+          echo $OUTPUT_FILENAME
 
       - name: Upload build to release
         id: upload-release-asset
@@ -82,8 +95,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-          asset_path: ./$JAR_FILENAME
-          asset_name: $JAR_FILENAME
-          asset_content_type: application/java-archive
+          asset_path: ./$OUTPUT_FILENAME
+          asset_name: $OUTPUT_FILENAME
+          asset_content_type: application/octet-stream
 
 
