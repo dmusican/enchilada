@@ -68,7 +68,7 @@ jobs:
         with:
           run: mvn --no-transfer-progress test
       - name: Build jar
-        run: mvn --no-transfer-progress clean assembly:single
+        run: mvn --no-transfer-progress clean compile assembly:single
       - name: Get project version and set icon file name
         run: |
           echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
