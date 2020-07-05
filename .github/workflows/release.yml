@@ -2,6 +2,9 @@
 
 name: Create release when appropriately tagged and upload builds
 on: push
+defaults:
+  run:
+    shell: bash
 
 jobs:
   release:
@@ -39,7 +42,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: release_url
-      - name: Pur release URL into a variable
+      - name: Put release URL into a variable
         id: get_release_info
         run: |
           value=`cat release_url/release_url.txt`
