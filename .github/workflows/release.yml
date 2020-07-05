@@ -75,17 +75,17 @@ jobs:
       - name: Get install file for Linux
         if: ${{ matrix.os }}=='ubuntu-latest'
         run: |
-          echo ::set-output name=OUTPUT_FILENAME::$(ls *.deb)
+          echo ::set-env name=OUTPUT_FILENAME::$(ls *.deb)
           echo $OUTPUT_FILENAME
       - name: Get install file for Mac
         if: ${{ matrix.os }}=='macos-latest'
         run: |
-          echo ::set-output name=OUTPUT_FILENAME::$(ls *.dmg)
+          echo ::set-env name=OUTPUT_FILENAME::$(ls *.dmg)
           echo $OUTPUT_FILENAME
       - name: Get install file for Windows
         if: ${{ matrix.os }}=='windows-latest'
         run: |
-          echo ::set-output name=OUTPUT_FILENAME::$(ls *.exe)
+          echo ::set-env name=OUTPUT_FILENAME::$(ls *.exe)
           echo $OUTPUT_FILENAME
 
       - name: Upload build to release
