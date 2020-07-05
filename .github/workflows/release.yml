@@ -39,10 +39,10 @@ jobs:
         with:
           name: release_url
       - name: Pur release URL into a variable
-      id: get_release_info
-      run: |
-        value=`cat release_url/release_url.txt`
-        echo ::set-output name=upload_url::$value
+        id: get_release_info
+        run: |
+          value=`cat release_url/release_url.txt`
+          echo ::set-output name=upload_url::$value
       - name: Set up Java
         uses: actions/setup-java@v1
         with:
