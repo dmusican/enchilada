@@ -81,7 +81,7 @@ jobs:
         run: |
           echo here-it-is-$PROJECT_VERSION
           echo $ICON_FILENAME
-          jpackage --input target/ --name Enchilada --main-jar enchilada-$PROJECT_VERSION-jar-with-dependencies.jar --icon enchilada-icon.png --app-version $PROJECT_VERSION
+          jpackage --input target/ --name Enchilada --main-jar enchilada-$PROJECT_VERSION-jar-with-dependencies.jar --icon ${{ env.ICON_FILENAME }} --app-version $PROJECT_VERSION
           ls
       - name: Get install file for Linux
         if: ${{ matrix.os =='ubuntu-latest' }}
