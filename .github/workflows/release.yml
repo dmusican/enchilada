@@ -63,18 +63,30 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Run headless test
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: mvn --no-transfer-progress test
       - name: Build jar
         run: mvn --no-transfer-progress clean assembly:single
-      - name: Get project version
-        run: echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+      - name: Get project version and set icon file name
+        run: |
+          echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo ::set-env name=ICON_FILENAME::enchilada-icon.png
+      - name: Reset icon file name for Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          echo ::set-env name=ICON_FILENAME::enchilada-icon.ico
       - name: Show project version and make build
         run: |
           echo here-it-is-$PROJECT_VERSION
+          echo $ICON_FILENAME
           jpackage --input target/ --name Enchilada --main-jar enchilada-$PROJECT_VERSION-jar-with-dependencies.jar --icon enchilada-icon.png --app-version $PROJECT_VERSION
           ls
       - name: Get install file for Linux
         if: ${{ matrix.os =='ubuntu-latest' }}
         run: |
+          echo ::set-env name=ICON_FILENAME::enchilada-icon.jpg
           echo ::set-env name=OUTPUT_FILENAME::$(ls *.deb)
       - name: Get install file for Mac
         if: ${{ matrix.os == 'macos-latest' }}
@@ -83,8 +95,9 @@ jobs:
       - name: Get install file for Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
+          echo ::set-env name=ICON_FILENAME::enchilada-icon.ico
           echo ::set-env name=OUTPUT_FILENAME::$(ls *.exe)
-      - name: Check output filename
+      - name: Check output filenames
         run: |
           echo $OUTPUT_FILENAME
 
