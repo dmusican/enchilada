@@ -58,7 +58,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Checkout
-          uses: actions/checkout@v2
+        uses: actions/checkout@v2
       - name: Build jar
         run: mvn --no-transfer-progress clean assembly:single
       - name: Get project version
