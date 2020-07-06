@@ -5152,7 +5152,7 @@ public abstract class Database {
 		/*String s = null;
 		s.charAt(5);
 		*/
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		ArrayList<String> columnsToReturn = new ArrayList<String>();
 		columnsToReturn.add("Ts1Value");
 		int parentSeq1 = this.getParentCollectionID(seq.getCollectionID());
@@ -5242,8 +5242,7 @@ public abstract class Database {
 			System.err.println("Error retrieving time series data.");
 			e.printStackTrace();
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		
 		return retData;
