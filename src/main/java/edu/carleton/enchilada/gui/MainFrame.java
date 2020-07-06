@@ -219,7 +219,7 @@ public class MainFrame extends JFrame implements ActionListener
 		Font f = new Font("Dialog", Font.PLAIN, 11);
 		fixFonts(f);
 		
-		setIconImage(Toolkit.getDefaultToolkit().getImage("new_icon.gif"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("enchilada-icon.png"));
 		
 		setSize(800, 600);
 		
