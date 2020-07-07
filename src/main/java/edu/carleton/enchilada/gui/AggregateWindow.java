@@ -171,12 +171,9 @@ public class AggregateWindow extends JFrame implements ActionListener, ListSelec
 	    eurDateRadio.addActionListener(this);
 	    naDateRadio.setSelected(true);
 	    
-	    JPanel matchingPanel = new JPanel();
 	    matchingCombo = new JComboBox(collections);
 		matchingCombo .setEditable(false);
-		//matchingPanel.add(selSeqRadio);
-		//matchingPanel.add(matchingCombo);
-	    
+
 	    Calendar startDate = new GregorianCalendar(), endDate = new GregorianCalendar();
 	    Calendar interval = new GregorianCalendar(0, 0, 0, 0, 0, 0);
 	    // add things with indices so that you can remove them later!
@@ -325,28 +322,11 @@ public class AggregateWindow extends JFrame implements ActionListener, ListSelec
 	private JPanel getTimeSeriesPanel(Collection collection) {
 		final AggregationOptions options = collection.getAggregationOptions();
 		
-	    JCheckBox isContinuousData = new JCheckBox();
-	    isContinuousData.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				options.treatDataAsContinuous = (evt.getStateChange() == ItemEvent.SELECTED);
-			}
-		});
-	    isContinuousData.setSelected(options.treatDataAsContinuous);
-	    
 	    ButtonGroup bg = getValueCombiningButtons(options);
 	    Enumeration<AbstractButton> combiningButtons = bg.getElements();
 	    
-		JPanel continuousDataPanel = new JPanel(new BorderLayout(10, 0));
-		continuousDataPanel.add(isContinuousData, BorderLayout.WEST);
-		continuousDataPanel.add(new JLabel("<html>Treat Data as Continuous</html>"), BorderLayout.CENTER);
-		
 		JPanel mainPanel = new JPanel();
 		JPanel bottomHalf = addComponent(new JPanel(), mainPanel);
-		bottomHalf = addComponent(new JLabel("Collection Options for " + collection.getName() + ":"), bottomHalf);
-		bottomHalf = addComponent(new JPanel(), bottomHalf);
-		bottomHalf = addComponent(continuousDataPanel, bottomHalf);
-		bottomHalf = addComponent(new JPanel(), bottomHalf);
-		bottomHalf = addComponent(new JPanel(), bottomHalf);
 		bottomHalf = addComponent(new JLabel("Combining Method:"), bottomHalf);
 		
 		while (combiningButtons.hasMoreElements())
@@ -401,10 +381,9 @@ public class AggregateWindow extends JFrame implements ActionListener, ListSelec
 			progressBar.setIndeterminate(true);
 			final AggregateWindow thisRef = this;
 			final SwingWorker aggWorker = new SwingWorker() {
-				private int collectionID;
 				public Object construct() {
 					db.getMaxMinDateInCollections(collections, startDate, endDate);
-					return new Integer(0);
+					return 0;
 				}
 				public void finished() {
 					timesPanel.remove(1);
@@ -434,8 +413,7 @@ public class AggregateWindow extends JFrame implements ActionListener, ListSelec
     			return;
 			}
 			
-			String timeBasisSQLStr = null;
-			boolean baseSequenceOnCollection = selSeqRadio.isSelected(); 
+			boolean baseSequenceOnCollection = selSeqRadio.isSelected();
 			
 			final Aggregator aggregator;
 			if (baseSequenceOnCollection) {

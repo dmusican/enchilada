@@ -14,7 +14,6 @@ public class AggregationOptions {
 	// These are only relevant to ATOFMS:
 	public double peakTolerance = .4;
 	public boolean produceParticleCountTS = true;
-	public boolean treatDataAsContinuous = false;
 	public boolean allMZValues = false;
 	public CombiningMethod combMethod = CombiningMethod.SUM;
 	public ArrayList<Integer> mzValues;
@@ -80,7 +79,6 @@ public class AggregationOptions {
 		// These are only relevant to ATOFMS:
 		peakTolerance = .4;
 		produceParticleCountTS = true;
-		treatDataAsContinuous = false;
 		combMethod = CombiningMethod.SUM;
 		mzValues = new ArrayList<Integer>();
 		
