@@ -1,0 +1,1 @@
+Fixes [Aggregate time series fails in two ways #4](https://github.com/dmusican/enchilada/issues/4)
