@@ -10,7 +10,6 @@ import edu.carleton.enchilada.database.*;
 
 public class Aggregator {
 	private JFrame parentFrame;
-	private String timeBasisSQLstring;
 	private boolean baseOnCollection;
 	private Database db;
 	
