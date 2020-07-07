@@ -22,7 +22,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
-          body_path: release-notes.md
+          body: |
+            Fixes [Aggregate time series fails in two ways #4](https://github.com/dmusican/enchilada/issues/4)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
