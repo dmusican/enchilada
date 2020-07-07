@@ -23,7 +23,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Fixes [Aggregate time series fails in two ways #4](https://github.com/dmusican/enchilada/issues/4)
+            Removed checkbox in aggregation window for treating data as continuous, as it didn't do anything
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
