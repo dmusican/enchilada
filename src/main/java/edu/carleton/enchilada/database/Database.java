@@ -5048,58 +5048,13 @@ public abstract class Database {
 		return null;
 	}
 	
-	public ArrayList<Date> getCollectionDates(Collection seq1, Collection seq2){
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		int parentSeq1 = this.getParentCollectionID(seq1.getCollectionID());
-		int parentSeq2 = -1;
-		if(seq2 != null) parentSeq2 = this.getParentCollectionID(seq2.getCollectionID());
-		String selectAllTimesStr = 
-			"SELECT DISTINCT T.Time\n" +
-			"FROM (SELECT CollectionID, Time, Value\n" +
-			"	FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " D\n" +
-			" 	JOIN AtomMembership M on (D.AtomID = M.AtomID)) T\n" +
-			"	JOIN CollectionRelationships CR on (CollectionID = CR.ChildID)" +
-			"WHERE ParentID = " + parentSeq1+"";
-		if (seq2 != null) {
-			selectAllTimesStr += "\nOR ParentID = " + parentSeq2 + "";
-		}
-		selectAllTimesStr += "\n     Order BY Time";
-		selectAllTimesStr += ";";
-		
-		ArrayList<Date> retData = new ArrayList<Date>();
-		
-		try{
-			Statement stmt = con.createStatement();
-			System.out.println("DATES:\n"+selectAllTimesStr);
-			ResultSet rs;
-			rs = stmt.executeQuery(selectAllTimesStr);
-			while (rs.next()) {
-				String dateTime = rs.getString("Time");
-				if (dateTime != null)
-					retData.add(parser.parse(dateTime));	
-			}
-			
-		} catch (SQLException e){
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL exception retrieving time series data.");
-			System.err.println("Error retrieving time series data.");
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return retData;
-	}
-	
+
 	//Overload so that exporting of >2 collections to CVS is possible
 	public ArrayList<Date> getCollectionDates(Collection[] collections){
 		//This should NEVER happen!
 		if (collections.length < 1)
 			return null;
 		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		int parentSeq1 = this.getParentCollectionID(collections[0].getCollectionID());
 
 		String selectAllTimesStr = 
@@ -5129,7 +5084,7 @@ public abstract class Database {
 			while (rs.next()) {
 				String dateTime = rs.getString("Time");
 				if (dateTime != null)
-					retData.add(parser.parse(dateTime));	
+					retData.add(TimeUtilities.iso8601ToDate(dateTime));
 			}
 			
 		} catch (SQLException e){
@@ -5152,7 +5107,6 @@ public abstract class Database {
 		/*String s = null;
 		s.charAt(5);
 		*/
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		ArrayList<String> columnsToReturn = new ArrayList<String>();
 		columnsToReturn.add("Ts1Value");
 		int parentSeq1 = this.getParentCollectionID(seq.getCollectionID());
@@ -5233,7 +5187,7 @@ public abstract class Database {
 				
 				String dateTime = rs.getString("Time");
 				if (dateTime != null)
-					retData.put(parser.parse(dateTime), retValues);	
+					retData.put(TimeUtilities.iso8601ToDate(dateTime), retValues);
 			}
 			stmt.close();
 			rs.close();
@@ -5242,8 +5196,7 @@ public abstract class Database {
 			System.err.println("Error retrieving time series data.");
 			e.printStackTrace();
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		
 		return retData;
@@ -5254,8 +5207,7 @@ public abstract class Database {
 		System.out.println("Collection ID: "+collection.getCollectionID());
 		System.out.println("threshold: "+magnitude+"\nduration: "+minDuration);
 		*/int parentCollection = this.getParentCollectionID(collection.getCollectionID());
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		
+
 		String atomSelStr = "SELECT CollectionID, Time, Value" +
 			"\n FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " D \n" +
 			"JOIN AtomMembership M ON (D.AtomID = M.AtomID)";
@@ -5339,8 +5291,7 @@ public abstract class Database {
 		System.out.println("Collection ID: "+collection.getCollectionID());
 		System.out.println("threshold: "+magnitude+"\nduration: "+minDuration);
 		*/int parentCollection = this.getParentCollectionID(collection.getCollectionID());
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		
+
 		String atomSelStr = "SELECT CollectionID, Time, Value" +
 			"\n FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " D \n" +
 			"JOIN AtomMembership M ON (D.AtomID = M.AtomID)";
@@ -5423,8 +5374,7 @@ public abstract class Database {
 		System.out.println("Collection ID: "+collection.getCollectionID());
 		System.out.println("threshold: "+magnitude+"\nduration: "+minDuration);
 		*/int parentCollection = this.getParentCollectionID(collection.getCollectionID());
-		SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		
+
 		String atomSelStr = "SELECT CollectionID, Time, Value" +
 			"\n FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, "TimeSeries") + " D \n" +
 			"JOIN AtomMembership M ON (D.AtomID = M.AtomID)";
@@ -5470,7 +5420,7 @@ public abstract class Database {
 			while(more){
 				while(more && rs.getDouble("Value") >= minValue){
 					String dateTime = rs.getString("Time");
-					curPlume.put(parser.parse(dateTime),rs.getDouble("Value"));
+					curPlume.put(TimeUtilities.iso8601ToDate(dateTime),rs.getDouble("Value"));
 					more = rs.next();
 				}
 				if(!curPlume.isEmpty()&&curPlume.lastKey().getTime() - curPlume.firstKey().getTime() 

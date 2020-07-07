@@ -46,12 +46,15 @@
  */
 package edu.carleton.enchilada.database;
 
+import edu.carleton.enchilada.dataImporters.TSImport;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.LabelingIon;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -102,7 +105,7 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 		System.runFinalization();
 		System.gc();
-		db.dropDatabaseCommands();
+//		db.dropDatabaseCommands();
 	}
 
 	/**
@@ -2409,5 +2412,40 @@ public class DatabaseTest extends TestCase {
 		db.openConnection();
 		db.saveAtomRemovedIons(10, new ArrayList<>(), new ArrayList<>());
 
+	}
+
+	private File makeTestTSFile() throws IOException {
+		File f = File.createTempFile("tsFile",".csv");
+		PrintWriter ts = new PrintWriter(f);
+
+		Calendar c = new GregorianCalendar();
+		c.setTimeInMillis(System.currentTimeMillis());
+		c.set(Calendar.MILLISECOND, 0);
+		SimpleDateFormat dForm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+		ts.println("Time,Val");
+
+		int numParticles = 1000;
+		for (int i = 0; i < numParticles; i++) {
+			ts.println(dForm.format(c.getTime())+","+i);
+			c.add(Calendar.SECOND, 30);
+		}
+
+		ts.close();
+
+		return f;
+	}
+
+
+	public void testGetConditionalTSCollectionData() throws IOException {
+		db.openConnection();
+		TSImport tsImport = new TSImport(db, null, false);
+		File testCsvFile = makeTestTSFile();
+		tsImport.readCSVFile(testCsvFile.getPath());
+
+		Collection testCollection = db.getCollection(7);
+		ArrayList<Collection> conditionalSeqs = new ArrayList<>();
+		ArrayList<String> conditionStrs = new ArrayList<>();
+		db.getConditionalTSCollectionData(testCollection, conditionalSeqs, conditionStrs);
 	}
 }
