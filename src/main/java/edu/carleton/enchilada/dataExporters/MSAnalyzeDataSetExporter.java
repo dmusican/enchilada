@@ -44,9 +44,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import edu.carleton.enchilada.collection.Collection;
 
@@ -101,6 +103,10 @@ public class MSAnalyzeDataSetExporter {
 			throw new DisplayException("Please choose a ATOFMS collection to export to MSAnalyze.");
 		}
 
+		if (msAnalyzeFileName == null) {
+			throw new DisplayException("Please specify the Access database.");
+		}
+
 		parFileName = parFileName.replaceAll("'", "");
 		// parFileName is an absolute pathname to the par file.
 		// the set file goes in the same directory
@@ -116,8 +122,19 @@ public class MSAnalyzeDataSetExporter {
 
 		progressBar.setText("Updating MS-Analyze database");
 		progressBar.setIndeterminate(true);
-		// the thought: set "name" to the basename of the file they choose.
-		java.util.Date date = db.exportToMSAnalyzeDatabase(coll, name, "MS-Analyze", msAnalyzeFileName, progressBar);
+
+		Date date = null;
+		try {
+			date = db.exportToMSAnalyzeDatabase(coll, name, msAnalyzeFileName);
+		} catch (IOException e) {
+			ErrorLogger.writeExceptionToLog("Access","Error exporting to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error exporting to Access database.");
+		} catch (SQLException e) {
+			ErrorLogger.writeExceptionToLog("Access","Error exporting to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error accessing Enchilada database.");
+		}
 		if (date == null)
 		{
 			return false;

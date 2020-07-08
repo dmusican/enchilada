@@ -46,15 +46,19 @@
  */
 package edu.carleton.enchilada.database;
 
+import com.healthmarketscience.jackcess.DatabaseBuilder;
 import edu.carleton.enchilada.dataImporters.TSImport;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
-import edu.carleton.enchilada.gui.LabelingIon;
+import edu.carleton.enchilada.gui.ParticleAnalyzeWindow;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -1007,15 +1011,20 @@ public class DatabaseTest extends TestCase {
 	}
 	
 
-	public void ignoreTestExportToMSAnalyzeDatabase() {
+	public void testExportToMSAnalyzeDatabase() throws IOException, SQLException {
+		Path tempDir = Files.createTempDirectory("access-test");
+		tempDir.toFile().deleteOnExit();
+
+		Path accessDataPath = tempDir.resolve("sample-ms-analyze.mdb");
+		Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/sample-ms-analyze.mdb"),
+				accessDataPath, StandardCopyOption.REPLACE_EXISTING);
+		com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(accessDataPath.toFile());
+		accessDataPath.toFile().deleteOnExit();
+
+		System.out.println(accessDb.getFileFormat());
+
 		db.openConnection();
-		final ProgressBarWrapper progressBar = 
-			new ProgressBarWrapper(null, "Exporting to MS-Analyze",100);
-		progressBar.constructThis();
-		progressBar.setIndeterminate(true);
-		progressBar.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		progressBar.setVisible(false);
-		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2),"MSAnalyzeDB","MS-Analyze", null, progressBar);
+		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2),"MSAnalyzeDB", null);
 		db.closeConnection();
 		assertEquals("Tue Sep 02 17:30:38 CDT 2003", date.toString());
 	}

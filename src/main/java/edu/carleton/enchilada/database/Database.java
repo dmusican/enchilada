@@ -40,6 +40,7 @@
 
 package edu.carleton.enchilada.database;
 
+import com.healthmarketscience.jackcess.*;
 import edu.carleton.enchilada.ATOFMS.AMSPeak;
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
@@ -2778,124 +2779,60 @@ public abstract class Database {
 	 * the necessary data to import (.par file, etc).
 	 * @param collection the collection to export
 	 * @param newName the name of the par file without the ".par" part.
-	 * @param sOdbcConnection the name of the system data source to export to
-	 * -- ignored if a fileName is supplied.
 	 * @param fileName the path to the access database to export to--
 	 * overrides sOdbcConnection
-	 * @param progressBar
 	 * @return date associated with the mock dataset.
 	 */
 	public java.util.Date exportToMSAnalyzeDatabase(
 			Collection collection, 
 			String newName, 
-			String sOdbcConnection,
-			String fileName,
-			ProgressBarWrapper progressBar)// throws InterruptedException
-	{
+			String fileName) throws IOException, SQLException {
+
 		if (! collection.getDatatype().equals("ATOFMS")) {
-			throw new RuntimeException(
-					"trying to export the wrong datatype for MSAnalyze: " 
+			throw new UnsupportedOperationException(
+					"Trying to export the wrong datatype for MSAnalyze: "
 					+ collection.getDatatype());
 		}
-		DateFormat dFormat = null;
-		Date startTime = null;
-		try {
-			Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-		} catch (ClassNotFoundException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error loading ODBC bridge driver.");
-			System.err.println("Error loading ODBC bridge driver");
-			e.printStackTrace();
-			return null;
-		}
-		try {
-			Connection odbcCon;
-			
-			if (fileName != null) {
-				try {
-			        fileName = fileName.replace('\\', '/').trim();
 
-					odbcCon = DriverManager.getConnection(
-							accessDBURLPrefix + fileName + accessDBURLSuffix);
-					System.out.println(accessDBURLPrefix + fileName + accessDBURLSuffix);
-				}
-				catch (SQLException se) {
-					//putting in specific error message here to help the user 
-					//if something goes wrong. the generic message at the end
-					//of this method is not helpful
-					ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error connecting to the file path " + fileName + " please ensure the file exists.");
-					System.err.println("Error connecting to Access database");
-					se.printStackTrace();
-					return null;
-				}
-			}
-			else {
-				try {
-					odbcCon = DriverManager.getConnection(
-							"jdbc:odbc:" + sOdbcConnection);
-					System.out.println("jdbc:odbc:" + sOdbcConnection);
-				}
-				catch (SQLException se) {
-					//putting in specific error message here to help the user 
-					//if something goes wrong. the generic message at the end
-					//of this method is not helpful
-					ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error connecting to the system data source name " + sOdbcConnection + " please the name and the file exist.");
-					System.err.println("Error connecting to Access database");
-					se.printStackTrace();
-					return null;
-				}
-			}
-			
-			Statement odbcStmt = odbcCon.createStatement();
-			Statement stmt = con.createStatement();
-
-			// Create a table containing the values that will be 
+		try (
+				Statement stmt = con.createStatement();
+				Statement rsStmt = con.createStatement();)
+		{
+			// Create a table containing the values that will be
 			// exported to the particles table in MS-Analyze
-			try {
-				stmt.execute(
-						"IF (OBJECT_ID('tempdb..#ParticlesToExport') " +
-						"IS NOT NULL)\n" +
-						"	DROP TABLE #ParticlesToExport\n" +
-						"CREATE TABLE #ParticlesToExport (AtomID INT " +
-						"PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
-						"LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
-						"TotalNegIntegral INT)\n");
-			}
-			catch (SQLException se) {
-				//putting in specific error message here to help the user 
-				//if something goes wrong. the generic message at the end
-				//of this method is not helpful
-				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error setting up temporary table in SQL server.  Please ensure you have appropriate access to the database.");
-				System.err.println("Error connecting to Access database");
-				se.printStackTrace();
-				return null;
-			}
-			
-			stmt.execute(		
-					"INSERT INTO #ParticlesToExport\n" +
-					"(AtomID,Filename, [Time], [Size], LaserPower)\n" +
-					"(\n" +
-					"	SELECT " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + ".AtomID, OrigFilename, [Time], [Size], LaserPower\n" +
-					"	FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + ", InternalAtomOrder" +
-					"	WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + 
-					".AtomID = InternalAtomOrder.AtomID AND InternalAtomOrder.CollectionID = " + collection.getCollectionID() + ")\n" +
-					
-					"UPDATE #ParticlesToExport\n" +
-					"SET NumPeaks = \n" +
-					"	(SELECT COUNT(AtomID)\n" +
-					"		FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + "\n" +
-					"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense,collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID),\n" +
-					"TotalPosIntegral = \n" +
-					"	(SELECT SUM (PeakArea)\n" +
-					"		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + "\n" +
-					"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID\n" +
-					"			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + ".PeakLocation >= 0),\n" +
-					"TotalNegIntegral =\n" +
-					"	(SELECT SUM (PeakArea)\n" +
-					"		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + "\n" +
-					"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID\n" +
-					"			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,collection.getDatatype()) + ".PeakLocation < 0)\n"
+			stmt.executeUpdate("DROP TABLE IF EXISTS temp.ParticlesToExport");
+			stmt.executeUpdate("CREATE TEMPORARY TABLE ParticlesToExport (AtomID INT " +
+					"PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
+					"LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
+					"TotalNegIntegral INT)");
+
+			stmt.executeUpdate(
+					"INSERT INTO temp.ParticlesToExport\n" +
+							"(AtomID,Filename, Time, Size, LaserPower)\n" +
+							"(\n" +
+							"	SELECT " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID, OrigFilename, [Time], [Size], LaserPower\n" +
+							"	FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ", InternalAtomOrder" +
+							"	WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) +
+							".AtomID = InternalAtomOrder.AtomID AND InternalAtomOrder.CollectionID = " + collection.getCollectionID() + ")");
+
+			stmt.executeUpdate(
+					"UPDATE temp.ParticlesToExport\n" +
+							"SET NumPeaks = \n" +
+							"	(SELECT COUNT(AtomID)\n" +
+							"		FROM " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + "\n" +
+							"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID),\n" +
+							"TotalPosIntegral = \n" +
+							"	(SELECT SUM (PeakArea)\n" +
+							"		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + "\n" +
+							"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID\n" +
+							"			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + ".PeakLocation >= 0),\n" +
+							"TotalNegIntegral =\n" +
+							"	(SELECT SUM (PeakArea)\n" +
+							"		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + "\n" +
+							"			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + ".AtomID = #ParticlesToExport.AtomID\n" +
+							"			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype()) + ".PeakLocation < 0)\n"
 			);
-			
+
 			// Find the start time of our mock dataset, use this
 			// as the timestamp for the dataset since this might
 			// potentially be a collection that wasn't originally
@@ -2909,41 +2846,30 @@ public abstract class Database {
 			// is a little earlier, and which most likely 
 			// represents the time they switched on the 
 			// ATOFMS machine in MS-Control.
-			// TODO: Use rGetAllDescended in order to get the real first
-			// atom
+			// TODO: Use rGetAllDescended in order to get the real first atom
 			
-			ResultSet rs = stmt.executeQuery(
-					"SELECT MIN ([Time])\n" +
-			"FROM #ParticlesToExport");
-			Date endTime;
-			startTime = endTime = null;
+			ResultSet rs = rsStmt.executeQuery("SELECT MIN(Time) FROM temp.ParticlesToExport");
+			Date startTime = null;
 			long unixTime;
-			
-			if (rs.next())
-			{
-				startTime = new Date(rs.getTimestamp(1).getTime());
-				//startTime = startTime.substring(0, startTime.length()-2);
+
+			if (rs.next()) {
+				startTime = TimeUtilities.iso8601ToDate(rs.getString(1));
 				unixTime = startTime.getTime() / 1000;
-			}
-			else
-			{
+			} else {
 				unixTime = 0;
-				//endTime = "";
 			}
+
 			// find the end time in the same manner
-			rs = stmt.executeQuery(
-					"SELECT MAX([Time])\n" +
-			"FROM #ParticlesToExport\n");
-			if (rs.next())
-			{
-				endTime = new Date(rs.getTimestamp(1).getTime());
-				//endTime = endTime.substring(0, startTime.length()-2);
+			Date endTime = null;
+			rs = rsStmt.executeQuery("SELECT MAX(Time) FROM temp.ParticlesToExport");
+			if (rs.next()) {
+				endTime = TimeUtilities.iso8601ToDate(rs.getString(1));
 			}
 			String comment = " ";
 			
 			// Get the comment for the current collection to use
 			// as the comment for the dataset
-			rs = stmt.executeQuery(
+			rs = rsStmt.executeQuery(
 					"SELECT Comment \n" +
 					"FROM Collections\n" +
 					"WHERE CollectionID = " + collection.getCollectionID());
@@ -2957,32 +2883,24 @@ public abstract class Database {
 			// find out how many particles are in the collection
 			// and pretend like that is the number of particles
 			// hit in a powercycle.  
-			rs = stmt.executeQuery("SELECT COUNT(AtomID) from #ParticlesToExport");
-			
+			rs = rsStmt.executeQuery("SELECT COUNT(AtomID) from temp.ParticlesToExport");
 			if (rs.next())
 				hitParticles = rs.getInt(1);
 			
 			newName = newName.concat(Long.toString(unixTime));
-			
-			odbcStmt = odbcCon.createStatement();
-			
+
 			// Make an entry for this collection in the datasets
 			// table.  Since the particles from this dataset
 			// might have been peaklisted separately, enter zeroes
 			// for those values, and for the missed particles.
-			try {
-			odbcStmt.executeUpdate(
-					"DELETE FROM DataSets\n" +
-					"WHERE Name = '" + newName + "'\n");
-			}
-			catch (SQLException se) {
-				//putting in specific error message here to help the user 
-				//if something goes wrong. the generic message at the end
-				//of this method is not helpful
-				ErrorLogger.writeExceptionToLogAndPrompt(getName(),"Error updating the MS-Analyze database.  Please ensure you have update access to the database.");
-				System.err.println("Error updating the Access database");
-				se.printStackTrace();
-				return null;
+			com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(new File(fileName));
+
+			// Delete all rows from DataSets where newName is present
+			Table dataSetsTable = accessDb.getTable("DataSets");
+			Cursor cursor = CursorBuilder.createCursor(dataSetsTable);
+			for (Row row : cursor) {
+				if (row.get("Name").equals(newName))
+					cursor.deleteCurrentRow();
 			}
 
 			System.out.println(
@@ -3101,11 +3019,13 @@ public abstract class Database {
 			odbcCon.close();
 			stmt.close();
 		} catch (SQLException e) {
-			ErrorLogger.writeExceptionToLogAndPrompt(getName(),"SQL Exception exporting to MSAccess database.");
 			System.err.println("SQL error exporting to " +
 			"Access database:");
 			e.printStackTrace();
 			return null;
+		} catch (ParseException e) {
+			// A parse exception indicates something was stored incorrectly in the database; it's an internal error
+			throw new RuntimeException(e);
 		}
 		return startTime;
 	}
