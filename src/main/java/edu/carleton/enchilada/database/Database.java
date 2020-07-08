@@ -2848,30 +2848,6 @@ public abstract class Database {
                             "	WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) +
                             ".AtomID = InternalAtomOrder.AtomID AND InternalAtomOrder.CollectionID = " + collection.getCollectionID());
 
-            System.out.println(        "UPDATE tempParticlesToExport\n" +
-                                               "SET NumPeaks = \n" +
-                                               "	(SELECT COUNT(AtomID)\n" +
-                                               "		FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,
-                                                                                     collection.getDatatype()) + "\n" +
-                                               "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense,
-                                                                                          collection.getDatatype()) + ".AtomID = tempParticlesToExport.AtomID),\n" +
-                                               "TotalPosIntegral = \n" +
-                                               "	(SELECT SUM (PeakArea)\n" +
-                                               "		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                     collection.getDatatype()) + "\n" +
-                                               "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                          collection.getDatatype()) + ".AtomID = tempParticlesToExport.AtomID\n" +
-                                               "			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                        collection.getDatatype()) + ".PeakLocation >= 0),\n" +
-                                               "TotalNegIntegral =\n" +
-                                               "	(SELECT SUM (PeakArea)\n" +
-                                               "		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                     collection.getDatatype()) + "\n" +
-                                               "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                          collection.getDatatype()) + ".AtomID = tempParticlesToExport.AtomID\n" +
-                                               "			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                        collection.getDatatype()) + ".PeakLocation < 0)\n"
-            );
             stmt.executeUpdate(
                     "UPDATE tempParticlesToExport\n" +
                             "SET NumPeaks = \n" +
@@ -2992,106 +2968,61 @@ public abstract class Database {
                         rs.getInt("TotalNegIntegral")
                 );
             }
-//                odbcStmt.addBatch(
-//                        "INSERT INTO Particles\n" +
-//                                "(DataSet, Filename, [Time], Size, " +
-//                                "LaserPower, " +
-//                                "NumPeaks,TotalPosIntegral, " +
-//                                "TotalNegIntegral)\n" +
-//                                "VALUES ('" + newName + "', '" +
-//                                (new File(rs.getString("Filename"))).getName() +
-//                                "', '" +
-//                                dFormat.format(new Date(
-//                                        rs.getTimestamp("Time").
-//                                                getTime())) +
-//                                "', " +
-//                                rs.getFloat("Size") + ", " +
-//                                rs.getFloat("LaserPower") +
-//                                ", " + rs.getInt("NumPeaks") + ", " +
-//                                rs.getInt("TotalPosIntegral") + ", " +
-//                                rs.getInt("TotalNegIntegral") +
-//                                ")");
-//            }
-//            odbcStmt.executeBatch();
-//            stmt.executeUpdate(
-//                    "DROP TABLE #ParticlesToExport");
-//            stmt.executeUpdate(
-//                    "IF (OBJECT_ID('tempdb..#PeaksToExport') " +
-//                            "IS NOT NULL)\n" +
-//                            "	DROP TABLE #PeaksToExport\n" +
-//                            "CREATE TABLE #PeaksToExport\n" +
-//                            "(OrigFilename TEXT, " +
-//                            "PeakLocation FLOAT, PeakArea INT, " +
-//                            "RelPeakArea " +
-//                            "FLOAT, PeakHeight INT)\n" +
-//                            "\n" +
-//                            "\n" +
-//                            "\n" +
-//                            "INSERT INTO #PeaksToExport\n" +
-//                            "(OrigFilename, PeakLocation, PeakArea, " +
-//                            "RelPeakArea, PeakHeight)\n" +
-//                            "(SELECT OrigFilename, PeakLocation, " +
-//                            "PeakArea, RelPeakArea, PeakHeight\n" +
-//                            "FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-//                                                          collection.getDatatype()) + ", InternalAtomOrder, "
-//                            + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + "\n" +
-//                            "	WHERE (" + getDynamicTableName(DynamicTable.AtomInfoSparse,
-//                                                                collection.getDatatype()) + ".AtomID = InternalAtomOrder.AtomID)\n" +
-//                            "   AND (InternalAtomOrder.CollectionID = " + collection.getCollectionID() + ")" +
-//                            "	AND (" + getDynamicTableName(DynamicTable.AtomInfoSparse,
-//                                                              collection.getDatatype()) + ".AtomID = " +
-//                            getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID)" +
-//                            ")\n");
-//
-//            rs = stmt.executeQuery(
-//                    "SELECT OrigFilename, PeakLocation, " +
-//                            "PeakArea, " +
-//                            "RelPeakArea, PeakHeight\n" +
-//                            "FROM #PeaksToExport");
-//            odbcStmt.executeUpdate(
-//                    "DELETE FROM Peaks \n" +
-//                            "WHERE DataSet = '" + newName + "'");
-//
-//            int counter = 0; //THIS IS A HACK, IT PREVENTS AN OUT OF MEMORY ERROR BELOW.
-//            //Despite its hack-like nature, we think this is a reasonable way to do it.  We tried to do it in
-//            //more elegant ways (such as catching the heap space error, and executing the batch then), but
-//            //that caused more problems.
-//            while (rs.next()) {
-//                odbcStmt.addBatch(
-//                        "INSERT INTO Peaks\n" +
-//                                "(DataSet, Filename, MassToCharge, " +
-//                                "PeakArea, " +
-//                                "RelPeakArea, PeakHeight)" +
-//                                "VALUES\n" +
-//                                "(\n" +
-//                                "	'" + newName + "', '" +
-//                                (new File(rs.getString(1))).getName() + "', " +
-//                                rs.getFloat(2) + ", " + rs.getInt(3) +
-//                                ", " +
-//                                rs.getFloat(4) + ", " + rs.getInt(5) +
-//                                ")");
-//                counter++;
-//                if (counter >= 256) //256 is an arbitrary choice, not too big, but better than executing batch every time.
-//                {
-//                    odbcStmt.executeBatch();
-//                    counter = 0;
-//                }
-//            }
-//            odbcStmt.executeBatch();
-//            stmt.execute("DROP TABLE #PeaksToExport");
-//            odbcCon.close();
-//            stmt.close();
-//        } catch (SQLException e) {
-//            System.err.println("SQL error exporting to " +
-//                                       "Access database:");
-//            e.printStackTrace();
-//            return null;
+
+            stmt.executeUpdate("DROP TABLE tempParticlesToExport");
+            stmt.executeUpdate("DROP TABLE IF EXISTS tempPeaksToExport");
+            stmt.executeUpdate("CREATE TABLE tempPeaksToExport " +
+                            "(OrigFilename TEXT, " +
+                            "PeakLocation FLOAT, PeakArea INT, " +
+                            "RelPeakArea FLOAT, PeakHeight INT)");
+
+            stmt.executeUpdate("INSERT INTO tempPeaksToExport\n" +
+                            "(OrigFilename, PeakLocation, PeakArea, " +
+                            "RelPeakArea, PeakHeight)\n" +
+                            "SELECT OrigFilename, PeakLocation, " +
+                            "PeakArea, RelPeakArea, PeakHeight\n" +
+                            "FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
+                                                          collection.getDatatype()) + ", InternalAtomOrder, "
+                            + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + "\n" +
+                            "	WHERE (" + getDynamicTableName(DynamicTable.AtomInfoSparse,
+                                                                collection.getDatatype()) + ".AtomID = InternalAtomOrder.AtomID)\n" +
+                            "   AND (InternalAtomOrder.CollectionID = " + collection.getCollectionID() + ")" +
+                            "	AND (" + getDynamicTableName(DynamicTable.AtomInfoSparse,
+                                                              collection.getDatatype()) + ".AtomID = " +
+                            getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) + ".AtomID)");
+
+            // Delete all rows from Peaks where newName is present
+            Table peaksTable = accessDb.getTable("Peaks");
+            cursor = CursorBuilder.createCursor(peaksTable);
+            for (Row row : cursor) {
+                if (row.get("Name").equals(newName))
+                    cursor.deleteCurrentRow();
+            }
+
+
+            rs = rsStmt.executeQuery(
+                    "SELECT OrigFilename, PeakLocation, " +
+                            "PeakArea, " +
+                            "RelPeakArea, PeakHeight\n" +
+                            "FROM tempPeaksToExport");
+
+            while (rs.next()) {
+                peaksTable.addRow(
+                        newName,
+                        (new File(rs.getString("OrigFilename"))).getName(),
+                        rs.getFloat("PeakLocation"),
+                        rs.getInt("PeakArea"),
+                        rs.getFloat("RelPeakArea"),
+                        rs.getInt("PeakHeight")
+                );
+            }
+
+            stmt.executeUpdate("DROP TABLE tempPeaksToExport");
+            return startTime;
         } catch (ParseException e) {
             // A parse exception indicates something was stored incorrectly in the database; it's an internal error
             throw new RuntimeException(e);
         }
-//		return startTime;
-        return null;
     }
 
     /**

@@ -1057,6 +1057,14 @@ public class DatabaseTest extends TestCase {
 		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalPosIntegral"));
 		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalNegIntegral"));
 
+
+
+		Table peaksTable = accessDb.getTable("Peaks");
+		cursor = CursorBuilder.createCursor(peaksTable);
+		oneRow = cursor.getNextRow();
+		assertEquals("particle2",oneRow.getString("Filename"));
+		assertEquals(-30.0, oneRow.getDouble("MassToCharge"),.0001);
+
 		accessDb.close();
 
 
