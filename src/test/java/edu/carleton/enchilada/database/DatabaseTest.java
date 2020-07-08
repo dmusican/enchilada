@@ -46,7 +46,7 @@
  */
 package edu.carleton.enchilada.database;
 
-import com.healthmarketscience.jackcess.DatabaseBuilder;
+import com.healthmarketscience.jackcess.*;
 import edu.carleton.enchilada.dataImporters.TSImport;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.ParticleAnalyzeWindow;
@@ -1018,13 +1018,48 @@ public class DatabaseTest extends TestCase {
 		Path accessDataPath = tempDir.resolve("sample-ms-analyze.mdb");
 		Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/sample-ms-analyze.mdb"),
 				accessDataPath, StandardCopyOption.REPLACE_EXISTING);
-		com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(accessDataPath.toFile());
 		accessDataPath.toFile().deleteOnExit();
 
+		com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(accessDataPath.toFile());
+		Table dataSetsTable = accessDb.getTable("DataSets");
+		Cursor cursor = CursorBuilder.createCursor(dataSetsTable);
+		for (Row row : cursor) {
+			System.out.println("Name: " + row.get("Name"));
+		}
+
 		System.out.println(accessDb.getFileFormat());
+		accessDb.close();
 
 		db.openConnection();
-		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2),"MSAnalyzeDB", null);
+		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2), "MSAnalyzeDB",
+														   accessDataPath.toString());
+
+
+		accessDb = DatabaseBuilder.open(accessDataPath.toFile());
+		dataSetsTable = accessDb.getTable("DataSets");
+		cursor = CursorBuilder.createCursor(dataSetsTable);
+		for (Row row : cursor) {
+			System.out.println(row);
+		}
+
+		Table particlesTable = accessDb.getTable("Particles");
+		cursor = CursorBuilder.createCursor(particlesTable);
+
+		Row oneRow = cursor.getNextRow();
+		assertEquals("particle1",oneRow.getString("Filename"));
+		assertEquals(1.0, oneRow.getDouble("LaserPower"),.0001);
+		assertEquals(Integer.valueOf(0), oneRow.getInt("TotalPosIntegral"));
+		assertEquals(Integer.valueOf(0), oneRow.getInt("TotalNegIntegral"));
+
+		oneRow = cursor.getNextRow();
+		assertEquals("particle2",oneRow.getString("Filename"));
+		assertEquals(2.0, oneRow.getDouble("LaserPower"),.0001);
+		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalPosIntegral"));
+		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalNegIntegral"));
+
+		accessDb.close();
+
+
 		db.closeConnection();
 		assertEquals("Tue Sep 02 17:30:38 CDT 2003", date.toString());
 	}
