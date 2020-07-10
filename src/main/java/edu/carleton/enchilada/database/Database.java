@@ -3550,7 +3550,7 @@ public abstract class Database {
             }
             String q = "SELECT " + getDynamicTableName(DynamicTable.AtomInfoDense,
                                                        collection.getDatatype()) + ".AtomID, OrigFilename, ScatDelay," +
-                    " LaserPower, [Time], Size FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,
+                    " LaserPower, Time, Size FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,
                                                                             collection.getDatatype()) + ", InternalAtomOrder WHERE" +
                     " InternalAtomOrder.CollectionID = " + collection.getCollectionID() +
                     " AND " + getDynamicTableName(DynamicTable.AtomInfoDense,

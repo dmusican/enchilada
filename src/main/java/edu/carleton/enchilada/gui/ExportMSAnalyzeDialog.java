@@ -88,7 +88,7 @@ public class ExportMSAnalyzeDialog extends JDialog implements ActionListener
 		accessFileField = new JTextField(25);
 		accessDotDotDot = new JButton("...");
 		accessDotDotDot.addActionListener(this);
-		
+
 		JPanel buttonPanel = new JPanel();
 		okButton = new JButton("OK");
 		okButton.addActionListener(this);

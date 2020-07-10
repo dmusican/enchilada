@@ -42,6 +42,9 @@ package edu.carleton.enchilada.dataExporters;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.Statement;
 
@@ -49,6 +52,7 @@ import javax.swing.JFrame;
 
 import edu.carleton.enchilada.collection.Collection;
 
+import edu.carleton.enchilada.gui.ParticleAnalyzeWindow;
 import junit.framework.TestCase;
 import edu.carleton.enchilada.database.CreateTestDatabase;
 import edu.carleton.enchilada.database.Database;
@@ -83,21 +87,26 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 		JFrame mf = new JFrame();
 		final ProgressBarWrapper progressBar = 
 			new ProgressBarWrapper(mf, "Exporting to MS-Analyze", 100);
-		//progressBar.constructThis();
-		//final JFrame frameRef = frame;
-		//final ATOFMSBatchTableModel aRef = a;
 		exporter = new MSAnalyzeDataSetExporter(mf, db, progressBar);
 	}
 
-	public void testStub() {
-		// Just here because otherwise test suite fails with no tests active
-	}
-	public void ignoreTestNormalExport() {
+	public void testNormalExport() {
 		try {
+			// Get DB file set up
+			Path tempDir = Files.createTempDirectory("access-test");
+			tempDir.toFile().deleteOnExit();
+
+			Path accessDataPath = tempDir.resolve("sample-ms-analyze.mdb");
+			Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/sample-ms-analyze.mdb"),
+					   accessDataPath, StandardCopyOption.REPLACE_EXISTING);
+			accessDataPath.toFile().deleteOnExit();
+			System.out.println(accessDataPath);
+
+
 			boolean result;
 			Collection coll = db.getCollection(2);
-			parFile = File.createTempFile("test", ".par");
-			result = exporter.exportToPar(coll, parFile.getPath(), null);
+			parFile = tempDir.resolve("access-test.par").toFile();
+			result = exporter.exportToPar(coll, parFile.getPath(), accessDataPath.toString());
 			assertTrue("Failure during exportToPar in a normal export", result);
 			
 			// check the par file
@@ -112,13 +121,15 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 			
 			// check the set file.  set file logic is simpler so just check the first line
 			setFile = new File(parFile.getPath().replaceAll("\\.par$", ".set"));
+			System.out.println(setFile.getAbsolutePath());
 			assertTrue("Export did not write set file", setFile.exists());
 			reader = new BufferedReader(new FileReader(setFile));
-			assertEquals("1,..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\, 1, 65535, 1.000000, 09/02/2003 17:30:38", reader.readLine());
-			parFile.delete();
-		}
-		catch (Exception e)
-		{
+
+			// The actual file name contains the full path of the filename. Current code trims off the first three
+			// characters of the filename when exporting because it trims off the C:\, since MS-Analyze wants
+			// a relative path. That C:\ isn't present in the test filename, but it is in the real one.
+			assertEquals("1,..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\ticle1, 1, 65535, 1.000000, 09/02/2003 17:30:38", reader.readLine());
+		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Caught Exception in testNormalExport");
 		}
@@ -128,9 +139,19 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 	 * This is a test for bug 1951538.  If the export routine blew up and left
 	 * some temp tables, it wouldn't work a subsequent time.
 	 */
-	public void ignoreTestFailureBeforeSuccess()
+	public void testFailureBeforeSuccess()
 	{
 		try {
+			// Get DB file set up
+			Path tempDir = Files.createTempDirectory("access-test");
+			tempDir.toFile().deleteOnExit();
+
+			Path accessDataPath = tempDir.resolve("sample-ms-analyze.mdb");
+			Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/sample-ms-analyze.mdb"),
+					   accessDataPath, StandardCopyOption.REPLACE_EXISTING);
+			accessDataPath.toFile().deleteOnExit();
+			System.out.println(accessDataPath);
+
 			boolean result;
 			
 			Connection con = db.getCon();
@@ -139,14 +160,14 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 			// leave a temp table lying around
 			// this is what happens when the routine blows up trying to write
 			// to the access db
-			stmt.executeUpdate("CREATE TABLE #ParticlesToExport (AtomID INT " +
+			stmt.executeUpdate("CREATE TABLE temp.ParticlesToExport (AtomID INT " +
 						"PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
 						"LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
 						"TotalNegIntegral INT)\n");
 
 			Collection coll = db.getCollection(2);
 			parFile = File.createTempFile("test", ".par");
-			result = exporter.exportToPar(coll, parFile.getPath(), null);
+			result = exporter.exportToPar(coll, parFile.getPath(), accessDataPath.toString());
 			assertTrue("Failure during exportToPar in a normal export", result);
 
 			// make sure it wrote the par file and the set file
@@ -164,7 +185,9 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 	public void tearDown()
 	{
 		db.closeConnection();
-		if (parFile != null) parFile.delete();
-		if (setFile != null) setFile.delete();
+		if (parFile != null)
+			assertTrue(parFile.delete());
+		if (setFile != null)
+			assertTrue(setFile.delete());
 	}
 }
