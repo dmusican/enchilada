@@ -111,24 +111,27 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 			
 			// check the par file
 			assertTrue("Export did not write par file", parFile.exists());
-			BufferedReader reader = new BufferedReader(new FileReader(parFile));
-			assertEquals("First line of .par file is wrong", "ATOFMS data set parameters", reader.readLine());
-			String fileName = (new File(parFile.getName().replaceAll("\\.par$", ""))).getName();
-			assertEquals("Second line of .par file did not match name of par file", fileName, reader.readLine());
-			assertEquals("Third line of .par file had the wrong date", "09/02/2003 17:30:38", reader.readLine());
-			assertEquals("Fourth line of .par file didn't match collection comment", coll.getComment(), reader.readLine());
-			reader.close();
-			
+			try (var reader = new BufferedReader(new FileReader(parFile))) {
+				assertEquals("First line of .par file is wrong", "ATOFMS data set parameters", reader.readLine());
+				String fileName = (new File(parFile.getName().replaceAll("\\.par$", ""))).getName();
+				assertEquals("Second line of .par file did not match name of par file", fileName, reader.readLine());
+				assertEquals("Third line of .par file had the wrong date", "09/02/2003 17:30:38", reader.readLine());
+				assertEquals("Fourth line of .par file didn't match collection comment", coll.getComment(), reader.readLine());
+			}
+
 			// check the set file.  set file logic is simpler so just check the first line
 			setFile = new File(parFile.getPath().replaceAll("\\.par$", ".set"));
 			System.out.println(setFile.getAbsolutePath());
 			assertTrue("Export did not write set file", setFile.exists());
-			reader = new BufferedReader(new FileReader(setFile));
+			try (var reader = new BufferedReader(new FileReader(setFile))) {
 
-			// The actual file name contains the full path of the filename. Current code trims off the first three
-			// characters of the filename when exporting because it trims off the C:\, since MS-Analyze wants
-			// a relative path. That C:\ isn't present in the test filename, but it is in the real one.
-			assertEquals("1,..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\ticle1, 1, 65535, 1.000000, 09/02/2003 17:30:38", reader.readLine());
+				// The actual file name contains the full path of the filename. Current code trims off the first three
+				// characters of the filename when exporting because it trims off the C:\, since MS-Analyze wants
+				// a relative path. That C:\ isn't present in the test filename, but it is in the real one.
+				assertEquals("1,..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\ticle1, " +
+						"1, 65535, 1.000000, 09/02/2003 17:30:38",
+						reader.readLine());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Caught Exception in testNormalExport");
@@ -187,7 +190,8 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 		db.closeConnection();
 		if (parFile != null)
 			assertTrue(parFile.delete());
-		if (setFile != null)
+		if (setFile != null) {
 			assertTrue(setFile.delete());
+		}
 	}
 }
