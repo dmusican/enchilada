@@ -2825,6 +2825,8 @@ public abstract class Database {
                             + collection.getDatatype());
         }
 
+        Date startTime = null;
+
         try (
                 Statement stmt = con.createStatement();
                 Statement rsStmt = con.createStatement();
@@ -2834,17 +2836,17 @@ public abstract class Database {
             // exported to the particles table in MS-Analyze
             stmt.executeUpdate("DROP TABLE IF EXISTS temp.ParticlesToExport");
             stmt.executeUpdate("CREATE TABLE temp.ParticlesToExport (AtomID INT " +
-                                       "PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
-                                       "LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
-                                       "TotalNegIntegral INT)");
+                    "PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
+                    "LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
+                    "TotalNegIntegral INT)");
 
             stmt.executeUpdate(
                     "INSERT INTO temp.ParticlesToExport \n" +
                             "(AtomID,Filename, Time, Size, LaserPower)\n" +
                             "	SELECT " + getDynamicTableName(DynamicTable.AtomInfoDense,
-                                                                collection.getDatatype()) + ".AtomID, OrigFilename, [Time], [Size], LaserPower\n" +
+                            collection.getDatatype()) + ".AtomID, OrigFilename, [Time], [Size], LaserPower\n" +
                             "	FROM " + getDynamicTableName(DynamicTable.AtomInfoDense,
-                                                              collection.getDatatype()) + ", InternalAtomOrder" +
+                            collection.getDatatype()) + ", InternalAtomOrder" +
                             "	WHERE " + getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype()) +
                             ".AtomID = InternalAtomOrder.AtomID AND InternalAtomOrder.CollectionID = " + collection.getCollectionID());
 
@@ -2853,25 +2855,25 @@ public abstract class Database {
                             "SET NumPeaks = \n" +
                             "	(SELECT COUNT(AtomID)\n" +
                             "		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                  collection.getDatatype()) + "\n" +
+                            collection.getDatatype()) + "\n" +
                             "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                       collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID),\n" +
+                            collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID),\n" +
                             "TotalPosIntegral = \n" +
                             "	(SELECT SUM (PeakArea)\n" +
                             "		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                  collection.getDatatype()) + "\n" +
+                            collection.getDatatype()) + "\n" +
                             "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                       collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID\n" +
+                            collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID\n" +
                             "			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                     collection.getDatatype()) + ".PeakLocation >= 0),\n" +
+                            collection.getDatatype()) + ".PeakLocation >= 0),\n" +
                             "TotalNegIntegral =\n" +
                             "	(SELECT SUM (PeakArea)\n" +
                             "		FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                  collection.getDatatype()) + "\n" +
+                            collection.getDatatype()) + "\n" +
                             "			WHERE " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                       collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID\n" +
+                            collection.getDatatype()) + ".AtomID = temp.ParticlesToExport.AtomID\n" +
                             "			AND " + getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                     collection.getDatatype()) + ".PeakLocation < 0)\n"
+                            collection.getDatatype()) + ".PeakLocation < 0)\n"
             );
 
             // Find the start time of our mock dataset, use this
@@ -2890,7 +2892,6 @@ public abstract class Database {
             // TODO: Use rGetAllDescended in order to get the real first atom
 
             ResultSet rs = rsStmt.executeQuery("SELECT MIN(Time) FROM temp.ParticlesToExport");
-            Date startTime = null;
             long unixTime;
 
             if (rs.next()) {
@@ -2968,8 +2969,19 @@ public abstract class Database {
                         rs.getInt("TotalNegIntegral")
                 );
             }
+        } catch (ParseException e) {
+            // A parse exception indicates something was stored incorrectly in the database; it's an internal error
+            throw new RuntimeException(e);
+        }
 
-            stmt.executeUpdate("DROP TABLE temp.ParticlesToExport");
+        // Ensures that temp.ParticlesToExport gets dropped, without locking errors
+        closeConnection();
+        openConnection();
+        try (
+                Statement stmt = con.createStatement();
+                Statement rsStmt = con.createStatement();
+                com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(new File(fileName));
+        ) {
             stmt.executeUpdate("DROP TABLE IF EXISTS temp.PeaksToExport");
             stmt.executeUpdate("CREATE TABLE temp.PeaksToExport " +
                             "(OrigFilename TEXT, " +
@@ -2993,14 +3005,14 @@ public abstract class Database {
 
             // Delete all rows from Peaks where newName is present
             Table peaksTable = accessDb.getTable("Peaks");
-            cursor = CursorBuilder.createCursor(peaksTable);
+            Cursor cursor = CursorBuilder.createCursor(peaksTable);
             for (Row row : cursor) {
                 if (row.get("Name").equals(newName))
                     cursor.deleteCurrentRow();
             }
 
 
-            rs = rsStmt.executeQuery(
+            ResultSet rs = rsStmt.executeQuery(
                     "SELECT OrigFilename, PeakLocation, " +
                             "PeakArea, " +
                             "RelPeakArea, PeakHeight\n" +
@@ -3019,9 +3031,6 @@ public abstract class Database {
 
             stmt.executeUpdate("DROP TABLE temp.PeaksToExport");
             return startTime;
-        } catch (ParseException e) {
-            // A parse exception indicates something was stored incorrectly in the database; it's an internal error
-            throw new RuntimeException(e);
         }
     }
 

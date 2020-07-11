@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.channels.NonWritableChannelException;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -134,6 +135,10 @@ public class MSAnalyzeDataSetExporter {
 			ErrorLogger.writeExceptionToLog("Access","Error exporting to Access database.");
 			e.printStackTrace();
 			throw new DisplayException("Error accessing Enchilada database.");
+		} catch (NonWritableChannelException e) {
+			ErrorLogger.writeExceptionToLog("Access", "Error writing to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error writing to Access database. Perhaps it has read-only permissions?");
 		}
 		if (date == null)
 		{
