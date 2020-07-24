@@ -85,6 +85,12 @@
       <version>3.2.0</version>
       <type>maven-plugin</type>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.healthmarketscience.jackcess/jackcess -->
+    <dependency>
+      <groupId>com.healthmarketscience.jackcess</groupId>
+      <artifactId>jackcess</artifactId>
+      <version>3.0.1</version>
+    </dependency>
   </dependencies>
 
   <build>

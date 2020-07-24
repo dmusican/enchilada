@@ -44,9 +44,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.channels.NonWritableChannelException;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import edu.carleton.enchilada.collection.Collection;
 
@@ -101,12 +104,16 @@ public class MSAnalyzeDataSetExporter {
 			throw new DisplayException("Please choose a ATOFMS collection to export to MSAnalyze.");
 		}
 
+		if (msAnalyzeFileName == null) {
+			throw new DisplayException("Please specify the Access database.");
+		}
+
 		parFileName = parFileName.replaceAll("'", "");
 		// parFileName is an absolute pathname to the par file.
 		// the set file goes in the same directory
 		File parFile = new File(parFileName);
 		System.out.println(parFile.getAbsolutePath());
-		
+
 		// String name is the basename of the par file---the dataset name.
 		// I've done trivial testing---spaces and periods seem to be ok
 		// in this name.  I'm sure that single quotes aren't... so I remove
@@ -116,8 +123,23 @@ public class MSAnalyzeDataSetExporter {
 
 		progressBar.setText("Updating MS-Analyze database");
 		progressBar.setIndeterminate(true);
-		// the thought: set "name" to the basename of the file they choose.
-		java.util.Date date = db.exportToMSAnalyzeDatabase(coll, name, "MS-Analyze", msAnalyzeFileName, progressBar);
+
+		Date date = null;
+		try {
+			date = db.exportToMSAnalyzeDatabase(coll, name, msAnalyzeFileName);
+		} catch (IOException e) {
+			ErrorLogger.writeExceptionToLog("Access","Error exporting to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error exporting to Access database.");
+		} catch (SQLException e) {
+			ErrorLogger.writeExceptionToLog("Access","Error exporting to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error accessing Enchilada database.");
+		} catch (NonWritableChannelException e) {
+			ErrorLogger.writeExceptionToLog("Access", "Error writing to Access database.");
+			e.printStackTrace();
+			throw new DisplayException("Error writing to Access database. Perhaps it has read-only permissions?");
+		}
 		if (date == null)
 		{
 			return false;
@@ -126,11 +148,11 @@ public class MSAnalyzeDataSetExporter {
 		try {
 			// make the par file first, then the set file
 			writeParFile(parFile, name, date, coll.getComment());
-			
+
 			setFile = new File(parFileName.replaceAll("\\.par$", ".set"));
 			int particleCount = 1;
-			DateFormat dFormat = 
-				new SimpleDateFormat("MM/dd/yyyy kk:mm:ss");
+			DateFormat dFormat =
+					new SimpleDateFormat("MM/dd/yyyy kk:mm:ss");
 			PrintWriter out = new PrintWriter(new FileOutputStream(setFile, false));
 
 			ATOFMSAtomFromDB particle = null;
@@ -139,54 +161,46 @@ public class MSAnalyzeDataSetExporter {
 			// next element of the interator as it links to 
 			// ResultSet.next()
 			CollectionCursor curs = db.getAtomInfoOnlyCursor(coll);
-			
+
 			NumberFormat nFormat = NumberFormat.getNumberInstance();
 			nFormat.setMaximumFractionDigits(6);
 			nFormat.setMinimumFractionDigits(6);
-			
+
 			int totalParticles = db.getCollectionSize(coll.getCollectionID());
 			progressBar.setIndeterminate(false);
 			progressBar.setMaximum(totalParticles);
 			while (curs.next())
 			{
 				particle = curs.getCurrent().getATOFMSParticleInfo();
+				// the number in the string (65535) is somewhat meaningless for our purposes, this is the busy delay
+				// according to the MS-Analyze manual.  So I just put in a dummy value.  I looked at a dataset and it
+				// had 65535 for the busy time for every single particle anyway, which leads me to believe it's actually
+				// the max value of a bin in the data (2^16)
+				// TODO: Test to make sure size matches the scatter delay MSA produces for the same dataset
+				out.println(particleCount + "," +
+									// better would be to copy all the .amz files around
+									// and use relative pathnames in a non-abusive way.
 
-			// the number in the string (65535) is 
-			// somewhat meaningless for our purposes, this is
-			// the busy 
-			// delay according to the MS-Analyze manual.  So I 
-			// just put in a dummy value.  I looked at a dataset
-			// and it had 65535 for the busy time for every single
-			// particle anyway, which leads me to believe it's 
-			// actually the max value of a bin in the data (2^16)
-			// TODO: Test to make sure size matches the
-			// scatter delay MSA produces for the same dataset
-				out.println(particleCount + "," + 
-						// better would be to copy all the .amz files around
-						// and use relative pathnames in a non-abusive way.
-//						particle.getFilename().substring(0,1) + 
-//						File.separator +
-						
-						//XXX: hack.  MSA only understands relative pathnames:
-						"..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\" +
-						// .substring(3) : the part of the path after "c:\".
-						// How to make this platform-independent?
-						// well, MS-Analyze doesn't work on linux, so there!
-						particle.getFilename().substring(3) + 
+									//XXX: hack.  MSA only understands relative pathnames:
+									"..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\" +
+									// .substring(3) : the part of the path after "c:\".
+									// How to make this platform-independent?
+									// well, MS-Analyze doesn't work on linux, so there!
+									particle.getFilename().substring(3) +
 
-						// if MS-Analyze is ever smart enough to recognize
-						// absolute pathnames, get rid of the stuff above
-						// and use this line.
+									// if MS-Analyze is ever smart enough to recognize
+									// absolute pathnames, get rid of the stuff above
+									// and use this line.
 //						particle.getFilename() + 
-						", " + particle.getScatDelay() + 
-						", 65535, " +
-						nFormat.format(particle.getLaserPower()) + 
-						", " + 
-						dFormat.format(particle.getTimeStamp()));
+									", " + particle.getScatDelay() +
+									", 65535, " +
+									nFormat.format(particle.getLaserPower()) +
+									", " +
+									dFormat.format(particle.getTimeStamp()));
 				particleCount++;
 				if(particleCount % 50 == 0 && particleCount >= 50) {
-					String barText = "Exporting Item # " + particleCount + " out of " 
-						+ totalParticles + " to set file";
+					String barText = "Exporting Item # " + particleCount + " out of "
+							+ totalParticles + " to set file";
 					progressBar.increment(barText);
 				}
 			}
@@ -211,7 +225,7 @@ public class MSAnalyzeDataSetExporter {
 		throws java.io.FileNotFoundException {
 		progressBar.setText("Writing .par file");
 		progressBar.setIndeterminate(true);
-
+		System.out.println("Writing par file: " + parFile.getAbsolutePath());
 		DateFormat dFormat = 
 			new SimpleDateFormat("MM/dd/yyyy kk:mm:ss");
 		PrintWriter out = new PrintWriter(new FileOutputStream(parFile, false));

@@ -46,15 +46,19 @@
  */
 package edu.carleton.enchilada.database;
 
+import com.healthmarketscience.jackcess.*;
 import edu.carleton.enchilada.dataImporters.TSImport;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
-import edu.carleton.enchilada.gui.LabelingIon;
+import edu.carleton.enchilada.gui.ParticleAnalyzeWindow;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -1007,15 +1011,63 @@ public class DatabaseTest extends TestCase {
 	}
 	
 
-	public void ignoreTestExportToMSAnalyzeDatabase() {
+	public void testExportToMSAnalyzeDatabase() throws IOException, SQLException {
+		Path tempDir = Files.createTempDirectory("access-test");
+		tempDir.toFile().deleteOnExit();
+
+		Path accessDataPath = tempDir.resolve("sample-ms-analyze.mdb");
+		Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/sample-ms-analyze.mdb"),
+				accessDataPath, StandardCopyOption.REPLACE_EXISTING);
+		accessDataPath.toFile().deleteOnExit();
+
+		com.healthmarketscience.jackcess.Database accessDb = DatabaseBuilder.open(accessDataPath.toFile());
+		Table dataSetsTable = accessDb.getTable("DataSets");
+		Cursor cursor = CursorBuilder.createCursor(dataSetsTable);
+		for (Row row : cursor) {
+			System.out.println("Name: " + row.get("Name"));
+		}
+
+		System.out.println(accessDb.getFileFormat());
+		accessDb.close();
+
 		db.openConnection();
-		final ProgressBarWrapper progressBar = 
-			new ProgressBarWrapper(null, "Exporting to MS-Analyze",100);
-		progressBar.constructThis();
-		progressBar.setIndeterminate(true);
-		progressBar.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		progressBar.setVisible(false);
-		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2),"MSAnalyzeDB","MS-Analyze", null, progressBar);
+		java.util.Date date = db.exportToMSAnalyzeDatabase(db.getCollection(2), "MSAnalyzeDB",
+														   accessDataPath.toString());
+
+
+		accessDb = DatabaseBuilder.open(accessDataPath.toFile());
+		dataSetsTable = accessDb.getTable("DataSets");
+		cursor = CursorBuilder.createCursor(dataSetsTable);
+		for (Row row : cursor) {
+			System.out.println(row);
+		}
+
+		Table particlesTable = accessDb.getTable("Particles");
+		cursor = CursorBuilder.createCursor(particlesTable);
+
+		Row oneRow = cursor.getNextRow();
+		assertEquals("particle1",oneRow.getString("Filename"));
+		assertEquals(1.0, oneRow.getDouble("LaserPower"),.0001);
+		assertEquals(Integer.valueOf(0), oneRow.getInt("TotalPosIntegral"));
+		assertEquals(Integer.valueOf(0), oneRow.getInt("TotalNegIntegral"));
+
+		oneRow = cursor.getNextRow();
+		assertEquals("particle2",oneRow.getString("Filename"));
+		assertEquals(2.0, oneRow.getDouble("LaserPower"),.0001);
+		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalPosIntegral"));
+		assertEquals(Integer.valueOf(15), oneRow.getInt("TotalNegIntegral"));
+
+
+
+		Table peaksTable = accessDb.getTable("Peaks");
+		cursor = CursorBuilder.createCursor(peaksTable);
+		oneRow = cursor.getNextRow();
+		assertEquals("particle2",oneRow.getString("Filename"));
+		assertEquals(-30.0, oneRow.getDouble("MassToCharge"),.0001);
+
+		accessDb.close();
+
+
 		db.closeConnection();
 		assertEquals("Tue Sep 02 17:30:38 CDT 2003", date.toString());
 	}

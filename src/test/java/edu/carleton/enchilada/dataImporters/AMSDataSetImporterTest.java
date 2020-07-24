@@ -164,7 +164,7 @@ public class AMSDataSetImporterTest extends TestCase {
 			ex.printStackTrace();
 			fail("Error in importing test AMS data");
 		}
-	}
+ 	}
 
 	protected void tearDown() throws Exception {
 		db.closeConnection();

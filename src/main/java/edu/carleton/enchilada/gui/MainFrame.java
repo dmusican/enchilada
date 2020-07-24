@@ -1199,7 +1199,10 @@ public class MainFrame extends JFrame implements ActionListener
 		HierarchyCSVexportItem = new JMenuItem("to CSV File as Hierarchy of Average Particles. . .");
 		HierarchyCSVexportItem.addActionListener(this);
 		exportCollectionMenu.setMnemonic(KeyEvent.VK_E);
-		exportCollectionMenu.add(MSAexportItem);
+		// Exporting to MS-Analyze only makes sense under Windows, since paths won't otherwise work
+		if (System.getProperty("os.name").toLowerCase().contains("win")) {
+			exportCollectionMenu.add(MSAexportItem);
+		}
 		exportCollectionMenu.add(CSVexportItem);
 		exportCollectionMenu.add(HierarchyCSVexportItem);
 		
@@ -1400,7 +1403,10 @@ public class MainFrame extends JFrame implements ActionListener
 		buttonPanel.add(importFlatButton);
 //		buttonPanel.add(importEnchiladaDataButton);
 		buttonPanel.add(importAMSDataButton);
-		buttonPanel.add(exportParsButton);
+		// Exporting to MS-Analyze only makes sense under Windows, since paths won't otherwise work
+		if (System.getProperty("os.name").toLowerCase().contains("win")) {
+			buttonPanel.add(exportParsButton);
+		}
 		add(buttonPanel);
 	}
 	

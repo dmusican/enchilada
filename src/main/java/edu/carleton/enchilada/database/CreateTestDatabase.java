@@ -73,11 +73,11 @@ public class CreateTestDatabase {
 			String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '2003-09-02 17:30:38', ?, ?, ?, ?)";
 			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
 			for (int i=1; i < 12; i++) {
-				pstmt.setInt(1, i);
-				pstmt.setInt(2, i);
-				pstmt.setDouble(3, i/100.);
-				pstmt.setInt(4, i);
-				pstmt.setString(5, "particle"+i);
+				pstmt.setInt(1, i);                         // atom id
+				pstmt.setInt(2, i);                         // laserpower
+				pstmt.setDouble(3, i/100.);              // size
+				pstmt.setInt(4, i);                         // scatdelay
+				pstmt.setString(5, "particle"+i);        // origfilename
 				pstmt.addBatch();
 			}
 			pstmt.executeBatch();

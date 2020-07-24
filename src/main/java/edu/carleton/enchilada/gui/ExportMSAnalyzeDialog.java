@@ -53,6 +53,7 @@ import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.externalswing.SwingWorker;
 
+import java.awt.*;
 import java.awt.event.*;
 
 /**
@@ -83,11 +84,11 @@ public class ExportMSAnalyzeDialog extends JDialog implements ActionListener
 		parDotDotDot = new JButton("...");
 		parDotDotDot.addActionListener(this);
 		
-		JLabel accessFileLabel = new JLabel("MS Analyze DB File (Optional): ");
+		JLabel accessFileLabel = new JLabel("MS Analyze DB File: ");
 		accessFileField = new JTextField(25);
 		accessDotDotDot = new JButton("...");
 		accessDotDotDot.addActionListener(this);
-		
+
 		JPanel buttonPanel = new JPanel();
 		okButton = new JButton("OK");
 		okButton.addActionListener(this);
@@ -97,45 +98,73 @@ public class ExportMSAnalyzeDialog extends JDialog implements ActionListener
 		buttonPanel.add(cancelButton);
 		
 		JPanel mainPanel = new JPanel();
-		SpringLayout layout = new SpringLayout();
-	    mainPanel.setLayout(layout);	
-		
-	    mainPanel.add(parFileLabel);
-	    mainPanel.add(parFileField);
-	    mainPanel.add(parDotDotDot);
-	    mainPanel.add(accessFileLabel);
-	    mainPanel.add(accessFileField);
-	    mainPanel.add(accessDotDotDot);
-	    mainPanel.add(buttonPanel);
-	    
-		layout.putConstraint(SpringLayout.WEST, parFileLabel,
-                10, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, parFileLabel,
-                15, SpringLayout.NORTH, mainPanel);
-		layout.putConstraint(SpringLayout.WEST, parFileField,
-                170, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, parFileField,
-                10, SpringLayout.NORTH, mainPanel);
-		layout.putConstraint(SpringLayout.WEST, parDotDotDot,
-                375, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, parDotDotDot,
-                10, SpringLayout.NORTH, mainPanel);
-		layout.putConstraint(SpringLayout.WEST, accessFileLabel,
-                10, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, accessFileLabel,
-                15, SpringLayout.SOUTH, parFileField);
-		layout.putConstraint(SpringLayout.WEST, accessFileField,
-                170, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, accessFileField,
-                10, SpringLayout.SOUTH, parFileField);
-		layout.putConstraint(SpringLayout.WEST, accessDotDotDot,
-				375, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, accessDotDotDot,
-                10, SpringLayout.SOUTH, parFileField);
-		layout.putConstraint(SpringLayout.WEST, buttonPanel,
-                160, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, buttonPanel,
-                10, SpringLayout.SOUTH, accessFileLabel);
+		LayoutManager layout = new GridBagLayout();
+	    mainPanel.setLayout(layout);
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+	    mainPanel.add(parFileLabel, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+	    mainPanel.add(parFileField, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 2;
+		gbc.gridy = 0;
+	    mainPanel.add(parDotDotDot, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		mainPanel.add(accessFileLabel, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 1;
+		gbc.gridy = 1;
+	    mainPanel.add(accessFileField, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 2;
+		gbc.gridy = 1;
+	    mainPanel.add(accessDotDotDot, gbc);
+
+		gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 2;
+		mainPanel.add(buttonPanel, gbc);
+
+
+//		layout.putConstraint(SpringLayout.WEST, parFileLabel,
+//                10, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, parFileLabel,
+//                15, SpringLayout.NORTH, mainPanel);
+//		layout.putConstraint(SpringLayout.WEST, parFileField,
+//                170, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, parFileField,
+//                10, SpringLayout.NORTH, mainPanel);
+//		layout.putConstraint(SpringLayout.WEST, parDotDotDot,
+//                375, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, parDotDotDot,
+//                10, SpringLayout.NORTH, mainPanel);
+//		layout.putConstraint(SpringLayout.WEST, accessFileLabel,
+//                10, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, accessFileLabel,
+//                15, SpringLayout.SOUTH, parFileField);
+//		layout.putConstraint(SpringLayout.WEST, accessFileField,
+//                170, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, accessFileField,
+//                10, SpringLayout.SOUTH, parFileField);
+//		layout.putConstraint(SpringLayout.WEST, accessDotDotDot,
+//				375, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, accessDotDotDot,
+//                10, SpringLayout.SOUTH, parFileField);
+//		layout.putConstraint(SpringLayout.WEST, buttonPanel,
+//                160, SpringLayout.WEST, mainPanel);
+//		layout.putConstraint(SpringLayout.NORTH, buttonPanel,
+//                10, SpringLayout.SOUTH, accessFileLabel);
 		
 		add(mainPanel);
 		

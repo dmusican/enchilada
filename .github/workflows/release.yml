@@ -24,6 +24,7 @@ jobs:
           prerelease: false
           body: |
             Removed checkbox in aggregation window for treating data as continuous, as it didn't do anything
+            Fixes [Fix export to MS-Analyze](https://github.com/dmusican/enchilada/issues/2)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
