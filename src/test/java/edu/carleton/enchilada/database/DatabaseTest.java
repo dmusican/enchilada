@@ -63,6 +63,8 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.Date;
 import java.util.regex.MatchResult;
@@ -1069,7 +1071,9 @@ public class DatabaseTest extends TestCase {
 
 
 		db.closeConnection();
-		assertEquals("Tue Sep 02 17:30:38 CDT 2003", date.toString());
+		LocalDateTime refTime = LocalDateTime.of(2003, 9, 2, 17, 30, 38);
+		LocalDateTime returnedTime = date.toInstant().atZone((ZoneId.systemDefault())).toLocalDateTime();
+		assertEquals(refTime, returnedTime);
 	}
 	
 	
