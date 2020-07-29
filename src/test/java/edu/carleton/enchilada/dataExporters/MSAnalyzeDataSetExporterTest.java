@@ -132,6 +132,9 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 						"1, 65535, 1.000000, 09/02/2003 17:30:38",
 						reader.readLine());
 			}
+
+			// Try a second time to make sure deleting the first one (in db) works
+			result = exporter.exportToPar(coll, parFile.getPath(), accessDataPath.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Caught Exception in testNormalExport");
