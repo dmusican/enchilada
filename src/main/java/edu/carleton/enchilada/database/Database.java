@@ -3007,7 +3007,7 @@ public abstract class Database {
             Table peaksTable = accessDb.getTable("Peaks");
             Cursor cursor = CursorBuilder.createCursor(peaksTable);
             for (Row row : cursor) {
-                if (row.get("Name").equals(newName))
+                if (row.get("DataSet").equals(newName))
                     cursor.deleteCurrentRow();
             }
 
