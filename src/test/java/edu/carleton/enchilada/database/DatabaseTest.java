@@ -2503,5 +2503,6 @@ public class DatabaseTest extends TestCase {
 		ArrayList<Collection> conditionalSeqs = new ArrayList<>();
 		ArrayList<String> conditionStrs = new ArrayList<>();
 		db.getConditionalTSCollectionData(testCollection, conditionalSeqs, conditionStrs);
+		assertTrue(testCsvFile.delete());
 	}
 }

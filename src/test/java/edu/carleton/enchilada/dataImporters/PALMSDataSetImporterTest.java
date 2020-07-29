@@ -43,6 +43,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -107,7 +108,7 @@ public class PALMSDataSetImporterTest extends TestCase {
 		table = new PALMSTableModel();
 		dataLoaded = false;
 	}
-	
+
 	/**
 	 * Create a dataset with the given parameters (as defined in testRow/PALMS/GenData),
 	 * 	save it to disk, and add it to the import table
@@ -117,7 +118,6 @@ public class PALMSDataSetImporterTest extends TestCase {
 	 * @param peaks	a list containing the positive m/z values at which PALMS items should have peaks
 	 * @param tstart	the time at which to start the particle timeseries
 	 * @param tdelta	the fixed timestep for the particle timeseries
-	 * @param fnames	names of the files to generate: {datasetname, timeseriesname, mzname}
 	 */
 	private void addData(int items, int mznum, int mzscale, int[] peaks, long tstart, long tdelta) {
 		String[] names = new String[]{"Test_" + curRow};
@@ -127,11 +127,12 @@ public class PALMSDataSetImporterTest extends TestCase {
 		table.setValueAt(files[0], curRow, 1);	
 
 		table.tableChanged(new TableModelEvent(table, curRow));
-		
-		for (String s : files)
-			deleteFiles.add(s);
+
+		deleteFiles.addAll(Arrays.asList(files));
+		deleteFiles.add(GenData.getLocation().toString());
 		
 		++curRow;
+
 	}
 	
 	/**
@@ -164,8 +165,9 @@ public class PALMSDataSetImporterTest extends TestCase {
 		Connection con = tempDB.getCon();
 		Database.dropDatabase("TestDB");
 
-		for (String s : deleteFiles)
-			(new File(s)).delete();
+		for (String s : deleteFiles) {
+			assertTrue((new File(s)).delete());
+		}
 	
 		if (dataLoaded) {	
 			mf.dispose();
@@ -230,7 +232,7 @@ public class PALMSDataSetImporterTest extends TestCase {
 		
 		//make sure the correct number of items were imported, and that sparse data has the correct length
 		testDataLength(items, items * peaks.length);
-		
+
 		//perform deeper testing
 		testDataset(items, mznum, mzscale, peaks, tstart, tdelta, 2, 1, 1);
 		
@@ -247,11 +249,13 @@ public class PALMSDataSetImporterTest extends TestCase {
 		//add the other dataset, overwriting the first
 		String[] names = new String[]{"Test_" + curRow};
 		String[] files = GenData.generate(names, items_2, mznum_2, mzscale_2, peaks_2, tstart_2, tdelta_2);
-		
+		deleteFiles.addAll(Arrays.asList(files));
+		deleteFiles.add(GenData.getLocation().toString());
+
 		table.setValueAt(files[0], curRow, 1);
 
 		table.tableChanged(new TableModelEvent(table, curRow));
-		
+
 		loadData();
 		
 		//we should now have more data - make sure we do indeed.
@@ -307,7 +311,7 @@ public class PALMSDataSetImporterTest extends TestCase {
 	 * Ensure that PALMSAtomInfoDense, AtomMembership, DataSetMembers, and PALMSAtomInfoSparse
 	 * 	have the correct number of rows
 	 * @param items	the number of expected Items
-	 * @param peaks	the number of expected total peaks
+	 * @param numpeaks	the number of expected total peaks
 	 * 	(if all items have the same number of peaks, items * peaksPerItem)
 	 */
 	private void testDataLength(int items, int numpeaks) {

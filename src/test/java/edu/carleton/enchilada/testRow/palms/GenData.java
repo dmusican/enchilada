@@ -208,4 +208,8 @@ public class GenData {
 		catch(Exception e){}
 		file.close();
 	}
+
+	public static Path getLocation() {
+		return THISLOC;
+	}
 }
