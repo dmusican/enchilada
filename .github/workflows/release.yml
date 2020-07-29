@@ -23,7 +23,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Attempted a fix [Error in Export to MS-Analyze](https://github.com/dmusican/enchilada/issues/9)
+            Fixed bug [Test data left behind in /tmp](https://github.com/dmusican/enchilada/issues/5)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
