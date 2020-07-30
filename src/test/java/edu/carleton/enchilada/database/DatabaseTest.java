@@ -2472,6 +2472,7 @@ public class DatabaseTest extends TestCase {
 
 	private File makeTestTSFile() throws IOException {
 		File f = File.createTempFile("tsFile",".csv");
+		f.deleteOnExit();
 		PrintWriter ts = new PrintWriter(f);
 
 		Calendar c = new GregorianCalendar();
@@ -2503,6 +2504,22 @@ public class DatabaseTest extends TestCase {
 		ArrayList<Collection> conditionalSeqs = new ArrayList<>();
 		ArrayList<String> conditionStrs = new ArrayList<>();
 		db.getConditionalTSCollectionData(testCollection, conditionalSeqs, conditionStrs);
-		assertTrue(testCsvFile.delete());
+	}
+
+	public void testBackupAndRestoreDatabase() throws IOException, SQLException {
+		db.openConnection();
+		File tmpFile = File.createTempFile("backup-test", ".sqlite");
+		tmpFile.deleteOnExit();
+		db.backupDatabase(tmpFile.getAbsolutePath());
+		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement()) {
+			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			int count = 0;
+			while (rs.next()) {
+				count++;
+			}
+			assertEquals(11, count);
+		}
 	}
 }

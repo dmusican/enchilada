@@ -104,9 +104,7 @@ public class MainFrame extends JFrame implements ActionListener
 	private JButton analyzeParticleButton;
 	private JButton aggregateButton;
 	private JButton mapValuesButton;
-//	private JButton clusterDialogButton;
 	private JMenu analysisMenu;
-//	private JMenuItem loadEnchiladaDataItem;
 	private JMenuItem loadAMSDataItem;
 	private JMenuItem loadATOFMSItem;
 	private JMenuItem loadSPASSItem;
@@ -136,7 +134,11 @@ public class MainFrame extends JFrame implements ActionListener
 	private JMenuItem rebuildItem;
 	private JMenuItem exitItem;
 	private JMenuItem compactDBItem;
+
+	private JMenu backupRestoreMenu;
 	private JMenuItem backupItem;
+	private JMenuItem restoreItem;
+
 	private JMenuItem cutItem;
 	private JMenuItem copyItem;
 	private JMenuItem pasteItem;
@@ -936,7 +938,29 @@ public class MainFrame extends JFrame implements ActionListener
 			worker.start();
 		}
 		else if (source == backupItem) {
-			new BackupDialog(this, db);
+			FileDialog dialog = new FileDialog(this, "Select a location for backup file...",
+											   FileDialog.SAVE);
+			dialog.setFile("*.sqlite");
+			dialog.setVisible(true);
+			if (dialog.getFile() == null)
+				return;
+			String absolutePath = Paths.get(dialog.getDirectory(), dialog.getFile()).toString();
+			db.backupDatabase(absolutePath);
+		}
+		else if (source == restoreItem) {
+			FileDialog dialog = new FileDialog(this, "Select file to restore from...",
+											   FileDialog.LOAD);
+			dialog.setFilenameFilter((dir, name) -> {
+				File f = new File(name);
+				return f.isDirectory() || name.endsWith(".sqlite");
+			});
+
+			dialog.setVisible(true);
+			if (dialog.getFile() == null)
+				return;
+			String absolutePath = Paths.get(dialog.getDirectory(), dialog.getFile()).toString();
+			db.restoreDatabase(absolutePath);
+			refreshData();
 		}
 		else if (source == exitItem) {
 			exit();
@@ -1164,8 +1188,6 @@ public class MainFrame extends JFrame implements ActionListener
 		JMenu importCollectionMenu = new JMenu("Import Collection. . . ");
 		loadATOFMSItem = new JMenuItem("from ATOFMS data. . .");
 		loadATOFMSItem.addActionListener(this);
-//		loadEnchiladaDataItem = new JMenuItem("from Enchilada data. . .");
-//		loadEnchiladaDataItem.addActionListener(this);
 		loadAMSDataItem = new JMenuItem("from AMS data. . .");
 		loadAMSDataItem.addActionListener(this); 
 		loadSPASSItem = new JMenuItem("from SPASS data. . .");
@@ -1184,7 +1206,6 @@ public class MainFrame extends JFrame implements ActionListener
 		importCollectionMenu.add(loadATOFMSItem);
 		importCollectionMenu.add(batchLoadATOFMSItem);
 		importCollectionMenu.add(txtLoadATOFMSItem);
-//		importCollectionMenu.add(loadEnchiladaDataItem);
 		importCollectionMenu.add(loadAMSDataItem);
 		importCollectionMenu.add(loadSPASSItem);
 		importCollectionMenu.add(loadSPLATItem);
@@ -1206,39 +1227,25 @@ public class MainFrame extends JFrame implements ActionListener
 		exportCollectionMenu.add(CSVexportItem);
 		exportCollectionMenu.add(HierarchyCSVexportItem);
 		
-		/*
-		 * These capabilities work, but only with trivially small databases
-		JMenu importDatabaseMenu = new JMenu("Restore Database. . . ");
-		importXmlDatabaseItem = new JMenuItem("from XML. . .");
-		importXmlDatabaseItem.addActionListener(this);
-		importXlsDatabaseItem = new JMenuItem("from Xls. . .");
-		importXlsDatabaseItem.addActionListener(this);
-		importCsvDatabaseItem = new JMenuItem("from Csv. . .");
-		importCsvDatabaseItem.addActionListener(this);
-		importDatabaseMenu.add(importXmlDatabaseItem);
-		importDatabaseMenu.add(importXlsDatabaseItem);
-		importDatabaseMenu.add(importCsvDatabaseItem);
-		
-		JMenu exportDatabaseMenu = new JMenu("Export Database. . . ");
-		exportXmlDatabaseItem = new JMenuItem("to XML. . .");
-		exportXmlDatabaseItem.addActionListener(this);
-		exportXlsDatabaseItem = new JMenuItem("to Xls. . .");
-		exportXlsDatabaseItem.addActionListener(this);
-		exportCsvDatabaseItem = new JMenuItem("to Csv. . .");
-		exportCsvDatabaseItem.addActionListener(this);
-		exportDatabaseMenu.add(exportXmlDatabaseItem);
-		exportDatabaseMenu.add(exportXlsDatabaseItem);
-		exportDatabaseMenu.add(exportCsvDatabaseItem);
-		*/
 		compactDBItem = new JMenuItem("Compact Database", KeyEvent.VK_C);
 		compactDBItem.addActionListener(this);
 		
 		rebuildItem = new JMenuItem("Rebuild Database", KeyEvent.VK_R);
 		rebuildItem.addActionListener(this);
 		
-		backupItem = new JMenuItem("Backup/Restore...", KeyEvent.VK_B);
+//		backupItem = new JMenuItem("Backup/Restore...", KeyEvent.VK_B);
+//		backupItem.addActionListener(this);
+//
+
+		backupRestoreMenu = new JMenu("Backup/Restore...");
+		backupItem = new JMenuItem("Backup", KeyEvent.VK_B);
 		backupItem.addActionListener(this);
-		
+		restoreItem = new JMenuItem("Restore", KeyEvent.VK_E);
+		restoreItem.addActionListener(this);
+		backupRestoreMenu.add(backupItem);
+		backupRestoreMenu.add(restoreItem);
+
+
 		exitItem = new JMenuItem("Exit", KeyEvent.VK_X);
 		exitItem.addActionListener(this);
 		
@@ -1249,14 +1256,9 @@ public class MainFrame extends JFrame implements ActionListener
 		fileMenu.add(importCollectionMenu);
 		fileMenu.add(exportCollectionMenu);
 		fileMenu.addSeparator();
-		/*
-		 * These capabilities work, but only with trivially small databases
-		fileMenu.add(importDatabaseMenu);
-		fileMenu.add(exportDatabaseMenu);
-		*/
 		fileMenu.add(compactDBItem);
 		fileMenu.add(rebuildItem);
-		fileMenu.add(backupItem);
+		fileMenu.add(backupRestoreMenu);
 		fileMenu.addSeparator();
 		fileMenu.add(exitItem);
 		
@@ -1328,7 +1330,7 @@ public class MainFrame extends JFrame implements ActionListener
 			new JMenuItem("Delete Selected and Adopt Children", 
 					KeyEvent.VK_D);
 		deleteAdoptItem.addActionListener(this);
-		recursiveDeleteItem = 
+		recursiveDeleteItem =
 			new JMenuItem("Delete Selected and All Children");
 		recursiveDeleteItem.addActionListener(this);
 		renameItem = new JMenuItem("Rename Collection");
