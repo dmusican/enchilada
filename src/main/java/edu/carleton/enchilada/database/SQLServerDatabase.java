@@ -49,7 +49,6 @@ package edu.carleton.enchilada.database;
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.gui.MainFrame;
-import org.apache.commons.lang.NotImplementedException;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -131,10 +130,6 @@ public class SQLServerDatabase extends Database
 				"SpASMS",
 				"finally");
 
-	}
-
-	public Connection openAdditionalConnection() {
-		throw new NotImplementedException();
 	}
 
 	/**

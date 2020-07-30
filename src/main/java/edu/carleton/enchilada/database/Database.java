@@ -243,19 +243,6 @@ public abstract class Database {
         return true;
     }
 
-    protected Connection openAdditionalConnectionImpl(String connectionstr, String user, String pass) {
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(connectionstr, user, pass);
-            conn.setAutoCommit(true);
-        } catch (Exception e) {
-            ErrorLogger.writeExceptionToLogAndPrompt("Database", "Failed to establish a connection to " + database);
-            System.err.println("Failed to establish a connection to database");
-            e.printStackTrace();
-        }
-        return conn;
-    }
-
     /**
      * Close the connection to this database
      *
@@ -291,14 +278,6 @@ public abstract class Database {
      * @return true on success
      */
     public abstract boolean openConnectionNoDB();
-
-    /**
-     * Opens a connection to the database, flat file, memory structure,
-     * or whatever you're working with, without modifying the database object connection.
-     *
-     * @return true on success
-     */
-    public abstract Connection openAdditionalConnection();
 
     /**
      * @return true if this resource is available for use
@@ -1700,9 +1679,16 @@ public abstract class Database {
             stmt.executeUpdate("DELETE FROM Collections\n"
                                        + "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 
+
             isDirty = true;
             con.commit();
             con.setAutoCommit(true);
+            stmt.close();
+            pstmt.close();
+
+            // All statements must be closed to drop the table.
+            stmt = con.createStatement();
+            stmt.executeUpdate("DROP TABLE IF EXISTS temp.CollectionsToDelete;");
             stmt.close();
 
         } catch (Exception e) {
@@ -1710,6 +1696,7 @@ public abstract class Database {
             System.err.println("Exception deleting collection: ");
             e.printStackTrace();
             return false;
+        } finally {
         }
         return true;
     }

@@ -72,14 +72,6 @@ public class SQLiteDatabase extends Database {
                 "finally");
     }
 
-    @Override
-    public Connection openAdditionalConnection() {
-        return openAdditionalConnectionImpl(
-                "jdbc:sqlite:" + dbPath.resolve(database),
-                "SpASMS",
-                "finally");
-    }
-
     /**
      * @return the format to match how elsewhere in SQLite expects it
      */
