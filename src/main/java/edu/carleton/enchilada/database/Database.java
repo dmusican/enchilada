@@ -56,6 +56,7 @@ import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.LabelingIon;
+import edu.carleton.enchilada.gui.MainFrame;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.DatabaseSequenceFilter;
@@ -66,6 +67,7 @@ import org.dbunit.dataset.excel.XlsDataSet;
 import org.dbunit.dataset.filter.ITableFilter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.ext.mssql.InsertIdentityOperation;
+import org.sqlite.ExtendedCommand;
 
 import java.io.*;
 import java.sql.*;
@@ -2628,23 +2630,13 @@ public abstract class Database {
      * Backup the database to the backup location with the specified name
      *
      * @param name the name of the backup location
-     * @return output returned from the server, or "Failed" if failure
+     * @return output returned from the server if failed, or "Succeeded" otherwise
      */
     public String backupDatabase(String name) {
-        String ret = "Failed";
+        String ret = "Succeeded";
 
-        try {
-            String query = "BACKUP DATABASE " + database + " TO " + name + " WITH INIT";
-            Statement stmt = con.createStatement();
-            stmt.execute(query);
-
-            SQLWarning output = stmt.getWarnings();
-            StringBuffer message = new StringBuffer(output.getMessage());
-            while ((output = output.getNextWarning()) != null) {
-                message.append("\n" + output.getMessage());
-            }
-
-            ret = message.toString();
+        try (Statement stmt = getCon().createStatement()) {
+            stmt.executeUpdate("backup to " + name);
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error backing up database to " + name);
@@ -2652,7 +2644,6 @@ public abstract class Database {
             ex.printStackTrace();
             ret = ex.getMessage();
         }
-
         return ret;
     }
 
@@ -2660,32 +2651,13 @@ public abstract class Database {
      * Restore the database from the backup location with the specified name
      *
      * @param name the name of the backup location
-     * @return output returned from the server, or "Failed" if failure
+     * @return output returned from the server if failed, or "Suceeded" otherwise
      */
     public String restoreDatabase(String name) {
-        String ret = "Failed";
+        String ret = "Succeeded";
 
-        try {
-            //close the connection and use a non-database-specific one
-            closeConnection();
-            Database db = (Database) getDatabase("");
-            db.openConnectionNoDB();
-
-            String query = "RESTORE DATABASE " + database + " FROM " + name + " WITH REPLACE";
-            Statement stmt = db.getCon().createStatement();
-            stmt.execute(query);
-
-            SQLWarning output = stmt.getWarnings();
-            StringBuffer message = new StringBuffer(output.getMessage());
-            while ((output = output.getNextWarning()) != null) {
-                message.append("\n" + output.getMessage());
-            }
-
-            ret = message.toString();
-
-            //return to using the original Cfonnection
-            db.closeConnection();
-            openConnection();
+        try (Statement stmt = getCon().createStatement()) {
+            stmt.executeUpdate("restore from " + name);
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error restoring database from " + name);

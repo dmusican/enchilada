@@ -2511,6 +2511,7 @@ public class DatabaseTest extends TestCase {
 		File tmpFile = File.createTempFile("backup-test", ".sqlite");
 		tmpFile.deleteOnExit();
 		db.backupDatabase(tmpFile.getAbsolutePath());
+		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
 		db.restoreDatabase(tmpFile.getAbsolutePath());
 		try (Statement stmt = db.getCon().createStatement()) {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
@@ -2518,7 +2519,7 @@ public class DatabaseTest extends TestCase {
 			while (rs.next()) {
 				count++;
 			}
-			assertEquals(12, count);
+			assertEquals(11, count);
 		}
 	}
 }
