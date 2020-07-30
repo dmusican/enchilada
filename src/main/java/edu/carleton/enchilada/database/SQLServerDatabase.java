@@ -49,6 +49,7 @@ package edu.carleton.enchilada.database;
 import edu.carleton.enchilada.ATOFMS.ATOFMSPeak;
 import edu.carleton.enchilada.collection.Collection;
 import edu.carleton.enchilada.gui.MainFrame;
+import org.apache.commons.lang.NotImplementedException;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -59,7 +60,7 @@ import java.text.SimpleDateFormat;
  * @author andersbe, shaferia
  */
 public class SQLServerDatabase extends Database
-{	
+{
 	//This isn't used anymore. Safe for deletion.
 	private static int instance = 0;
 	
@@ -131,7 +132,11 @@ public class SQLServerDatabase extends Database
 				"finally");
 
 	}
-	
+
+	public Connection openAdditionalConnection() {
+		throw new NotImplementedException();
+	}
+
 	/**
 	 * @return the SQL Server native DATETIME format
 	 */

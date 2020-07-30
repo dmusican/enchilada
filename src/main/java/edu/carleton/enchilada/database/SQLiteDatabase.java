@@ -9,10 +9,7 @@ import edu.carleton.enchilada.gui.MainFrame;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
@@ -51,9 +48,6 @@ public class SQLiteDatabase extends Database {
         database = dbName;
     }
 
-    /**
-     * @see InfoWarehouse#isPresent()
-     */
     public boolean isPresent() {
         return dbPath.resolve(database).toFile().exists();
     }
@@ -74,6 +68,14 @@ public class SQLiteDatabase extends Database {
     public boolean openConnectionNoDB() {
         return openConnectionImpl(
                 "jdbc:sqlite:" + dbPath.resolve(MainFrame.dbname),
+                "SpASMS",
+                "finally");
+    }
+
+    @Override
+    public Connection openAdditionalConnection() {
+        return openAdditionalConnectionImpl(
+                "jdbc:sqlite:" + dbPath.resolve(database),
                 "SpASMS",
                 "finally");
     }
