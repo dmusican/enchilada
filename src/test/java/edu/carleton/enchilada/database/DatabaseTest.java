@@ -2472,6 +2472,7 @@ public class DatabaseTest extends TestCase {
 
 	private File makeTestTSFile() throws IOException {
 		File f = File.createTempFile("tsFile",".csv");
+		f.deleteOnExit();
 		PrintWriter ts = new PrintWriter(f);
 
 		Calendar c = new GregorianCalendar();
@@ -2503,7 +2504,6 @@ public class DatabaseTest extends TestCase {
 		ArrayList<Collection> conditionalSeqs = new ArrayList<>();
 		ArrayList<String> conditionStrs = new ArrayList<>();
 		db.getConditionalTSCollectionData(testCollection, conditionalSeqs, conditionStrs);
-		assertTrue(testCsvFile.delete());
 	}
 
 	public void testBackupAndRestoreDatabase() throws IOException, SQLException {
