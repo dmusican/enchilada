@@ -2654,8 +2654,9 @@ public abstract class Database {
      * @return output returned from the server if failed, or "Suceeded" otherwise
      */
     public String restoreDatabase(String name) {
+        closeConnection();
+        openConnection();
         String ret = "Succeeded";
-
         try (Statement stmt = getCon().createStatement()) {
             stmt.executeUpdate("restore from " + name);
         } catch (SQLException ex) {
