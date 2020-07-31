@@ -53,6 +53,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -560,7 +561,8 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 	}
 
 
-	public void testReadSpectraAndCreateParticleWithMissingParticle() throws URISyntaxException {
+	public void testReadSpectraAndCreateParticleWithMissingParticle()
+			throws URISyntaxException, InterruptedException, ParseException, IOException {
 		URI testDataURI = ATOFMSDataSetImporterTest.class.getResource("/test-row-missing").toURI();
 		Path testDataPath = Paths.get(testDataURI);
 		String parFile = testDataPath.resolve("b").resolve("b.par").toString();
@@ -598,18 +600,7 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 				fail("Couldn't set necessary files to create empty collection");
 			}
 
-			try {
-				importer.readSpectraAndCreateParticle();
-			} catch (java.io.IOException ex) {
-				ex.printStackTrace();
-				fail("Couldn't read spectra");
-			} catch (InterruptedException ex) {
-				ex.printStackTrace();
-				fail("Couldn't read spectra; interrupted.");
-			} catch (java.text.ParseException ex) {
-				ex.printStackTrace();
-				fail("Couldn't read spectra");
-			}
+		importer.readSpectraAndCreateParticle();
 
 	}
 }
