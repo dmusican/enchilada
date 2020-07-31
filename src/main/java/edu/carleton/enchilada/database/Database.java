@@ -944,10 +944,8 @@ public abstract class Database {
      * @return true on success.
      */
     public boolean compactDatabase(ProgressBarWrapper progressBar) {
-        try {
+        try (Statement stmt = con.createStatement()) {
             con.setAutoCommit(false);
-            Statement stmt = con.createStatement();
-            Statement typesStmt = con.createStatement();
             stmt.execute("DROP TABLE IF EXISTS temp.CollectionsToCompact;\n");
             stmt.execute(
                     "CREATE TEMPORARY TABLE CollectionsToCompact (CollectionID int, \n PRIMARY KEY([CollectionID]));\n");
@@ -972,8 +970,15 @@ public abstract class Database {
 
             stmt.execute("DROP TABLE IF EXISTS temp.AtomsToCompact;\n");
             stmt.execute("CREATE TEMPORARY TABLE temp.AtomsToCompact (AtomID int, \n PRIMARY KEY([AtomID]));\n");
+        }  catch (SQLException e) {
+            ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Exception setting up compacting.");
+            System.err.println("Exception deleting collection: ");
+            throw new ExceptionAdapter(e);
+        }
 
-            ResultSet types = typesStmt.executeQuery("SELECT DISTINCT Datatype FROM MetaData");
+        try (Statement stmt = con.createStatement();
+             Statement typesStmt = con.createStatement();
+             ResultSet types = typesStmt.executeQuery("SELECT DISTINCT Datatype FROM MetaData");) {
 
             while (types.next()) {
 
@@ -1004,43 +1009,35 @@ public abstract class Database {
                 // it is ok to call atominfo tables here because datatype is
                 // set from recursiveDelete() above.
                 // note: Sparse table may not necessarily exist. So check first.
-                Statement existsStmt = con.createStatement();
-                ResultSet sparseTablePresent = existsStmt.executeQuery(
-                        "SELECT * FROM sqlite_master WHERE tbl_name= '" + sparseTableName + "' AND type='table'");
-                if (sparseTablePresent.next()) {
-                    stmt.addBatch("DELETE FROM " + sparseTableName + "\n" +
-                                          "WHERE " + sparseTableName + ".AtomID IN temp.AtomsToCompact");
+                try (Statement existsStmt = con.createStatement();
+                     ResultSet sparseTablePresent = existsStmt.executeQuery(
+                             "SELECT * FROM sqlite_master WHERE tbl_name= '" + sparseTableName + "' AND type='table'");
+                ) {
+                    if (sparseTablePresent.next()) {
+                        stmt.addBatch("DELETE FROM " + sparseTableName + "\n" +
+                                              "WHERE " + sparseTableName + ".AtomID IN temp.AtomsToCompact");
+                    }
                 }
-                sparseTablePresent.close();
                 stmt.addBatch("DELETE FROM " + denseTableName + "\n" +
                                       "WHERE " + denseTableName + ".AtomID IN temp.AtomsToCompact");
 
-                //This separation is necessary!!
-                // SQL Server parser is stupid and if you create, delete, and recreate a temporary table
-                // the parser thinks you're doing something wrong and will die.
-                if (progressBar.wasTerminated()) {
-                    stmt.clearBatch();
-                    stmt.addBatch("DROP TABLE temp.CollectionsToCompact;\n");
-                    typesStmt.close();
-                    stmt.executeBatch();
-                    con.commit();
-                    con.setAutoCommit(true);
-                    stmt.close();
-                    return false;
-                }
                 stmt.executeBatch();
                 stmt.clearBatch();
             }
+        } catch (SQLException e) {
+            ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Exception compacting.");
+            throw new ExceptionAdapter(e);
+        }
 
-            types.close();
-            stmt.execute("DROP TABLE temp.CollectionsToCompact;\n");
-            stmt.execute("DROP TABLE temp.AtomsToCompact;\n");
 
-            isDirty = false;
+        try (Statement stmt = con.createStatement();) {
+
             con.commit();
             con.setAutoCommit(true);
-            stmt.close();
-            //updateAncestors(0);
+
+            stmt.execute("DROP TABLE temp.CollectionsToCompact;\n");
+            stmt.execute("DROP TABLE temp.AtomsToCompact;\n");
+            isDirty = false;
         } catch (Exception e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Exception deleting collection.");
             System.err.println("Exception deleting collection: ");
