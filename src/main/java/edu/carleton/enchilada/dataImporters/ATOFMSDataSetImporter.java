@@ -429,24 +429,27 @@ public class ATOFMSDataSetImporter {
 				String time = token.nextToken();
 				d = df.parse(time);
 
-				ReadSpec read = new ReadSpec(particleFileName, d);
+				try {
+					ReadSpec read = new ReadSpec(particleFileName, d);
 
-				currentParticle = read.getParticle();
+					currentParticle = read.getParticle();
 
-				((Database) db).insertParticle(
-						currentParticle.particleInfoDenseString(db.getDateFormat()),
-						currentParticle.getSparsePeakMap().values(),
-						destination, id[1], nextID, true);
+					((Database) db).insertParticle(
+							currentParticle.particleInfoDenseString(db.getDateFormat()),
+							currentParticle.getSparsePeakMap().values(),
+							destination, id[1], nextID, true);
 
-				nextID++;
-				particleNum++;
-				//doDisplay++;
-				//if((int)(100.0*particleNum/tParticles)>(int)(100.0*(particleNum-1)/tParticles)){
-				if (particleNum % 10 == 0 && particleNum > 0) {
-					//progressBar.increment("Importing Particle # "+particleNum+" out of "+tParticles);
-					//progressBar.setValue((int)(100.0*particleNum/tParticles));
-					progressBar.setValue(particleNum);
-					progressBar.setText("Importing Particle # " + particleNum + " out of " + numParticles[collectionIndex]);
+					nextID++;
+					particleNum++;
+					if (particleNum > 0) {
+						progressBar.setValue(particleNum);
+						progressBar.setText(
+								"Importing Particle # " + particleNum + " out of " + numParticles[collectionIndex]);
+
+					}
+				} catch (FileNotFoundException e) {
+					ErrorLogger.writeExceptionToLogAndPrompt("Importing",
+															 "Particle listed in .set file but file is missing.");
 
 				}
 			} //***SLH
