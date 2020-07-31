@@ -720,7 +720,6 @@ public class DatabaseTest extends TestCase {
 	public void testRecursiveDelete() throws SQLException {
 		db.openConnection();
 
-
 		ArrayList<Integer> atomIDs = new ArrayList<Integer>();
 		ResultSet rs;
 		Statement stmt;
@@ -796,7 +795,6 @@ public class DatabaseTest extends TestCase {
 
 
 		assertTrue(db.recursiveDelete(db.getCollection(5)));
-
 
 		//Check to make sure that the database is as it should be
 		//Both that information that should be gone is gone

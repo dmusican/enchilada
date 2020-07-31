@@ -59,7 +59,7 @@ import java.text.SimpleDateFormat;
  * @author andersbe, shaferia
  */
 public class SQLServerDatabase extends Database
-{	
+{
 	//This isn't used anymore. Safe for deletion.
 	private static int instance = 0;
 	
@@ -131,7 +131,7 @@ public class SQLServerDatabase extends Database
 				"finally");
 
 	}
-	
+
 	/**
 	 * @return the SQL Server native DATETIME format
 	 */

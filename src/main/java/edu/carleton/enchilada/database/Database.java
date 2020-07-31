@@ -1635,7 +1635,7 @@ public abstract class Database {
      * This method deletes all references to a collection in InternalAtomOrder, CollectionRelationships, CenterAtoms, and Collections.
      * Atom information is deleted seperately through compactDatabase
      *
-     * @param collectionID The id of the collection to delete
+     * @param collection The collection to delete
      * @return true on success.
      */
     public boolean recursiveDelete(Collection collection) {
@@ -1679,10 +1679,16 @@ public abstract class Database {
             stmt.executeUpdate("DELETE FROM Collections\n"
                                        + "WHERE CollectionID IN (SELECT * FROM temp.CollectionsToDelete);\n");
 
-            stmt.executeUpdate("DROP TABLE temp.CollectionsToDelete;\n");
+
             isDirty = true;
             con.commit();
             con.setAutoCommit(true);
+            stmt.close();
+            pstmt.close();
+
+            // All statements must be closed to drop the table.
+            stmt = con.createStatement();
+            stmt.executeUpdate("DROP TABLE IF EXISTS temp.CollectionsToDelete;");
             stmt.close();
 
         } catch (Exception e) {
@@ -1690,6 +1696,7 @@ public abstract class Database {
             System.err.println("Exception deleting collection: ");
             e.printStackTrace();
             return false;
+        } finally {
         }
         return true;
     }
