@@ -47,6 +47,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
@@ -553,6 +556,60 @@ public class ATOFMSDataSetImporterTest extends TestCase {
 			assertEquals(errors.length(), 0);
 			System.setErr(oldErr);
 		}
+
+	}
+
+
+	public void testReadSpectraAndCreateParticleWithMissingParticle() throws URISyntaxException {
+		URI testDataURI = ATOFMSDataSetImporterTest.class.getResource("/test-row-missing").toURI();
+		Path testDataPath = Paths.get(testDataURI);
+		String parFile = testDataPath.resolve("b").resolve("b.par").toString();
+		String calFile = testDataPath.resolve("b").resolve("cal.cal").toString();
+		table.setValueAt(parFile, 0, 1);   // dataset
+		table.setValueAt(calFile, 0, 2); // mass cal file
+		table.setValueAt(10, 0, 4);    // Min height
+		table.setValueAt(20, 0, 5);       // Min area
+		table.setValueAt((float) 0.1, 0, 6);  // Min relative area
+		table.setValueAt((float) 0.5, 0, 7);  // Max peak error
+		table.setValueAt(true, 0, 8);  // autocal
+
+		table.tableChanged(new TableModelEvent(table, 0));
+		//Since exceptions aren't thrown back down the stack by the database,
+		//	we need to see if any are thrown
+		StringPrintStream ps = new StringPrintStream();
+		PrintStream oldErr = System.err;
+		System.setErr(ps.getPrintStream());
+
+		//Make sure standard output gets set back.
+			try {
+				importer.parFile = new File((String) table.getValueAt(0, 1));
+				String massCalFile = calFile;
+				ATOFMSParticle.currCalInfo = new CalInfo(massCalFile, true);
+				ATOFMSParticle.currPeakParams = new PeakParams(10, 20, .1f, .5f);
+				importer.numParticles = new int[1];
+				importer.numParticles[0] = 10;
+				importer.collections = new Collection[1];
+				importer.id =
+						db.createEmptyCollectionAndDataset("ATOFMS", 0, "b",
+														   "comment", "'null', 'null', 10, 10, 0.005, 1");
+				importer.progressBar = new ProgressBarWrapper(null, "Progress", 10);
+			} catch (java.io.IOException ex) {
+				System.out.println(ex.getMessage());
+				fail("Couldn't set necessary files to create empty collection");
+			}
+
+			try {
+				importer.readSpectraAndCreateParticle();
+			} catch (java.io.IOException ex) {
+				ex.printStackTrace();
+				fail("Couldn't read spectra");
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+				fail("Couldn't read spectra; interrupted.");
+			} catch (java.text.ParseException ex) {
+				ex.printStackTrace();
+				fail("Couldn't read spectra");
+			}
 
 	}
 }
