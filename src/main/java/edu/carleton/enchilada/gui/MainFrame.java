@@ -920,6 +920,8 @@ public class MainFrame extends JFrame implements ActionListener
 			}			
 		}
 		else if (source == compactDBItem){
+			db.closeConnection();
+			db.openConnection();
 			final ProgressBarWrapper progressBar = 
 				new ProgressBarWrapper(this, "Compacting Database",100);
 			progressBar.constructThis();
@@ -927,7 +929,7 @@ public class MainFrame extends JFrame implements ActionListener
 			progressBar.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 			UIWorker worker = new UIWorker() {
 				public Object construct() {
-					((Database)db).compactDatabase(progressBar);
+					db.compactDatabase(progressBar);
 					return null;
 				}
 				public void finished() {
@@ -1642,10 +1644,6 @@ public class MainFrame extends JFrame implements ActionListener
 		
 		//call setTable, which populates the table.
 		setTable();
-		//old code
-		//data.clear();
-		//data = db.updateParticleTable(collection, data, low, high);
-
 		return true;
 	}
 	
@@ -1994,10 +1992,6 @@ public class MainFrame extends JFrame implements ActionListener
 	 */
 	public void setTable() {
 			
-			//System.out.println("low " + currLow + " high " + currHigh + " "
-			//		+ ((currHigh - currLow)+1));//TESTING
-			//clear data in table and repopulate it with appropriate 
-			// data.
 			currentlyShowing.setText("Currently showing particles " + currLow +
 					"-" + currHigh + " of " + currCollectionSize + ".");
 			data.clear();
