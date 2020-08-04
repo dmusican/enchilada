@@ -2,7 +2,7 @@
 # Michael Murphy 2013
 # Server name needs to be changed for individual PC
 # Dependencies: pyodbc, numpy
-
+import os
 import sqlite3
 import numpy
 import sys
@@ -11,7 +11,7 @@ import time
 
 print '\n*** Histogram generator for EDAM Enchilada ***'
 
-cnxn = sqlite3.connect('/home/dmusicant/enchilada/sqlitedata/SpASMSdb')
+cnxn = sqlite3.connect(os.path.expanduser('~/enchilada/sqlitedata/SpASMSdb'))
 
 qtype = raw_input('\nEnter query type (H-height sum, R-rel. area sum, A-area sum, C-peak count, S-size count): ').upper().strip()
 if qtype not in ('H', 'R', 'A', 'C', 'S'):
@@ -204,7 +204,6 @@ for i in range(len(collids)):
 		ORDER BY y, m, d, h, mi, s
 		'''
 
-	print query
 	datacsr.execute(query)
 
 	data = numpy.array(datacsr.fetchall())
