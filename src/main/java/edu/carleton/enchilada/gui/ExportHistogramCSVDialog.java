@@ -44,54 +44,60 @@
  */
 package edu.carleton.enchilada.gui;
 
-import javax.swing.*;
-
+import edu.carleton.enchilada.collection.Collection;
+import edu.carleton.enchilada.dataExporters.CSVDataSetExporter;
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
-import gnu.trove.iterator.TFloatIntIterator;
-import gnu.trove.list.array.TFloatArrayList;
-import gnu.trove.map.hash.TFloatIntHashMap;
+import edu.carleton.enchilada.externalswing.SwingWorker;
 
-import java.awt.event.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.util.Comparator;
-import java.util.TreeSet;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class SizeExportDialog extends JDialog implements ActionListener 
+/**
+ * @author jtbigwoo
+ */
+public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 {
 	public static String EXPORT_FILE_EXTENSION = "csv";
-	
+
 	private JButton okButton;
 	private JButton cancelButton;
+	private JComboBox queryList;
 	private JTextField csvFileField;
-	private JRadioButton rawButton;
-	private JRadioButton binnedButton;
+	private JCheckBox onePerFileBox;
 	private JButton csvDotDotDot;
 	private Database db;
-	private SizeHistogramWindow parent = null;
-	
-	private boolean raw = false;
-	
-	public SizeExportDialog(SizeHistogramWindow sizeHistogramWindow) {
-		super (sizeHistogramWindow,"Export to CSV file", true);
-		this.parent = sizeHistogramWindow;
+	private JFrame parent = null;
+	private Collection[] collection = null;
+	private boolean onePerFile = false;
+
+	/**
+	 * Called when you want to export a particular particle or whole collection of particles
+	 * @param parent
+	 * @param db
+	 * @param c
+	 */
+	public ExportHistogramCSVDialog(JFrame parent, Database db, Collection[] c) {
+		super (parent,"Export Histogram to CSV file", true);
+		this.db = db;
+		this.parent = parent;
+		this.collection = c;
 		setSize(450,150);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		JLabel csvFileLabel = new JLabel("." + EXPORT_FILE_EXTENSION + " File: ");
-		csvFileField = new JTextField(25);
+		csvFileField = new JTextField(15);
 		csvDotDotDot = new JButton("...");
 		csvDotDotDot.addActionListener(this);
 		
-		binnedButton = new JRadioButton("Binned counts",true);
-		binnedButton.addActionListener(this);
-		rawButton = new JRadioButton("Raw data",false);
-		rawButton.addActionListener(this);
+		JLabel queryTypePrompt = new JLabel("Query type: ");
+		String[] queryTypes = {"heigh sum", "rel. area sum", "area sum", "peak count", "size count"};
+		queryList = new JComboBox(queryTypes);
+
+		onePerFileBox = new JCheckBox("Sparse particle format");
+		onePerFileBox.addActionListener(this);
 		
 		JPanel buttonPanel = new JPanel();
 		okButton = new JButton("OK");
@@ -100,6 +106,7 @@ public class SizeExportDialog extends JDialog implements ActionListener
 		cancelButton.addActionListener(this);
 		buttonPanel.add(okButton);
 		buttonPanel.add(cancelButton);
+	    buttonPanel.add(onePerFileBox);
 		
 		JPanel mainPanel = new JPanel();
 		SpringLayout layout = new SpringLayout();
@@ -108,8 +115,8 @@ public class SizeExportDialog extends JDialog implements ActionListener
 	    mainPanel.add(csvFileLabel);
 	    mainPanel.add(csvFileField);
 	    mainPanel.add(csvDotDotDot);
-	    mainPanel.add(binnedButton);
-	    mainPanel.add(rawButton);
+	    mainPanel.add(queryTypePrompt);
+	    mainPanel.add(queryList);
 	    mainPanel.add(buttonPanel);
 	    
 		layout.putConstraint(SpringLayout.WEST, csvFileLabel,
@@ -124,18 +131,18 @@ public class SizeExportDialog extends JDialog implements ActionListener
                 375, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, csvDotDotDot,
                 10, SpringLayout.NORTH, mainPanel);
-		layout.putConstraint(SpringLayout.WEST, binnedButton,
+		layout.putConstraint(SpringLayout.WEST, queryTypePrompt,
                 10, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, binnedButton,
-                10, SpringLayout.SOUTH, csvFileField);
-		layout.putConstraint(SpringLayout.WEST, rawButton,
-                140, SpringLayout.WEST, mainPanel);
-		layout.putConstraint(SpringLayout.NORTH, rawButton,
+		layout.putConstraint(SpringLayout.NORTH, queryTypePrompt,
+                15, SpringLayout.SOUTH, csvFileField);
+		layout.putConstraint(SpringLayout.WEST, queryList,
+                170, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, queryList,
                 10, SpringLayout.SOUTH, csvFileField);
 		layout.putConstraint(SpringLayout.WEST, buttonPanel,
                 160, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, buttonPanel,
-                10, SpringLayout.SOUTH, binnedButton);
+                10, SpringLayout.SOUTH, queryTypePrompt);
 		
 		add(mainPanel);
 		
@@ -145,15 +152,7 @@ public class SizeExportDialog extends JDialog implements ActionListener
 	public void actionPerformed(ActionEvent e) {
 		int maxMZValue;
 		Object source = e.getSource();
-		if (source == rawButton) {
-			binnedButton.setSelected(!rawButton.isSelected());
-			raw = rawButton.isSelected();
-		}
-		else if (source == binnedButton) {
-			rawButton.setSelected(!binnedButton.isSelected());
-			raw = !binnedButton.isSelected();
-		}
-		else if (source == csvDotDotDot) {
+		if (source == csvDotDotDot) {
 			String fileName = "*." + EXPORT_FILE_EXTENSION;
 			if (!csvFileField.getText().equals("")) {
 				fileName = csvFileField.getText();
@@ -161,104 +160,62 @@ public class SizeExportDialog extends JDialog implements ActionListener
 			csvFileField.setText((new FileDialogPicker("Choose ." + EXPORT_FILE_EXTENSION + " file destination",
 					 fileName, this, false)).getFileName());
 		}
+		if (source == onePerFileBox) {
+			onePerFile = onePerFileBox.isSelected();
+			if (onePerFile)
+				queryList.setEnabled(false);
+			else
+				queryList.setEnabled(true);
+		}
 		else if (source == okButton) {
-			if(!csvFileField.getText().equals("") && !csvFileField.getText().equals("*." + EXPORT_FILE_EXTENSION)) {
-				final String csvFileName = csvFileField.getText().equals("") ? null : csvFileField.getText();
-				try {
-					exportToCSV(csvFileName, raw);
-				} catch (DisplayException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				dispose();
+			try {
+				maxMZValue = 0;
 			}
+			catch (NumberFormatException nfe) {
+				maxMZValue = -1;
+			}
+			if(!csvFileField.getText().equals("") && !csvFileField.getText().equals("*." + EXPORT_FILE_EXTENSION)) {
+				if (maxMZValue > 0 || onePerFile) {
+					final Database dbRef = (Database)db;
+					
+					final ProgressBarWrapper progressBar = 
+						new ProgressBarWrapper(parent, CSVDataSetExporter.TITLE, 100);
+					final CSVDataSetExporter cse = 
+							new CSVDataSetExporter(
+									this, dbRef,progressBar);
+					cse.setOnePerFile(onePerFile);
+					
+					progressBar.constructThis();
+					final String csvFileName = csvFileField.getText().equals("") ? null : csvFileField.getText();
+					final int mzValue = maxMZValue;
+					
+					final SwingWorker worker = new SwingWorker(){
+						public Object construct() {
+							try {
+								cse.exportHierarchyToCSV(collection[0], csvFileName, mzValue);
+							}catch (DisplayException e1) {
+								ErrorLogger.displayException(progressBar,e1.toString());
+							} 
+							return null;
+						}
+						public void finished() {
+							progressBar.disposeThis();
+							ErrorLogger.flushLog(parent);
+							parent.validate();
+						}
+					};
+					worker.start();
+					dispose();
+				}
+				else
+					JOptionPane.showMessageDialog(this, "Highest m/z value to export must be a number greater than zero.");
+			}
+			//If they didn't enter a name, force them to enter one
 			else
 				JOptionPane.showMessageDialog(this, "Please enter an export file name.");
 		}
 		else if (source == cancelButton) {
 			dispose();
 		}
-//		else  
-//			dispose();
-	}
-	
-	public boolean exportToCSV(String fileName, boolean raw) throws DisplayException {		
-			if (fileName == null) {
-				return false;
-			} else if (! fileName.endsWith(ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION)) {
-				fileName = fileName + "." + ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION;
-			}
-	
-			fileName = fileName.replaceAll("'", "");
-	
-			try {
-				if (raw)
-					writeOutDistancesToFile(parent.getRawSizes(), fileName);
-				else
-					writeOutDistancesToFile(parent.getBinnedSizes(), fileName);
-			} catch (IOException e) {
-				ErrorLogger.writeExceptionToLogAndPrompt("CSV Data Exporter","Error writing file. Please ensure the application can write to the specified file.");
-				System.err.println("Problem writing file: ");
-				e.printStackTrace();
-				return false;
-		}
-		return true;
-	}
-	
-	private void writeOutDistancesToFile(TFloatArrayList data, String fileName) throws IOException {
-		PrintWriter out = null;
-		File csvFile;
-		TFloatIntHashMap currentData;
-		DecimalFormat formatter = new DecimalFormat("0.00");
-
-		csvFile = new File(fileName);
-
-		out = new PrintWriter(new FileOutputStream(csvFile, false));
-		StringBuffer sbHeader = new StringBuffer();
-		sbHeader.append("Size");
-		out.println(sbHeader.toString());
-
-		StringBuffer sbValues = new StringBuffer();
-		
-		for (int i = 0; i < data.size(); i++) {
-			sbValues.append(data.get(i));
-			out.println(sbValues.toString());
-			sbValues.setLength(0);
-		}
-		out.close();
-	}
-		
-	private void writeOutDistancesToFile(TFloatIntHashMap data, String fileName) throws IOException {
-		PrintWriter out = null;
-		File csvFile;
-		TFloatIntHashMap currentData;
-		DecimalFormat formatter = new DecimalFormat("0.00");
-
-		csvFile = new File(fileName);
-
-		out = new PrintWriter(new FileOutputStream(csvFile, false));
-		StringBuffer sbHeader = new StringBuffer();
-		sbHeader.append("SizeBin,Count");
-		out.println(sbHeader.toString());
-		
-		StringBuffer sbValues = new StringBuffer();
-		
-		// maps aren't sorted, but histograms are
-		TreeSet<float[]> sortedBins = new TreeSet<float[]>(new Comparator<float[]>() {
-			public int compare(float[] a, float[] b) {
-				if (a[0] > b[0]) return 1;
-				else return -1;
-			}
-		}); 
-		for (TFloatIntIterator it = data.iterator(); it.hasNext();) {
-			it.advance();
-			sortedBins.add(new float[]{it.key(),it.value()});
-		}
-		for (float[] v : sortedBins) {
-			sbValues.append(v[0]+","+(int)v[1]);
-			out.println(sbValues.toString());
-			sbValues.setLength(0);
-		}
-		out.close();
 	}
 }

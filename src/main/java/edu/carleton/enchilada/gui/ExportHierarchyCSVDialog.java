@@ -61,7 +61,7 @@ import java.util.ArrayList;
 /**
  * @author jtbigwoo
  */
-public class ExportCSVDialog extends JDialog implements ActionListener 
+public class ExportHierarchyCSVDialog extends JDialog implements ActionListener
 {
 	public static String EXPORT_FILE_EXTENSION = "csv";
 	
@@ -85,7 +85,7 @@ public class ExportCSVDialog extends JDialog implements ActionListener
 	 * @param exportAverages - if this is true, we call exportHierarchyToCSV which exports
 	 * the averages of all subcollections of the selected collection.
 	 */
-	public ExportCSVDialog(JFrame parent, Database db, Collection c, boolean exportAverages) {
+	public ExportHierarchyCSVDialog(JFrame parent, Database db, Collection c, boolean exportAverages) {
 		super (parent,"Export " + (exportAverages ? "Hierarchy " : "") + "to CSV file", true);
 		this.db = db;
 		this.parent = parent;

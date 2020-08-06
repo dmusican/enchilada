@@ -197,8 +197,8 @@ public class ClusterDistanceExportDialog extends JDialog implements ActionListen
 	public boolean exportToCSV(String fileName, boolean raw) throws DisplayException {		
 			if (fileName == null) {
 				return false;
-			} else if (! fileName.endsWith(ExportCSVDialog.EXPORT_FILE_EXTENSION)) {
-				fileName = fileName + "." + ExportCSVDialog.EXPORT_FILE_EXTENSION;
+			} else if (! fileName.endsWith(ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION)) {
+				fileName = fileName + "." + ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION;
 			}
 	
 			fileName = fileName.replaceAll("'", "");

@@ -63,7 +63,7 @@ import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.NonZeroCursor;
 import edu.carleton.enchilada.errorframework.DisplayException;
 import edu.carleton.enchilada.errorframework.ErrorLogger;
-import edu.carleton.enchilada.gui.ExportCSVDialog;
+import edu.carleton.enchilada.gui.ExportHierarchyCSVDialog;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
 /**
@@ -111,8 +111,8 @@ public class CSVDataSetExporter {
 		
 		if (fileName == null) {
 			return false;
-		} else if (! fileName.endsWith(ExportCSVDialog.EXPORT_FILE_EXTENSION)) {
-			fileName = fileName + "." + ExportCSVDialog.EXPORT_FILE_EXTENSION;
+		} else if (! fileName.endsWith(ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION)) {
+			fileName = fileName + "." + ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION;
 		}
 		if (! coll.getDatatype().equals("ATOFMS")) {
 			throw new DisplayException("Please choose a ATOFMS collection to export.");
@@ -311,8 +311,8 @@ public class CSVDataSetExporter {
 		
 		if (fileName == null) {
 			return false;
-		} else if (! fileName.endsWith(ExportCSVDialog.EXPORT_FILE_EXTENSION)) {
-			fileName = fileName + "." + ExportCSVDialog.EXPORT_FILE_EXTENSION;
+		} else if (! fileName.endsWith(ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION)) {
+			fileName = fileName + "." + ExportHierarchyCSVDialog.EXPORT_FILE_EXTENSION;
 		}
 		if (! coll.getDatatype().equals("ATOFMS")) {
 			throw new DisplayException("Please choose a ATOFMS collection to export.");

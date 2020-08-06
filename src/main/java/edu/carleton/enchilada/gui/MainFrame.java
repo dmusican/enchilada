@@ -54,16 +54,11 @@ import javax.swing.event.TableModelEvent;
 
 import edu.carleton.enchilada.ATOFMS.Peak;
 
-import edu.carleton.enchilada.collection.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -582,7 +577,7 @@ public class MainFrame extends JFrame implements ActionListener
 						"No collection selected", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-			new ExportCSVDialog(this, db, c, false);
+			new ExportHierarchyCSVDialog(this, db, c, false);
 		}
 		else if (source == HierarchyCSVexportItem)
 		{
@@ -592,7 +587,7 @@ public class MainFrame extends JFrame implements ActionListener
 						"No collection selected", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-			new ExportCSVDialog(this, db, c, true);
+			new ExportHierarchyCSVDialog(this, db, c, true);
 		}
 		else if (source == HistogramCSVexportItem)
 		{
@@ -602,8 +597,7 @@ public class MainFrame extends JFrame implements ActionListener
 											  "No collection selected", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-			System.out.println(Arrays.toString(c));
-			//new ExportCSVDialog(this, db, c, true);
+			new ExportHistogramCSVDialog(this, db, c);
 		}
 		else if (source == deleteAdoptItem)
 		{
