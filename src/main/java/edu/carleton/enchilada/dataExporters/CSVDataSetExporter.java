@@ -395,4 +395,16 @@ public class CSVDataSetExporter {
 		
 		
 	}
+
+
+	public void exportHistogramToCSV(Collection[] collections, String csvFileName, String selectedQueryType,
+			String ltime, String utime) {
+
+		if (ltime.equals(""))
+			ltime = "1753-01-01 00:00:00"; // minimum SQL date
+		if (utime.equals(""))
+			utime = "9999-12-31 23:59:59"; //maximum SQL date
+
+
+	}
 }

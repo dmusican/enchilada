@@ -54,6 +54,7 @@ import edu.carleton.enchilada.externalswing.SwingWorker;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 /**
  * @author jtbigwoo
@@ -65,15 +66,14 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 	private final JButton okButton;
 	private final JButton cancelButton;
 	private final JComboBox<String> queryList;
+	private String selectedQueryType = null;
 	private final JTextField csvFileField;
-	private JCheckBox onePerFileBox;
-	private JButton csvDotDotDot;
+	private final JButton csvDotDotDot;
 	private final JTextField startTimeField;
 	private final JTextField endTimeField;
-	private Database db;
+	private final Database db;
 	private JFrame parent = null;
 	private Collection[] collection = null;
-	private boolean onePerFile = false;
 
 	/**
 	 * Called when you want to export a particular particle or whole collection of particles
@@ -97,6 +97,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		JLabel queryTypePrompt = new JLabel("Query type: ");
 		String[] queryTypes = {"height sum", "rel. area sum", "area sum", "peak count", "size count"};
 		queryList = new JComboBox<String>(queryTypes);
+		queryList.addActionListener(this);
 
 		JLabel timeLabel = new JLabel("For times, enter YYYY-MM-DD hh:mm:ss, blank for all");
 		JLabel startTimeLabel = new JLabel("Start time: ");
@@ -105,9 +106,6 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		JLabel endTimeLabel = new JLabel("End time: ");
 		endTimeField = new JTextField(15);
 
-		onePerFileBox = new JCheckBox("Sparse particle format");
-		onePerFileBox.addActionListener(this);
-		
 		JPanel buttonPanel = new JPanel();
 		okButton = new JButton("OK");
 		okButton.addActionListener(this);
@@ -115,8 +113,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		cancelButton.addActionListener(this);
 		buttonPanel.add(okButton);
 		buttonPanel.add(cancelButton);
-	    buttonPanel.add(onePerFileBox);
-		
+
 		JPanel mainPanel = new JPanel();
 		SpringLayout layout = new SpringLayout();
 	    mainPanel.setLayout(layout);	
@@ -195,7 +192,6 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		int maxMZValue;
 		Object source = e.getSource();
 		if (source == csvDotDotDot) {
 			String fileName = "*." + EXPORT_FILE_EXTENSION;
@@ -204,56 +200,63 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 			}
 			csvFileField.setText((new FileDialogPicker("Choose ." + EXPORT_FILE_EXTENSION + " file destination",
 					 fileName, this, false)).getFileName());
-		}
-		if (source == onePerFileBox) {
-			onePerFile = onePerFileBox.isSelected();
-			if (onePerFile)
-				queryList.setEnabled(false);
-			else
-				queryList.setEnabled(true);
-		}
-		else if (source == okButton) {
-			try {
-				maxMZValue = 0;
-			}
-			catch (NumberFormatException nfe) {
-				maxMZValue = -1;
-			}
+		} else if (source == queryList) {
+			selectedQueryType = (String)((JComboBox<String>)source).getSelectedItem();
+
+		} else if (source == okButton) {
 			if(!csvFileField.getText().equals("") && !csvFileField.getText().equals("*." + EXPORT_FILE_EXTENSION)) {
-				if (maxMZValue > 0 || onePerFile) {
-					final Database dbRef = (Database)db;
-					
-					final ProgressBarWrapper progressBar = 
-						new ProgressBarWrapper(parent, CSVDataSetExporter.TITLE, 100);
-					final CSVDataSetExporter cse = 
-							new CSVDataSetExporter(
-									this, dbRef,progressBar);
-					cse.setOnePerFile(onePerFile);
-					
-					progressBar.constructThis();
-					final String csvFileName = csvFileField.getText().equals("") ? null : csvFileField.getText();
-					final int mzValue = maxMZValue;
-					
-					final SwingWorker worker = new SwingWorker(){
-						public Object construct() {
-							try {
-								cse.exportHierarchyToCSV(collection[0], csvFileName, mzValue);
-							}catch (DisplayException e1) {
-								ErrorLogger.displayException(progressBar,e1.toString());
-							} 
-							return null;
+
+				String choice = null;
+				int numbins = -100;
+				var bins = new ArrayList<Integer>();
+				int lpeak = -100;
+				int upeak = -100;
+				if (selectedQueryType.equals("size count")) {
+					choice = JOptionPane.showInputDialog(
+							"Enter 16, 32, 64, or 128 for standard bins per decade or press enter to create your own bins");
+					System.out.println("it is: " + choice);
+
+					assert choice != null;
+					if (choice.equals("")) {
+						numbins = Integer.parseInt(JOptionPane.showInputDialog("Enter total number of size bins:"));
+						bins.add(0);
+						for (int x = 0; x < numbins; x++) {
+							bins.add(Integer.parseInt(
+									JOptionPane.showInputDialog("Enter upper bound for size bin " + (x + 1))));
 						}
-						public void finished() {
-							progressBar.disposeThis();
-							ErrorLogger.flushLog(parent);
-							parent.validate();
-						}
-					};
-					worker.start();
-					dispose();
+					}
+				} else {
+					lpeak = Integer.parseInt(JOptionPane.showInputDialog("Enter lower bound for peak range:"));
+					upeak = Integer.parseInt(JOptionPane.showInputDialog("Enter upper bound for peak range:"));
 				}
-				else
-					JOptionPane.showMessageDialog(this, "Highest m/z value to export must be a number greater than zero.");
+
+				final ProgressBarWrapper progressBar =
+						new ProgressBarWrapper(parent, CSVDataSetExporter.TITLE, 100);
+				final CSVDataSetExporter cse =
+						new CSVDataSetExporter(
+								this, db,progressBar);
+
+				progressBar.constructThis();
+				final String csvFileName = csvFileField.getText().equals("") ? null : csvFileField.getText();
+
+				final SwingWorker worker = new SwingWorker(){
+					public Object construct() {
+//						try {
+							cse.exportHistogramToCSV(collection, csvFileName, selectedQueryType,
+													 startTimeField.getText(), endTimeField.getText());
+//						}catch (DisplayException e1) {
+//							ErrorLogger.displayException(progressBar,e1.toString());
+//						}
+						return null;
+					}
+					public void finished() {
+						progressBar.disposeThis();
+						ErrorLogger.flushLog(parent);
+						parent.validate();
+					}
+				};
+				worker.start();
+				dispose();
 			}
 			//If they didn't enter a name, force them to enter one
 			else
