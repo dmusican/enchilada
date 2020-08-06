@@ -116,15 +116,7 @@ public class MainFrame extends JFrame implements ActionListener
 	private JMenuItem MSAexportItem;
 	private JMenuItem CSVexportItem;
 	private JMenuItem HierarchyCSVexportItem;
-	/*
-	 * These capabilities work, but only with trivially small databases
-	private JMenuItem importXmlDatabaseItem;
-	private JMenuItem importXlsDatabaseItem;
-	private JMenuItem importCsvDatabaseItem;
-	private JMenuItem exportXmlDatabaseItem;
-	private JMenuItem exportXlsDatabaseItem;
-	private JMenuItem exportCsvDatabaseItem;
-	*/
+	private JMenuItem HistogramCSVexportItem;
 	private JMenuItem emptyCollection;
 	private JMenuItem saveParticle;
 	private JMenuItem queryItem;
@@ -601,6 +593,17 @@ public class MainFrame extends JFrame implements ActionListener
 				return;
 			}
 			new ExportCSVDialog(this, db, c, true);
+		}
+		else if (source == HistogramCSVexportItem)
+		{
+			final Collection[] c = getSelectedCollections();
+			if (c == null) {
+				JOptionPane.showMessageDialog(this, "Please select a collection to export.",
+											  "No collection selected", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			System.out.println(Arrays.toString(c));
+			//new ExportCSVDialog(this, db, c, true);
 		}
 		else if (source == deleteAdoptItem)
 		{
@@ -1221,6 +1224,8 @@ public class MainFrame extends JFrame implements ActionListener
 		CSVexportItem.addActionListener(this);
 		HierarchyCSVexportItem = new JMenuItem("to CSV File as Hierarchy of Average Particles. . .");
 		HierarchyCSVexportItem.addActionListener(this);
+		HistogramCSVexportItem = new JMenuItem("to CSV File as Histogram. . .");
+		HistogramCSVexportItem.addActionListener(this);
 		exportCollectionMenu.setMnemonic(KeyEvent.VK_E);
 		// Exporting to MS-Analyze only makes sense under Windows, since paths won't otherwise work
 		if (System.getProperty("os.name").toLowerCase().contains("win")) {
@@ -1228,6 +1233,7 @@ public class MainFrame extends JFrame implements ActionListener
 		}
 		exportCollectionMenu.add(CSVexportItem);
 		exportCollectionMenu.add(HierarchyCSVexportItem);
+		exportCollectionMenu.add(HistogramCSVexportItem);
 		
 		compactDBItem = new JMenuItem("Compact Database", KeyEvent.VK_C);
 		compactDBItem.addActionListener(this);

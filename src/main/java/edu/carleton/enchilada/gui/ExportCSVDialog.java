@@ -228,22 +228,5 @@ public class ExportCSVDialog extends JDialog implements ActionListener
 		else if (source == cancelButton) {
 			dispose();
 		}
-		//else  
-		//	dispose();
 	}
-	private ArrayList<Integer> getSelectedAtomIds(JTable particleTable)
-	{
-		ArrayList<Integer> returnList = null;
-		TableModel particleModel;
-		Object value;
-		if (particleTable.getSelectedRows() != null && particleTable.getSelectedRows().length != 0) {
-			particleModel = particleTable.getModel();
-			returnList = new ArrayList<Integer>(particleTable.getSelectedRows().length);
-			for (int rowIndex : particleTable.getSelectedRows()) {
-				returnList.add((Integer) particleTable.getValueAt(rowIndex, 0));
-			}
-		}
-		return returnList;
-	}
-
 }
