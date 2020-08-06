@@ -71,6 +71,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 	private final JButton csvDotDotDot;
 	private final JTextField startTimeField;
 	private final JTextField endTimeField;
+	private final JTextField timeResField;
 	private final Database db;
 	private JFrame parent = null;
 	private Collection[] collection = null;
@@ -106,6 +107,9 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		JLabel endTimeLabel = new JLabel("End time: ");
 		endTimeField = new JTextField(15);
 
+		JLabel timeResLabel = new JLabel("Time resolution (secs)");
+		timeResField = new JTextField(15);
+
 		JPanel buttonPanel = new JPanel();
 		okButton = new JButton("OK");
 		okButton.addActionListener(this);
@@ -128,6 +132,8 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		mainPanel.add(startTimeField);
 		mainPanel.add(endTimeLabel);
 		mainPanel.add(endTimeField);
+		mainPanel.add(timeResLabel);
+		mainPanel.add(timeResField);
 	    mainPanel.add(buttonPanel);
 	    
 		layout.putConstraint(SpringLayout.WEST, csvFileLabel,
@@ -175,16 +181,25 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		layout.putConstraint(SpringLayout.NORTH, endTimeLabel,
 							 10, SpringLayout.SOUTH, startTimeLabel);
 
-
 		layout.putConstraint(SpringLayout.WEST, endTimeField,
 							 170, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, endTimeField,
 							 10, SpringLayout.SOUTH, startTimeLabel);
 
+		layout.putConstraint(SpringLayout.WEST, timeResLabel,
+							 10, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, timeResLabel,
+							 10, SpringLayout.SOUTH, endTimeLabel);
+
+		layout.putConstraint(SpringLayout.WEST, timeResField,
+							 170, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, timeResField,
+							 10, SpringLayout.SOUTH, endTimeLabel);
+
 		layout.putConstraint(SpringLayout.WEST, buttonPanel,
 							 160, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, buttonPanel,
-							 10, SpringLayout.SOUTH, endTimeLabel);
+							 10, SpringLayout.SOUTH, timeResLabel);
 
 		add(mainPanel);
 		
@@ -206,15 +221,14 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		} else if (source == okButton) {
 			if(!csvFileField.getText().equals("") && !csvFileField.getText().equals("*." + EXPORT_FILE_EXTENSION)) {
 
-				String choice = null;
-				int numbins = -100;
+				final String choice;
+				final int numbins;
 				var bins = new ArrayList<Integer>();
 				int lpeak = -100;
 				int upeak = -100;
 				if (selectedQueryType.equals("size count")) {
 					choice = JOptionPane.showInputDialog(
 							"Enter 16, 32, 64, or 128 for standard bins per decade or press enter to create your own bins");
-					System.out.println("it is: " + choice);
 
 					assert choice != null;
 					if (choice.equals("")) {
@@ -224,10 +238,17 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 							bins.add(Integer.parseInt(
 									JOptionPane.showInputDialog("Enter upper bound for size bin " + (x + 1))));
 						}
+					} else {
+						numbins = -1;
 					}
 				} else {
+					choice = "";
+					numbins = -1;
 					lpeak = Integer.parseInt(JOptionPane.showInputDialog("Enter lower bound for peak range:"));
 					upeak = Integer.parseInt(JOptionPane.showInputDialog("Enter upper bound for peak range:"));
+					for (int x = lpeak; x <= upeak; x++) {
+						bins.add(x);
+					}
 				}
 
 				final ProgressBarWrapper progressBar =
@@ -243,7 +264,8 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 					public Object construct() {
 //						try {
 							cse.exportHistogramToCSV(collection, csvFileName, selectedQueryType,
-													 startTimeField.getText(), endTimeField.getText());
+													 startTimeField.getText(), endTimeField.getText(),
+													 Integer.parseInt(timeResField.getText()), choice, numbins, bins);
 //						}catch (DisplayException e1) {
 //							ErrorLogger.displayException(progressBar,e1.toString());
 //						}
