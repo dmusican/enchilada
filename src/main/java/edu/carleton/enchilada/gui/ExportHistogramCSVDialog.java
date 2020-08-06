@@ -62,12 +62,14 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 {
 	public static String EXPORT_FILE_EXTENSION = "csv";
 
-	private JButton okButton;
-	private JButton cancelButton;
-	private JComboBox queryList;
-	private JTextField csvFileField;
+	private final JButton okButton;
+	private final JButton cancelButton;
+	private final JComboBox<String> queryList;
+	private final JTextField csvFileField;
 	private JCheckBox onePerFileBox;
 	private JButton csvDotDotDot;
+	private final JTextField startTimeField;
+	private final JTextField endTimeField;
 	private Database db;
 	private JFrame parent = null;
 	private Collection[] collection = null;
@@ -84,7 +86,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		this.db = db;
 		this.parent = parent;
 		this.collection = c;
-		setSize(450,150);
+		setSize(450,300);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		JLabel csvFileLabel = new JLabel("." + EXPORT_FILE_EXTENSION + " File: ");
@@ -93,8 +95,15 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		csvDotDotDot.addActionListener(this);
 		
 		JLabel queryTypePrompt = new JLabel("Query type: ");
-		String[] queryTypes = {"heigh sum", "rel. area sum", "area sum", "peak count", "size count"};
-		queryList = new JComboBox(queryTypes);
+		String[] queryTypes = {"height sum", "rel. area sum", "area sum", "peak count", "size count"};
+		queryList = new JComboBox<String>(queryTypes);
+
+		JLabel timeLabel = new JLabel("For times, enter YYYY-MM-DD hh:mm:ss, blank for all");
+		JLabel startTimeLabel = new JLabel("Start time: ");
+		startTimeField = new JTextField(15);
+
+		JLabel endTimeLabel = new JLabel("End time: ");
+		endTimeField = new JTextField(15);
 
 		onePerFileBox = new JCheckBox("Sparse particle format");
 		onePerFileBox.addActionListener(this);
@@ -117,33 +126,69 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 	    mainPanel.add(csvDotDotDot);
 	    mainPanel.add(queryTypePrompt);
 	    mainPanel.add(queryList);
+	    mainPanel.add(timeLabel);
+		mainPanel.add(startTimeLabel);
+		mainPanel.add(startTimeField);
+		mainPanel.add(endTimeLabel);
+		mainPanel.add(endTimeField);
 	    mainPanel.add(buttonPanel);
 	    
 		layout.putConstraint(SpringLayout.WEST, csvFileLabel,
                 10, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, csvFileLabel,
                 15, SpringLayout.NORTH, mainPanel);
+
 		layout.putConstraint(SpringLayout.WEST, csvFileField,
                 170, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, csvFileField,
                 10, SpringLayout.NORTH, mainPanel);
+
 		layout.putConstraint(SpringLayout.WEST, csvDotDotDot,
                 375, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, csvDotDotDot,
                 10, SpringLayout.NORTH, mainPanel);
+
 		layout.putConstraint(SpringLayout.WEST, queryTypePrompt,
                 10, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, queryTypePrompt,
                 15, SpringLayout.SOUTH, csvFileField);
+
 		layout.putConstraint(SpringLayout.WEST, queryList,
                 170, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, queryList,
                 10, SpringLayout.SOUTH, csvFileField);
+
+		layout.putConstraint(SpringLayout.WEST, timeLabel,
+							 10, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, timeLabel,
+							 10, SpringLayout.SOUTH, queryTypePrompt);
+
+		layout.putConstraint(SpringLayout.WEST, startTimeLabel,
+							 10, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, startTimeLabel,
+							 10, SpringLayout.SOUTH, timeLabel);
+
+		layout.putConstraint(SpringLayout.WEST, startTimeField,
+							 170, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, startTimeField,
+							 10, SpringLayout.SOUTH, timeLabel);
+
+		layout.putConstraint(SpringLayout.WEST, endTimeLabel,
+							 10, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, endTimeLabel,
+							 10, SpringLayout.SOUTH, startTimeLabel);
+
+
+		layout.putConstraint(SpringLayout.WEST, endTimeField,
+							 170, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, endTimeField,
+							 10, SpringLayout.SOUTH, startTimeLabel);
+
 		layout.putConstraint(SpringLayout.WEST, buttonPanel,
-                160, SpringLayout.WEST, mainPanel);
+							 160, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, buttonPanel,
-                10, SpringLayout.SOUTH, queryTypePrompt);
-		
+							 10, SpringLayout.SOUTH, endTimeLabel);
+
 		add(mainPanel);
 		
 		setVisible(true);	
