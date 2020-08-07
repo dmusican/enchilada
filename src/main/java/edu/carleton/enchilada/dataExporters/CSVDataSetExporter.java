@@ -40,6 +40,7 @@
 
 package edu.carleton.enchilada.dataExporters;
 
+import com.opencsv.CSVWriter;
 import edu.carleton.enchilada.ATOFMS.ParticleInfo;
 import edu.carleton.enchilada.analysis.BinnedPeak;
 import edu.carleton.enchilada.analysis.BinnedPeakList;
@@ -54,16 +55,14 @@ import edu.carleton.enchilada.gui.ExportHierarchyCSVDialog;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -401,7 +400,7 @@ public class CSVDataSetExporter {
 
 	@SuppressWarnings("StringConcatenationInLoop")
 	public void exportHistogramToCSV(Collection[] collections, String csvFileName, String qtype,
-			String ltime, String utime, int timeres, String choice, int numbins, ArrayList<Integer> bins) throws SQLException {
+			String ltime, String utime, int timeres, String choice, int numbins, ArrayList<Double> bins) throws SQLException, IOException {
 
 		if (ltime.equals(""))
 			ltime = "1753-01-01 00:00:00"; // minimum SQL date
@@ -434,7 +433,6 @@ public class CSVDataSetExporter {
 		}
 
 
-		double[] bins;
 		String cols, join;
 		if (qtype.equals("size count")) {
 			if (choice.equals("16")) {
@@ -528,10 +526,10 @@ public class CSVDataSetExporter {
 			labels.add("StartTime");
 
 			if (qtype.equals("size count")) {
-				for (int j=0; j < bins.length-1; j++) {
-					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins[j] + " AND " + bins[j+1] +
-							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + (j+1) + ", ";
-					labels.add("" + (float)(bins[j]) + "-" + (float)(bins[j+1]));
+				for (int j = 0; j < bins.length - 1; j++) {
+					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins[j] + " AND " + bins[j + 1] +
+							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + (j + 1) + ", ";
+					labels.add("" + (float) (bins[j]) + "-" + (float) (bins[j + 1]));
 
 				}
 
@@ -566,9 +564,9 @@ public class CSVDataSetExporter {
 
 			// select = select.rstrip(', ')
 			while (select.endsWith(",") || select.endsWith(" ")) {
-				select = select.substring(0, select.length()-1);
+				select = select.substring(0, select.length() - 1);
 			}
-			
+
 			String query = String.join(
 					System.getProperty("line.separator"),
 					"SELECT",
@@ -584,7 +582,7 @@ public class CSVDataSetExporter {
 					"    FROM ATOFMSAtomInfoDense AS d" + join,
 					"      InternalAtomOrder AS i",
 					"    WHERE i.CollectionID = " + cid + " AND d.AtomID = i.AtomID",
-					"    AND d.Time BETWEEN '" + ltime +  "AND '"  + utime + "'",
+					"    AND d.Time BETWEEN '" + ltime + "AND '" + utime + "'",
 					"  ) AS data",
 					"GROUP BY y, m, d, h, mi, s",
 					"ORDER BY y, m, d, h, mi, s"
@@ -592,23 +590,22 @@ public class CSVDataSetExporter {
 
 			int dataCols;
 			ArrayList<LocalDateTime> datetimes = new ArrayList<>();
-			ArrayList<ArrayList<Float>> data = new ArrayList<>();
+			ArrayList<ArrayList<String>> data = new ArrayList<>();
 
 			try (Statement stmt = db.getCon().createStatement();
-				 ResultSet rs = stmt.executeQuery(query);)
-			{
+				 ResultSet rs = stmt.executeQuery(query);) {
 				dataCols = rs.getMetaData().getColumnCount();
 				while (rs.next()) {
 					int yyyy = rs.getInt(1);
 					int mm = rs.getInt(2);
 					int dd = rs.getInt(3);
-					int hh = rs.getInt(4)*hl;
-					int mi = rs.getInt(5)*ml;
-					int ss = rs.getInt(6)*sl;
+					int hh = rs.getInt(4) * hl;
+					int mi = rs.getInt(5) * ml;
+					int ss = rs.getInt(6) * sl;
 					datetimes.add(LocalDateTime.of(yyyy, mm, dd, hh, mi, ss));
-					ArrayList<Float> row = new ArrayList<>()>;
+					ArrayList<String> row = new ArrayList<>() >;
 					for (int col = 7; col <= dataCols; col++) {
-						row.add(rs.getFloat(col));
+						row.add("" + rs.getFloat(col));
 					}
 					data.add(row);
 				}
@@ -616,12 +613,12 @@ public class CSVDataSetExporter {
 
 			int l = 0;
 
-			ArrayList<Integer> zrow = new ArrayList<>();
-			for (int i=7; i <= dataCols; i++) {
-				zrow.add(0);
+			ArrayList<String> zrow = new ArrayList<>();
+			for (int i = 7; i <= dataCols; i++) {
+				zrow.add("0");
 			}
 
-			while (datetimes.get(l).compareTo(datetimes.get(datetimes.size()-1)) < 0) {
+			while (datetimes.get(l).compareTo(datetimes.get(datetimes.size() - 1)) < 0) {
 				Duration delta = Duration.between(datetimes.get(l), datetimes.get(l + 1));
 				if (delta.getSeconds() != timeres) {
 					LocalDateTime thistime = datetimes.get(l).plusSeconds(timeres);
@@ -631,26 +628,25 @@ public class CSVDataSetExporter {
 				l += 1;
 			}
 
-		datelabels = []
-		timelabels = []
-		for x in datetimes:
-		datelabels.append(x.isoformat().split('T')[0])
-		timelabels.append(x.isoformat().split('T')[1])
+			ArrayList<String> datelabels = new ArrayList<>();
+			ArrayList<String> timelabels = new ArrayList<>();
 
-		table = numpy.empty(shape=(len(timelabels)+1,len(labels)), dtype='a24')
-		table[0,:] = labels
-		table[1:,0] = datelabels
-		table[1:,1] = timelabels
-		table[1:,2:] = data[:,6:]
+			for (LocalDateTime x : datetimes) {
+				datelabels.add(x.format(DateTimeFormatter.ISO_LOCAL_DATE));
+				timelabels.add(x.format(DateTimeFormatter.ISO_LOCAL_TIME));
+			}
 
-		numpy.savetxt('histogram_' + cn + '_' + qtype + '.csv', table, fmt='%s', delimiter=',')
+			try (CSVWriter writer = new CSVWriter(new FileWriter("/tmp/hist_" + cn + "_" + qtype + ".csv"))) {
+				writer.writeNext((String[]) labels.toArray());
 
-		print 'Post-processing took: ' + str(time.clock()-timer) + ' seconds'
-		print '\nCSV saved as: ' + 'histogram_' + cn + '_' + qtype + '.csv'
-
-		cnxn.close()
-
-
-
+				for (int i = 0; i < datelabels.size(); i++) {
+					ArrayList<String> row = new ArrayList<>();
+					row.add(datelabels.get(i));
+					row.add(timelabels.get(i));
+					row.addAll(data.get(i));
+					writer.writeNext((String[]) row.toArray());
+				}
+			}
+		}
 	}
 }

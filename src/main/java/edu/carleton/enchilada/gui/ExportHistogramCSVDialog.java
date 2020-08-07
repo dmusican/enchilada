@@ -223,7 +223,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 
 				final String choice;
 				final int numbins;
-				var bins = new ArrayList<Integer>();
+				ArrayList<Double> bins = new ArrayList<>();
 				int lpeak = -100;
 				int upeak = -100;
 				if (selectedQueryType.equals("size count")) {
@@ -233,9 +233,9 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 					assert choice != null;
 					if (choice.equals("")) {
 						numbins = Integer.parseInt(JOptionPane.showInputDialog("Enter total number of size bins:"));
-						bins.add(0);
+						bins.add(0.);
 						for (int x = 0; x < numbins; x++) {
-							bins.add(Integer.parseInt(
+							bins.add(Double.parseDouble(
 									JOptionPane.showInputDialog("Enter upper bound for size bin " + (x + 1))));
 						}
 					} else {
@@ -247,7 +247,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 					lpeak = Integer.parseInt(JOptionPane.showInputDialog("Enter lower bound for peak range:"));
 					upeak = Integer.parseInt(JOptionPane.showInputDialog("Enter upper bound for peak range:"));
 					for (int x = lpeak; x <= upeak; x++) {
-						bins.add(x);
+						bins.add((double)x);
 					}
 				}
 
@@ -262,13 +262,13 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 
 				final SwingWorker worker = new SwingWorker(){
 					public Object construct() {
-//						try {
+						try {
 							cse.exportHistogramToCSV(collection, csvFileName, selectedQueryType,
 													 startTimeField.getText(), endTimeField.getText(),
 													 Integer.parseInt(timeResField.getText()), choice, numbins, bins);
-//						}catch (DisplayException e1) {
-//							ErrorLogger.displayException(progressBar,e1.toString());
-//						}
+						} catch (Exception e1) {
+							ErrorLogger.displayException(progressBar,e1.toString());
+						}
 						return null;
 					}
 					public void finished() {
