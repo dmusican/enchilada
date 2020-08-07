@@ -58,11 +58,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -589,35 +590,46 @@ public class CSVDataSetExporter {
 					"ORDER BY y, m, d, h, mi, s"
 			);
 
-		datacsr.execute(query)
+			int dataCols;
+			ArrayList<LocalDateTime> datetimes = new ArrayList<>();
+			ArrayList<ArrayList<Float>> data = new ArrayList<>();
 
-		data = numpy.array(datacsr.fetchall())
+			try (Statement stmt = db.getCon().createStatement();
+				 ResultSet rs = stmt.executeQuery(query);)
+			{
+				dataCols = rs.getMetaData().getColumnCount();
+				while (rs.next()) {
+					int yyyy = rs.getInt(1);
+					int mm = rs.getInt(2);
+					int dd = rs.getInt(3);
+					int hh = rs.getInt(4)*hl;
+					int mi = rs.getInt(5)*ml;
+					int ss = rs.getInt(6)*sl;
+					datetimes.add(LocalDateTime.of(yyyy, mm, dd, hh, mi, ss));
+					ArrayList<Float> row = new ArrayList<>()>;
+					for (int col = 7; col <= dataCols; col++) {
+						row.add(rs.getFloat(col));
+					}
+					data.add(row);
+				}
+			}
 
-		datetimes = []
-		for k in range(len(data[:,0])):
-		yyyy = int(data[k,0])
-		mm = int(data[k,1])
-		dd = int(data[k,2])
-		hh = int(data[k,3]*hl)
-		mi = int(data[k,4]*ml)
-		ss = int(data[k,5]*sl)
-		datetimes.append(datetime.datetime(yyyy,mm,dd,hh,mi,ss))
+			int l = 0;
 
-		print '\n\nSQL querying took: ' + str(time.clock()-timer) + ' seconds'
+			ArrayList<Integer> zrow = new ArrayList<>();
+			for (int i=7; i <= dataCols; i++) {
+				zrow.add(0);
+			}
 
-		timer = time.clock()
-
-		l = 0
-
-		zrow = [0 for x in data[0,:]]
-
-		while (datetimes[l] < datetimes[-1]):
-		delta = datetimes[l+1] - datetimes[l]
-		if (delta.total_seconds() != timeres):
-		thistime = datetimes[l] + datetime.timedelta(seconds=timeres)
-		datetimes.insert(l+1, thistime)
-		data = numpy.insert(data, l+1, zrow, axis=0)
-		l += 1
+			while (datetimes.get(l).compareTo(datetimes.get(datetimes.size()-1)) < 0) {
+				Duration delta = Duration.between(datetimes.get(l), datetimes.get(l + 1));
+				if (delta.getSeconds() != timeres) {
+					LocalDateTime thistime = datetimes.get(l).plusSeconds(timeres);
+					datetimes.add(l + 1, thistime);
+					data.add(l + 1, zrow);
+				}
+				l += 1;
+			}
 
 		datelabels = []
 		timelabels = []
