@@ -58,7 +58,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -395,8 +398,9 @@ public class CSVDataSetExporter {
 	}
 
 
+	@SuppressWarnings("StringConcatenationInLoop")
 	public void exportHistogramToCSV(Collection[] collections, String csvFileName, String qtype,
-			String ltime, String utime, int timeres, String choice, int numbins, ArrayList<Integer> bins) {
+			String ltime, String utime, int timeres, String choice, int numbins, ArrayList<Integer> bins) throws SQLException {
 
 		if (ltime.equals(""))
 			ltime = "1753-01-01 00:00:00"; // minimum SQL date
@@ -512,6 +516,128 @@ public class CSVDataSetExporter {
 			cols = "d.[AtomID], d.[Time], d.[Size], s.[PeakHeight], s.[PeakLocation], s.[PeakArea], s.[RelPeakArea] ";
 			join = "JOIN (SELECT * FROM ATOFMSAtomInfoSparse) AS s ON d.[AtomID] = s.[AtomID], ";
 		}
+
+		for (Collection collection : collections) {
+			int cid = collection.getCollectionID();
+			String cn = collection.getName();
+
+			String select = "";
+			ArrayList<String> labels = new ArrayList<String>();
+			labels.add("Date");
+			labels.add("StartTime");
+
+			if (qtype.equals("size count")) {
+				for (int j=0; j < bins.length-1; j++) {
+					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins[j] + " AND " + bins[j+1] +
+							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + (j+1) + ", ";
+					labels.add("" + (float)(bins[j]) + "-" + (float)(bins[j+1]));
+
+				}
+
+			} else if (qtype.equals("peak count")) {
+				for (double j : bins) {
+					select += "SUM(CAST((CASE WHEN PeakLocation = " + j +
+							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + j + ", ";
+					labels.add("" + j);
+
+				}
+			} else {
+				for (double j : bins) {
+					String qt;
+					switch (qtype) {
+						case "height sum":
+							qt = "PeakHeight";
+							break;
+						case "rel. sum area":
+							qt = "RelPeakArea";
+							break;
+						case "area sum":
+							qt = "PeakArea";
+							break;
+						default:
+							throw new IllegalArgumentException("Bad query type");
+					}
+					select += "SUM(CAST(" + qt + " * (CASE WHEN PeakLocation = " + j +
+							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + j + ", ";
+					labels.add("" + j);
+				}
+			}
+
+			// select = select.rstrip(', ')
+			while (select.endsWith(",") || select.endsWith(" ")) {
+				select = select.substring(0, select.length()-1);
+			}
+			
+			String query = String.join(
+					System.getProperty("line.separator"),
+					"SELECT",
+					"  CAST(strftime('%Y', Time) AS integer) as y,",
+					"  CAST(strftime('%m', Time) AS integer) as m,",
+					"  CAST(strftime('%d', Time) AS integer) as d,",
+					"  CAST(strftime('%H', Time) AS INTEGER)" + hf + " AS h,",
+					"  CAST(strftime('%M', Time) AS INTEGER)" + mf + " AS mi,",
+					"  CAST(strftime('%S', Time) AS INTEGER)" + sf + " AS s,",
+					"  " + select,
+					"  FROM (",
+					"    SELECT " + cols,
+					"    FROM ATOFMSAtomInfoDense AS d" + join,
+					"      InternalAtomOrder AS i",
+					"    WHERE i.CollectionID = " + cid + " AND d.AtomID = i.AtomID",
+					"    AND d.Time BETWEEN '" + ltime +  "AND '"  + utime + "'",
+					"  ) AS data",
+					"GROUP BY y, m, d, h, mi, s",
+					"ORDER BY y, m, d, h, mi, s"
+			);
+
+		datacsr.execute(query)
+
+		data = numpy.array(datacsr.fetchall())
+
+		datetimes = []
+		for k in range(len(data[:,0])):
+		yyyy = int(data[k,0])
+		mm = int(data[k,1])
+		dd = int(data[k,2])
+		hh = int(data[k,3]*hl)
+		mi = int(data[k,4]*ml)
+		ss = int(data[k,5]*sl)
+		datetimes.append(datetime.datetime(yyyy,mm,dd,hh,mi,ss))
+
+		print '\n\nSQL querying took: ' + str(time.clock()-timer) + ' seconds'
+
+		timer = time.clock()
+
+		l = 0
+
+		zrow = [0 for x in data[0,:]]
+
+		while (datetimes[l] < datetimes[-1]):
+		delta = datetimes[l+1] - datetimes[l]
+		if (delta.total_seconds() != timeres):
+		thistime = datetimes[l] + datetime.timedelta(seconds=timeres)
+		datetimes.insert(l+1, thistime)
+		data = numpy.insert(data, l+1, zrow, axis=0)
+		l += 1
+
+		datelabels = []
+		timelabels = []
+		for x in datetimes:
+		datelabels.append(x.isoformat().split('T')[0])
+		timelabels.append(x.isoformat().split('T')[1])
+
+		table = numpy.empty(shape=(len(timelabels)+1,len(labels)), dtype='a24')
+		table[0,:] = labels
+		table[1:,0] = datelabels
+		table[1:,1] = timelabels
+		table[1:,2:] = data[:,6:]
+
+		numpy.savetxt('histogram_' + cn + '_' + qtype + '.csv', table, fmt='%s', delimiter=',')
+
+		print 'Post-processing took: ' + str(time.clock()-timer) + ' seconds'
+		print '\nCSV saved as: ' + 'histogram_' + cn + '_' + qtype + '.csv'
+
+		cnxn.close()
+
 
 
 	}
