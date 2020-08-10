@@ -219,15 +219,15 @@ public class CSVDataSetExporterTest extends TestCase {
 		assertEquals(null, reader.readLine());
 	}
 
-	// Make sure works for multiple collections
-	public void testExportHistogramToCSV() throws IOException, SQLException {
+	public void testExportHistogramToCSVHeightSum() throws IOException, SQLException {
 
 		ArrayList<Double> bins = new ArrayList<>();
 		for (int bin = 1; bin <= 50; bin++) {
 			bins.add((double)bin);
 		}
 		exporter.exportHistogramToCSV(
-				new Collection[]{db.getCollection(2)},
+				new Collection[]{db.getCollection(2),
+								 db.getCollection(3)},
 				tempDir.toString(),
 				"height sum",
 				"",
@@ -246,7 +246,62 @@ public class CSVDataSetExporterTest extends TestCase {
 					scanner.next());
 			assertFalse(scanner.hasNext());
 		}
+		assertTrue(outputFilename.toFile().delete());
 
+		outputFilename = tempDir.resolve("histogram_height_Two.csv");
+		try (Scanner scanner = new Scanner(tempDir.resolve(outputFilename))) {
+			assertEquals(
+					"Date,StartTime,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50",
+					scanner.next());
+			assertEquals(
+					"2003-09-02,17:30:38,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,36.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+					scanner.next());
+			assertFalse(scanner.hasNext());
+		}
+		assertTrue(outputFilename.toFile().delete());
+
+	}
+
+
+	public void testExportHistogramToCSVRelAreaSum() throws IOException, SQLException {
+
+		ArrayList<Double> bins = new ArrayList<>();
+		for (int bin = 1; bin <= 50; bin++) {
+			bins.add((double)bin);
+		}
+		exporter.exportHistogramToCSV(
+				new Collection[]{db.getCollection(2),
+						db.getCollection(3)},
+				tempDir.toString(),
+				"rel area sum",
+				"",
+				"",
+				1,
+				"",
+				bins);
+
+		Path outputFilename = tempDir.resolve("histogram_rel_One.csv");
+		try (Scanner scanner = new Scanner(tempDir.resolve(outputFilename))) {
+			assertEquals(
+					"Date,StartTime,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50",
+					scanner.next());
+			assertEquals(
+					"2003-09-02,17:30:38,0.0,0.0,0.0,0.0,0.0,0.006,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.006,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.018,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.006,0.0,0.0,0.0,0.0,0.0",
+					scanner.next());
+			assertFalse(scanner.hasNext());
+		}
+		assertTrue(outputFilename.toFile().delete());
+
+		outputFilename = tempDir.resolve("histogram_rel_Two.csv");
+		try (Scanner scanner = new Scanner(tempDir.resolve(outputFilename))) {
+			assertEquals(
+					"Date,StartTime,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50",
+					scanner.next());
+			assertEquals(
+					"2003-09-02,17:30:38,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.018,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+					scanner.next());
+			assertFalse(scanner.hasNext());
+		}
 		assertTrue(outputFilename.toFile().delete());
 
 	}
@@ -255,6 +310,7 @@ public class CSVDataSetExporterTest extends TestCase {
 	{
 		if (csvFile != null) csvFile.delete();
 		if (secondCsvFile != null) secondCsvFile.delete();
+		System.out.println(tempDir.toString());
 		assertTrue(tempDir.toFile().delete());
 		db.closeConnection();
 	}
