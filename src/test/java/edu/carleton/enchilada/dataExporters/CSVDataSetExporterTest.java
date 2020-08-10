@@ -43,8 +43,12 @@ package edu.carleton.enchilada.dataExporters;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -206,6 +210,21 @@ public class CSVDataSetExporterTest extends TestCase {
 		for (int i = 0; i < 30; i++)
 			reader.readLine();
 		assertEquals(null, reader.readLine());
+	}
+
+	public void testExportHistogramToCSV() throws IOException, SQLException {
+
+		exporter.exportHistogramToCSV(
+				new Collection[]{db.getCollection(2)},
+				File.createTempFile("test", ".csv").toString(),
+				"height sum",
+				"",
+				"",
+				10,
+				"",
+				new ArrayList<>());
+
+
 	}
 
 	public void tearDown()

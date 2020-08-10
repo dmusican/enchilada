@@ -97,6 +97,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		
 		JLabel queryTypePrompt = new JLabel("Query type: ");
 		String[] queryTypes = {"height sum", "rel. area sum", "area sum", "peak count", "size count"};
+		selectedQueryType = "height sum";
 		queryList = new JComboBox<String>(queryTypes);
 		queryList.addActionListener(this);
 
@@ -269,6 +270,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 													 bins);
 						} catch (Exception e1) {
 							ErrorLogger.displayException(progressBar,e1.toString());
+							e1.printStackTrace();
 						}
 						return null;
 					}

@@ -436,12 +436,12 @@ public class CSVDataSetExporter {
 
 		String cols, join;
 		if (qtype.equals("size count")) {
+			cols = "d.AtomID, d.Time, d.Size ";
+			join = ", ";
 			if (choice.equals("16")) {
 				bins = List.<Double>of(0., 0.010, 0.012, 0.013, 0.015, 0.018, 0.021, 0.024, 0.027, 0.032, 0.037, 0.042, 0.049, 0.056, 0.065, 0.075, 0.087, 0.100, 0.115,
 						0.133, 0.154, 0.178, 0.205, 0.237, 0.274, 0.316, 0.365, 0.422, 0.487, 0.562, 0.649, 0.750, 0.866, 1.000, 1.155, 1.334, 1.540,
 						1.778, 2.054, 2.371, 2.738, 3.162, 3.652, 4.217, 4.870, 5.623, 6.494, 7.499, 8.660, 10.000);
-				cols = "d.[AtomID], d.[Time], d.[Size] ";
-				join = ", ";
 			} else if (choice.equals("32")) {
 				bins = List.<Double>of(0., 0.010, 0.011, 0.012, 0.012, 0.013, 0.014, 0.015, 0.017, 0.018, 0.019, 0.021, 0.022, 0.024, 0.025, 0.027, 0.029, 0.032,
 						0.034, 0.037, 0.039, 0.042, 0.045, 0.049, 0.052, 0.056, 0.060, 0.065, 0.070, 0.075, 0.081, 0.087, 0.093, 0.100, 0.107, 0.115,
@@ -449,8 +449,6 @@ public class CSVDataSetExporter {
 						0.453, 0.487, 0.523, 0.562, 0.604, 0.649, 0.698, 0.750, 0.806, 0.866, 0.931, 1.000, 1.075, 1.155, 1.241, 1.334, 1.433, 1.540,
 						1.655, 1.778, 1.911, 2.054, 2.207, 2.371, 2.548, 2.738, 2.943, 3.162, 3.398, 3.652, 3.924, 4.217, 4.532, 4.870, 5.233, 5.623,
 						6.043, 6.494, 6.978, 7.499, 8.058, 8.660, 9.306, 10.000);
-				cols = "d.[AtomID], d.[Time], d.[Size] ";
-				join = ", ";
 			} else if (choice.equals("64")) {
 				bins = List.<Double>of(0., 0.010000, 0.010366, 0.010746, 0.011140, 0.011548, 0.011971, 0.012409, 0.012864, 0.013335, 0.013824, 0.014330, 0.014855,
 						0.015399, 0.015963, 0.016548, 0.017154, 0.017783, 0.018434, 0.019110, 0.019810, 0.020535, 0.021288, 0.022067, 0.022876,
@@ -469,8 +467,6 @@ public class CSVDataSetExporter {
 						4.216965, 4.371445, 4.531584, 4.697589, 4.869675, 5.048066, 5.232991, 5.424691, 5.623413, 5.829415, 6.042964, 6.264335,
 						6.493816, 6.731704, 6.978306, 7.233942, 7.498942, 7.773650, 8.058422, 8.353625, 8.659643, 8.976871, 9.305720, 9.646616,
 						10.000000);
-				cols = "d.[AtomID], d.[Time], d.[Size] ";
-				join = ", ";
 			} else if (choice.equals("128")) {
 				bins = List.<Double>of(0., 0.010000, 0.010182, 0.010366, 0.010554, 0.010746, 0.010941, 0.011140, 0.011342, 0.011548, 0.011757, 0.011971, 0.012188,
 						0.012409, 0.012635, 0.012864, 0.013097, 0.013335, 0.013577, 0.013824, 0.014075, 0.014330, 0.014590, 0.014855, 0.015125, 0.015399,
@@ -502,15 +498,10 @@ public class CSVDataSetExporter {
 						5.424691, 5.523158, 5.623413, 5.725488, 5.829415, 5.935229, 6.042964, 6.152654, 6.264335, 6.378044, 6.493816, 6.611690, 6.731704,
 						6.853896, 6.978306, 7.104974, 7.233942, 7.365250, 7.498942, 7.635061, 7.773650, 7.914755, 8.058422, 8.204696, 8.353625, 8.505258,
 						8.659643, 8.816831, 8.976871, 9.139817, 9.305720, 9.474635, 9.646616, 9.821719, 10.000000);
-				cols = "d.[AtomID], d.[Time], d.[Size] ";
-				join = ", ";
-			} else {
-				cols = "d.[AtomID], d.[Time], d.[Size] ";
-				join = ", ";
 			}
 		} else {
-			cols = "d.[AtomID], d.[Time], d.[Size], s.[PeakHeight], s.[PeakLocation], s.[PeakArea], s.[RelPeakArea] ";
-			join = "JOIN (SELECT * FROM ATOFMSAtomInfoSparse) AS s ON d.[AtomID] = s.[AtomID], ";
+			cols = "d.AtomID, d.Time, d.Size, s.PeakHeight, s.PeakLocation, s.PeakArea, s.RelPeakArea ";
+			join = "JOIN (SELECT * FROM ATOFMSAtomInfoSparse) AS s ON d.AtomID = s.AtomID, ";
 		}
 
 		for (Collection collection : collections) {
@@ -544,7 +535,7 @@ public class CSVDataSetExporter {
 						case "height sum":
 							qt = "PeakHeight";
 							break;
-						case "rel. sum area":
+						case "rel. area sum":
 							qt = "RelPeakArea";
 							break;
 						case "area sum":
@@ -572,19 +563,20 @@ public class CSVDataSetExporter {
 					"  CAST(strftime('%d', Time) AS integer) as d,",
 					"  CAST(strftime('%H', Time) AS INTEGER)" + hf + " AS h,",
 					"  CAST(strftime('%M', Time) AS INTEGER)" + mf + " AS mi,",
-					"  CAST(strftime('%S', Time) AS INTEGER)" + sf + " AS s,",
+					"  CAST(strftime('%S', Time) AS INTEGER)" + sf + " AS s ",
 					"  " + select,
 					"  FROM (",
 					"    SELECT " + cols,
-					"    FROM ATOFMSAtomInfoDense AS d" + join,
+					"    FROM ATOFMSAtomInfoDense AS d " + join,
 					"      InternalAtomOrder AS i",
 					"    WHERE i.CollectionID = " + cid + " AND d.AtomID = i.AtomID",
-					"    AND d.Time BETWEEN '" + ltime + "AND '" + utime + "'",
+					"    AND d.Time BETWEEN '" + ltime + "' AND '" + utime + "'",
 					"  ) AS data",
 					"GROUP BY y, m, d, h, mi, s",
 					"ORDER BY y, m, d, h, mi, s"
 			);
 
+			System.out.println(query);
 			int dataCols;
 			ArrayList<LocalDateTime> datetimes = new ArrayList<>();
 			ArrayList<ArrayList<String>> data = new ArrayList<>();
