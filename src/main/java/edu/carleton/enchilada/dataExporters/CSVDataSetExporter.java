@@ -54,8 +54,8 @@ import edu.carleton.enchilada.errorframework.ErrorLogger;
 import edu.carleton.enchilada.gui.ExportHierarchyCSVDialog;
 import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
-import java.awt.*;
 import java.io.*;
+import java.awt.Window;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -65,6 +65,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -400,7 +401,7 @@ public class CSVDataSetExporter {
 
 	@SuppressWarnings("StringConcatenationInLoop")
 	public void exportHistogramToCSV(Collection[] collections, String csvFileName, String qtype,
-			String ltime, String utime, int timeres, String choice, int numbins, ArrayList<Double> bins) throws SQLException, IOException {
+			String ltime, String utime, int timeres, String choice, List<Double> bins) throws SQLException, IOException {
 
 		if (ltime.equals(""))
 			ltime = "1753-01-01 00:00:00"; // minimum SQL date
@@ -436,25 +437,22 @@ public class CSVDataSetExporter {
 		String cols, join;
 		if (qtype.equals("size count")) {
 			if (choice.equals("16")) {
-				numbins = 49;
-				bins = new double[]{0, 0.010, 0.012, 0.013, 0.015, 0.018, 0.021, 0.024, 0.027, 0.032, 0.037, 0.042, 0.049, 0.056, 0.065, 0.075, 0.087, 0.100, 0.115,
+				bins = List.<Double>of(0., 0.010, 0.012, 0.013, 0.015, 0.018, 0.021, 0.024, 0.027, 0.032, 0.037, 0.042, 0.049, 0.056, 0.065, 0.075, 0.087, 0.100, 0.115,
 						0.133, 0.154, 0.178, 0.205, 0.237, 0.274, 0.316, 0.365, 0.422, 0.487, 0.562, 0.649, 0.750, 0.866, 1.000, 1.155, 1.334, 1.540,
-						1.778, 2.054, 2.371, 2.738, 3.162, 3.652, 4.217, 4.870, 5.623, 6.494, 7.499, 8.660, 10.000};
+						1.778, 2.054, 2.371, 2.738, 3.162, 3.652, 4.217, 4.870, 5.623, 6.494, 7.499, 8.660, 10.000);
 				cols = "d.[AtomID], d.[Time], d.[Size] ";
 				join = ", ";
 			} else if (choice.equals("32")) {
-				numbins = 97;
-				bins = new double[]{0, 0.010, 0.011, 0.012, 0.012, 0.013, 0.014, 0.015, 0.017, 0.018, 0.019, 0.021, 0.022, 0.024, 0.025, 0.027, 0.029, 0.032,
+				bins = List.<Double>of(0., 0.010, 0.011, 0.012, 0.012, 0.013, 0.014, 0.015, 0.017, 0.018, 0.019, 0.021, 0.022, 0.024, 0.025, 0.027, 0.029, 0.032,
 						0.034, 0.037, 0.039, 0.042, 0.045, 0.049, 0.052, 0.056, 0.060, 0.065, 0.070, 0.075, 0.081, 0.087, 0.093, 0.100, 0.107, 0.115,
 						0.124, 0.133, 0.143, 0.154, 0.165, 0.178, 0.191, 0.205, 0.221, 0.237, 0.255, 0.274, 0.294, 0.316, 0.340, 0.365, 0.392, 0.422,
 						0.453, 0.487, 0.523, 0.562, 0.604, 0.649, 0.698, 0.750, 0.806, 0.866, 0.931, 1.000, 1.075, 1.155, 1.241, 1.334, 1.433, 1.540,
 						1.655, 1.778, 1.911, 2.054, 2.207, 2.371, 2.548, 2.738, 2.943, 3.162, 3.398, 3.652, 3.924, 4.217, 4.532, 4.870, 5.233, 5.623,
-						6.043, 6.494, 6.978, 7.499, 8.058, 8.660, 9.306, 10.000};
+						6.043, 6.494, 6.978, 7.499, 8.058, 8.660, 9.306, 10.000);
 				cols = "d.[AtomID], d.[Time], d.[Size] ";
 				join = ", ";
 			} else if (choice.equals("64")) {
-				numbins = 193;
-				bins = new double[]{0, 0.010000, 0.010366, 0.010746, 0.011140, 0.011548, 0.011971, 0.012409, 0.012864, 0.013335, 0.013824, 0.014330, 0.014855,
+				bins = List.<Double>of(0., 0.010000, 0.010366, 0.010746, 0.011140, 0.011548, 0.011971, 0.012409, 0.012864, 0.013335, 0.013824, 0.014330, 0.014855,
 						0.015399, 0.015963, 0.016548, 0.017154, 0.017783, 0.018434, 0.019110, 0.019810, 0.020535, 0.021288, 0.022067, 0.022876,
 						0.023714, 0.024582, 0.025483, 0.026416, 0.027384, 0.028387, 0.029427, 0.030505, 0.031623, 0.032781, 0.033982, 0.035227,
 						0.036517, 0.037855, 0.039242, 0.040679, 0.042170, 0.043714, 0.045316, 0.046976, 0.048697, 0.050481, 0.052330, 0.054247,
@@ -470,12 +468,11 @@ public class CSVDataSetExporter {
 						2.738420, 2.838736, 2.942727, 3.050528, 3.162278, 3.278121, 3.398208, 3.522695, 3.651741, 3.785515, 3.924190, 4.067944,
 						4.216965, 4.371445, 4.531584, 4.697589, 4.869675, 5.048066, 5.232991, 5.424691, 5.623413, 5.829415, 6.042964, 6.264335,
 						6.493816, 6.731704, 6.978306, 7.233942, 7.498942, 7.773650, 8.058422, 8.353625, 8.659643, 8.976871, 9.305720, 9.646616,
-						10.000000};
+						10.000000);
 				cols = "d.[AtomID], d.[Time], d.[Size] ";
 				join = ", ";
 			} else if (choice.equals("128")) {
-				numbins = 387;
-				bins = new double[]{0, 0.010000, 0.010182, 0.010366, 0.010554, 0.010746, 0.010941, 0.011140, 0.011342, 0.011548, 0.011757, 0.011971, 0.012188,
+				bins = List.<Double>of(0., 0.010000, 0.010182, 0.010366, 0.010554, 0.010746, 0.010941, 0.011140, 0.011342, 0.011548, 0.011757, 0.011971, 0.012188,
 						0.012409, 0.012635, 0.012864, 0.013097, 0.013335, 0.013577, 0.013824, 0.014075, 0.014330, 0.014590, 0.014855, 0.015125, 0.015399,
 						0.015679, 0.015963, 0.016253, 0.016548, 0.016849, 0.017154, 0.017466, 0.017783, 0.018106, 0.018434, 0.018769, 0.019110, 0.019456,
 						0.019810, 0.020169, 0.020535, 0.020908, 0.021288, 0.021674, 0.022067, 0.022468, 0.022876, 0.023291, 0.023714, 0.024144, 0.024582,
@@ -504,7 +501,7 @@ public class CSVDataSetExporter {
 						4.293510, 4.371445, 4.450794, 4.531584, 4.613840, 4.697589, 4.782858, 4.869675, 4.958068, 5.048066, 5.139697, 5.232991, 5.327979,
 						5.424691, 5.523158, 5.623413, 5.725488, 5.829415, 5.935229, 6.042964, 6.152654, 6.264335, 6.378044, 6.493816, 6.611690, 6.731704,
 						6.853896, 6.978306, 7.104974, 7.233942, 7.365250, 7.498942, 7.635061, 7.773650, 7.914755, 8.058422, 8.204696, 8.353625, 8.505258,
-						8.659643, 8.816831, 8.976871, 9.139817, 9.305720, 9.474635, 9.646616, 9.821719, 10.000000};
+						8.659643, 8.816831, 8.976871, 9.139817, 9.305720, 9.474635, 9.646616, 9.821719, 10.000000);
 				cols = "d.[AtomID], d.[Time], d.[Size] ";
 				join = ", ";
 			} else {
@@ -526,10 +523,10 @@ public class CSVDataSetExporter {
 			labels.add("StartTime");
 
 			if (qtype.equals("size count")) {
-				for (int j = 0; j < bins.length - 1; j++) {
-					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins[j] + " AND " + bins[j + 1] +
+				for (int j = 0; j < bins.size() - 1; j++) {
+					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins.get(j) + " AND " + bins.get(j + 1) +
 							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + (j + 1) + ", ";
-					labels.add("" + (float) (bins[j]) + "-" + (float) (bins[j + 1]));
+					labels.add("" + (bins.get(j)) + "-" + (bins.get(j + 1)));
 
 				}
 
@@ -603,7 +600,7 @@ public class CSVDataSetExporter {
 					int mi = rs.getInt(5) * ml;
 					int ss = rs.getInt(6) * sl;
 					datetimes.add(LocalDateTime.of(yyyy, mm, dd, hh, mi, ss));
-					ArrayList<String> row = new ArrayList<>() >;
+					ArrayList<String> row = new ArrayList<>();
 					for (int col = 7; col <= dataCols; col++) {
 						row.add("" + rs.getFloat(col));
 					}

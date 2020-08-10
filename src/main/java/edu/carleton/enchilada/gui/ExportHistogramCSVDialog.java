@@ -265,7 +265,8 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 						try {
 							cse.exportHistogramToCSV(collection, csvFileName, selectedQueryType,
 													 startTimeField.getText(), endTimeField.getText(),
-													 Integer.parseInt(timeResField.getText()), choice, numbins, bins);
+													 Integer.parseInt(timeResField.getText()), choice,
+													 bins);
 						} catch (Exception e1) {
 							ErrorLogger.displayException(progressBar,e1.toString());
 						}
