@@ -44,6 +44,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -72,6 +74,7 @@ public class CSVDataSetExporterTest extends TestCase {
 	CSVDataSetExporter exporter;
 	Database db;
 	File csvFile, secondCsvFile;
+	Path tempDir;
 	
 	public CSVDataSetExporterTest(String s) {
 		super(s);
@@ -94,6 +97,9 @@ public class CSVDataSetExporterTest extends TestCase {
 		//final JFrame frameRef = frame;
 		//final ATOFMSBatchTableModel aRef = a;
 		exporter = new CSVDataSetExporter(mf, db, progressBar);
+
+		tempDir = Files.createTempDirectory("export-tests");
+
 	}
 
 	public void testCollectionExport() throws Exception {
@@ -216,15 +222,13 @@ public class CSVDataSetExporterTest extends TestCase {
 	// Make sure works for multiple collections
 	public void testExportHistogramToCSV() throws IOException, SQLException {
 
-		File tempFile = File.createTempFile("test", ".csv");
-		System.out.println(tempFile.toString());
 		ArrayList<Double> bins = new ArrayList<>();
 		for (int bin = 1; bin <= 50; bin++) {
 			bins.add((double)bin);
 		}
 		exporter.exportHistogramToCSV(
 				new Collection[]{db.getCollection(2)},
-				tempFile.toString(),
+				tempDir.toString(),
 				"height sum",
 				"",
 				"",
@@ -232,7 +236,8 @@ public class CSVDataSetExporterTest extends TestCase {
 				"",
 				bins);
 
-		try (Scanner scanner = new Scanner(tempFile)) {
+		Path outputFilename = tempDir.resolve("histogram_height_One.csv");
+		try (Scanner scanner = new Scanner(tempDir.resolve(outputFilename))) {
 			assertEquals(
 					"Date,StartTime,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50",
 					scanner.next());
@@ -242,12 +247,15 @@ public class CSVDataSetExporterTest extends TestCase {
 			assertFalse(scanner.hasNext());
 		}
 
+		assertTrue(outputFilename.toFile().delete());
+
 	}
 
 	public void tearDown()
 	{
 		if (csvFile != null) csvFile.delete();
 		if (secondCsvFile != null) secondCsvFile.delete();
+		assertTrue(tempDir.toFile().delete());
 		db.closeConnection();
 	}
 }

@@ -54,6 +54,8 @@ import edu.carleton.enchilada.externalswing.SwingWorker;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -90,13 +92,13 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		setSize(450,300);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
-		JLabel csvFileLabel = new JLabel("." + EXPORT_FILE_EXTENSION + " File: ");
+		JLabel csvFileLabel = new JLabel("Directory for output:");
 		csvFileField = new JTextField(15);
 		csvDotDotDot = new JButton("...");
 		csvDotDotDot.addActionListener(this);
 		
 		JLabel queryTypePrompt = new JLabel("Query type: ");
-		String[] queryTypes = {"height sum", "rel. area sum", "area sum", "peak count", "size count"};
+		String[] queryTypes = {"height sum", "rel area sum", "area sum", "peak count", "size count"};
 		selectedQueryType = "height sum";
 		queryList = new JComboBox<String>(queryTypes);
 		queryList.addActionListener(this);
@@ -210,12 +212,15 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 	public void actionPerformed(ActionEvent e) {
 		Object source = e.getSource();
 		if (source == csvDotDotDot) {
-			String fileName = "*." + EXPORT_FILE_EXTENSION;
-			if (!csvFileField.getText().equals("")) {
-				fileName = csvFileField.getText();
+			// https://stackoverflow.com/a/10083508/490329
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Choose file destination");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+			if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+				csvFileField.setText(Path.of(chooser.getCurrentDirectory().toString())
+											 .resolve(chooser.getSelectedFile().toString()).toString());
 			}
-			csvFileField.setText((new FileDialogPicker("Choose ." + EXPORT_FILE_EXTENSION + " file destination",
-					 fileName, this, false)).getFileName());
 		} else if (source == queryList) {
 			selectedQueryType = (String)((JComboBox<String>)source).getSelectedItem();
 

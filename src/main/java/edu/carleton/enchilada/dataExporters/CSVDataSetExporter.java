@@ -56,6 +56,7 @@ import edu.carleton.enchilada.gui.ProgressBarWrapper;
 
 import java.io.*;
 import java.awt.Window;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -400,7 +401,7 @@ public class CSVDataSetExporter {
 
 
 	@SuppressWarnings("StringConcatenationInLoop")
-	public void exportHistogramToCSV(Collection[] collections, String csvFileName, String qtype,
+	public void exportHistogramToCSV(Collection[] collections, String csvFileNameRoot, String qtype,
 			String ltime, String utime, int timeres, String choice, List<Double> bins) throws SQLException, IOException {
 
 		if (ltime.equals(""))
@@ -536,7 +537,7 @@ public class CSVDataSetExporter {
 						case "height sum":
 							qt = "PeakHeight";
 							break;
-						case "rel. area sum":
+						case "rel area sum":
 							qt = "RelPeakArea";
 							break;
 						case "area sum":
@@ -626,6 +627,10 @@ public class CSVDataSetExporter {
 				timelabels.add(x.format(DateTimeFormatter.ISO_LOCAL_TIME));
 			}
 
+			// For the file name, add on the first word of the query type.
+			String csvFileName = Path.of(csvFileNameRoot)
+					.resolve("histogram" + "_" + qtype.split(" ")[0] + "_"
+									 + collection.getName() + ".csv").toString();
 			try (CSVWriter writer = new CSVWriter(new FileWriter(csvFileName),
 												  ',',
 												  CSVWriter.NO_QUOTE_CHARACTER)) {
