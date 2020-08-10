@@ -523,7 +523,8 @@ public class CSVDataSetExporter {
 				}
 
 			} else if (qtype.equals("peak count")) {
-				for (double j : bins) {
+				for (double jd : bins) {
+					int j = (int)jd;
 					select += "SUM(CAST((CASE WHEN PeakLocation = " + j +
 							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + j + ", ";
 					labels.add("" + j);
