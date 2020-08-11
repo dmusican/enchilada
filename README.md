@@ -21,7 +21,7 @@ Pull requests are welcome! Please include unit tests if you are adding new funct
 
 # How to build from source
 
-To build Enchilada, you will need Maven [installed on your machine](https://maven.apache.org/download.cgi): 
+To build Enchilada, you will need Maven [installed on your machine](https://maven.apache.org/download.cgi).
 
 After installing Maven, you can clone this repo and use Maven from the command
 line to build Enchilada. [Here are basic instructions for how to use
