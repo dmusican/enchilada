@@ -579,7 +579,6 @@ public class CSVDataSetExporter {
 					"ORDER BY y, m, d, h, mi, s"
 			);
 
-			System.out.println(query);
 			int dataCols;
 			ArrayList<LocalDateTime> datetimes = new ArrayList<>();
 			ArrayList<ArrayList<String>> data = new ArrayList<>();
@@ -607,7 +606,7 @@ public class CSVDataSetExporter {
 
 			ArrayList<String> zrow = new ArrayList<>();
 			for (int i = 7; i <= dataCols; i++) {
-				zrow.add("0");
+				zrow.add("0.0");
 			}
 
 			while (datetimes.get(l).compareTo(datetimes.get(datetimes.size() - 1)) < 0) {
