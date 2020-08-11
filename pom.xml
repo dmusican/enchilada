@@ -6,11 +6,10 @@
 
   <groupId>edu.carleton.enchilada</groupId>
   <artifactId>enchilada</artifactId>
-  <version>1.98.5</version>
+  <version>1.98.6</version>
 
   <name>enchilada</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <url>https://github.com/dmusican/enchilada</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

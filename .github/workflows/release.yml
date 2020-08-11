@@ -23,11 +23,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Fixed bug [Test data left behind in /tmp](https://github.com/dmusican/enchilada/issues/5)
-            Fixed bug [Backup Database Fail](https://github.com/dmusican/enchilada/issues/6)
-            Fixed bug ['Delete Selected and All Children' feature not operating](https://github.com/dmusican/enchilada/issues/7)
-            Fixed bug [Import ATOFMS Data failure](https://github.com/dmusican/enchilada/issues/8)
-            Fixed bug [Compact database doesn't work](https://github.com/dmusican/enchilada/issues/10)
+            Fixed bug [Update Python histogram scripts](https://github.com/dmusican/enchilada/issues/11)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
