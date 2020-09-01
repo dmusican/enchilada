@@ -23,7 +23,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Fixed bug [Update Python histogram scripts](https://github.com/dmusican/enchilada/issues/11)
+            Fixed bug [Size histogram export error](https://github.com/dmusican/enchilada/issues/12)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
