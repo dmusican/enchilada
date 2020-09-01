@@ -110,6 +110,9 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		JLabel endTimeLabel = new JLabel("End time: ");
 		endTimeField = new JTextField(15);
 
+		JLabel timeResLabelExplanation = new JLabel(
+				"Enter time resolution in secs. Leave blank for maximal possible integer.");
+
 		JLabel timeResLabel = new JLabel("Time resolution (secs)");
 		timeResField = new JTextField(15);
 
@@ -135,6 +138,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		mainPanel.add(startTimeField);
 		mainPanel.add(endTimeLabel);
 		mainPanel.add(endTimeField);
+		mainPanel.add(timeResLabelExplanation);
 		mainPanel.add(timeResLabel);
 		mainPanel.add(timeResField);
 	    mainPanel.add(buttonPanel);
@@ -189,15 +193,21 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 		layout.putConstraint(SpringLayout.NORTH, endTimeField,
 							 10, SpringLayout.SOUTH, startTimeLabel);
 
+		layout.putConstraint(SpringLayout.WEST, timeResLabelExplanation,
+							 10, SpringLayout.WEST, mainPanel);
+		layout.putConstraint(SpringLayout.NORTH, timeResLabelExplanation,
+							 10, SpringLayout.SOUTH, endTimeLabel);
+
+
 		layout.putConstraint(SpringLayout.WEST, timeResLabel,
 							 10, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, timeResLabel,
-							 10, SpringLayout.SOUTH, endTimeLabel);
+							 10, SpringLayout.SOUTH, timeResLabelExplanation);
 
 		layout.putConstraint(SpringLayout.WEST, timeResField,
 							 170, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, timeResField,
-							 10, SpringLayout.SOUTH, endTimeLabel);
+							 10, SpringLayout.SOUTH, timeResLabelExplanation);
 
 		layout.putConstraint(SpringLayout.WEST, buttonPanel,
 							 160, SpringLayout.WEST, mainPanel);
@@ -234,7 +244,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 				int upeak = -100;
 				if (selectedQueryType.equals("size count")) {
 					choice = JOptionPane.showInputDialog(
-							"Enter 16, 32, 64, or 128 for standard bins per decade or press enter to create your own bins");
+							"Enter number of standard bins per decade or leave blank and click OK to create your own bins");
 
 					assert choice != null;
 					if (choice.equals("")) {
@@ -271,7 +281,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 						try {
 							cse.exportHistogramToCSV(collection, csvFileName, selectedQueryType,
 													 startTimeField.getText(), endTimeField.getText(),
-													 Integer.parseInt(timeResField.getText()), choice,
+													 timeResField.getText(), choice,
 													 bins);
 						} catch (Exception e1) {
 							ErrorLogger.displayException(progressBar,e1.toString());
