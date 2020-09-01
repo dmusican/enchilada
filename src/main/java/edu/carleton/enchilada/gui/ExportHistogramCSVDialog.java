@@ -244,7 +244,7 @@ public class ExportHistogramCSVDialog extends JDialog implements ActionListener
 				int upeak = -100;
 				if (selectedQueryType.equals("size count")) {
 					choice = JOptionPane.showInputDialog(
-							"Enter 16, 32, 64, or 128 for standard bins per decade or press enter to create your own bins");
+							"Enter number of standard bins per decade or leave blank and click OK to create your own bins");
 
 					assert choice != null;
 					if (choice.equals("")) {
