@@ -453,7 +453,7 @@ public class CSVDataSetExporter {
 				Dres = Integer.parseInt(choice);
 				nNumSize = (int) Math.log10(Dmax / Dtemp) * Dres - nstart + 1;
 				for (int i=0; i < nNumSize; i++) {
-					int precision = 1000;
+					int precision = 100000;
 					double bin = Dtemp*Math.pow(10, (i + nstart)/(double)Dres);
 					bin = Math.round(bin*precision)/(double)precision;
 					bins.add(bin);
