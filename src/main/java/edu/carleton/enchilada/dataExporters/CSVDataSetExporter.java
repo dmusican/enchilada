@@ -402,12 +402,18 @@ public class CSVDataSetExporter {
 
 	@SuppressWarnings("StringConcatenationInLoop")
 	public void exportHistogramToCSV(Collection[] collections, String csvFileNameRoot, String qtype,
-			String ltime, String utime, int timeres, String choice, List<Double> bins) throws SQLException, IOException {
+			String ltime, String utime, String timeresText, String choice, List<Double> bins) throws SQLException, IOException {
 
 		if (ltime.equals(""))
 			ltime = "1753-01-01 00:00:00"; // minimum SQL date
 		if (utime.equals(""))
 			utime = "9999-12-31 23:59:59"; //maximum SQL date
+
+		int timeres;
+		if (timeresText.equals(""))
+			timeres = Integer.MAX_VALUE;
+		else
+			timeres = Integer.parseInt(timeresText);
 
 		String hf, mf, sf;
 		int hl, ml, sl;
