@@ -478,7 +478,7 @@ public class CSVDataSetExporter {
 
 			if (qtype.equals("size count")) {
 				for (int j = 0; j < bins.size() - 1; j++) {
-					select += "SUM(CAST((CASE WHEN Size BETWEEN " + bins.get(j) + " AND " + bins.get(j + 1) +
+					select += "SUM(CAST((CASE WHEN Size >= " + bins.get(j) + " AND SIZE <" + bins.get(j + 1) +
 							" THEN 1 ELSE 0 END) AS FLOAT)) AS bin" + (j + 1) + ", ";
 					labels.add("" + (bins.get(j)) + "-" + (bins.get(j + 1)));
 
