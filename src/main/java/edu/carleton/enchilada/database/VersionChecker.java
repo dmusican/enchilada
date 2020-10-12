@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 public class VersionChecker {
 	private Database db;
-	private File rebuildFile = new File("SQLServerRebuildDatabase.txt");
 	private String progVers;
 	private String dbVers;
 	
@@ -78,60 +77,10 @@ public class VersionChecker {
 	 */
 	public String programVersion() throws IOException {
 		if (progVers == null) {
-			progVers = getVersionFromFile();
+			progVers = "Sept2006.1";
 		}
 		return progVers;
 		
-	}
-	
-	
-	/**
-	 * Parses the SQL rebuild database file to find the version of database 
-	 * that the program expects.
-	 * 
-	 * @return the version string that will hopefully also be in the database
-	 * @throws IOException
-	 */
-	private String getVersionFromFile() throws IOException {
-		if (!rebuildFile.canRead() || !rebuildFile.isFile()) {
-			throw new IOException("Can't find or read the rebuild DB file.");
-		}
-		Scanner s = new Scanner(rebuildFile);
-		String line;
-		while (s.hasNextLine()) {
-			line = s.nextLine();
-			if (line.contains("%version-next%")) {
-				break;
-			}
-		}
-		String versionLine = s.nextLine();
-//		System.out.println("Should be in: " +versionLine);
-		Matcher m = 
-			Pattern.compile("\\('Version','([^']+)'\\)").matcher(versionLine);
-		
-		if (! m.find()) {
-			throw new IOException("Can't find the version number in the file!");
-		}
-		
-		this.progVers = m.group(1);
-		
-		return progVers;
-		
-	}
-	
-	/*
-	 * just for testing.
-	 */
-	public static void main(String[] args) {
-		VersionChecker v = new VersionChecker();
-		try {
-			System.out.println(v.programVersion());
-			System.out.println(v.dbVersion());
-			System.out.println(v.isDatabaseCurrent());
-			
-		} catch (Exception e) {
-			
-		}
 	}
 	
 	

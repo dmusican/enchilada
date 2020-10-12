@@ -675,8 +675,7 @@ public abstract class Database {
         Scanner in = null;
         Connection con = null;
 
-        // Run all the queries in the SQLServerRebuildDatabase.txt file, which
-        // inserts all of the necessary tables.
+        // Inserts all of the necessary tables.
         Database db = Database.getDatabase(dbName);
         try {
             db.openConnection();

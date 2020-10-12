@@ -88,7 +88,7 @@ public class SQLServerDatabase extends Database
 	}
 
 	public String getRebuildScriptFilename() {
-		return "SQLServerRebuildDatabase.txt";
+		return "";
 	}
 
 	/**
