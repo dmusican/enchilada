@@ -1877,66 +1877,6 @@ public class DatabaseTest extends TestCase {
 	/**
 	 * @author shaferia
 	 */
-	public void testGetDatabaseVersion() {
-		db.openConnection();
-		
-		try {
-			//Read version information from the database rebuild file
-			Scanner scan = new Scanner(new File("SQLServerRebuildDatabase.txt"));
-			scan.findWithinHorizon("INSERT INTO DBInfo VALUES \\('Version','(.*)'\\)", 0);
-			MatchResult res = scan.match();
-			if (res.groupCount() != 1)
-				fail("There should only be one version string in SQLServerRebuildDatabase.txt");
-			else {
-				String filev = res.group(1);
-				assertEquals(db.getVersion(), filev);
-			}
-				
-			scan.close();
-		}
-		catch (Exception ex) {
-			fail();
-			ex.printStackTrace();
-		}
-		
-		try {
-			db.getCon().createStatement().executeUpdate(
-					"UPDATE DBInfo SET Value = 'New!' WHERE Name = 'Version'");
-			
-			assertEquals(db.getVersion(), "New!");
-		}
-		catch (Exception ex) {
-			fail();
-			ex.printStackTrace();
-		}
-		
-		try {
-			db.getCon().createStatement().executeUpdate(
-					"DELETE FROM DBInfo WHERE Name = 'Version'");
-		}
-		catch (SQLException ex) {
-			System.err.println("Error deleting version while testing");
-			ex.printStackTrace();
-		}
-		
-		try {
-			db.getVersion();
-			
-			//shouldn't get this far.
-			fail("Should not succeed: an error should result.");
-		}
-		catch (IllegalStateException ex) {
-			assertEquals("Can't understand what state the DB is in. (has version field but no value)",
-					ex.getMessage());
-		}
-		
-		db.closeConnection();
-	}
-	
-
-	/**
-	 * @author shaferia
-	 */
 	public void testGetKnownDatatypes() {
 		db.openConnection();
 		
