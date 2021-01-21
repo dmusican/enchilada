@@ -2639,7 +2639,7 @@ public abstract class Database {
         String ret = "Succeeded";
 
         try (Statement stmt = getCon().createStatement()) {
-            stmt.executeUpdate("backup to \'" + name + "\'");
+            stmt.executeUpdate("backup to '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error backing up database to " + name);
@@ -2660,7 +2660,7 @@ public abstract class Database {
         openConnection();
         String ret = "Succeeded";
         try (Statement stmt = getCon().createStatement()) {
-            stmt.executeUpdate("restore from \'" + name + "\'jjj");
+            stmt.executeUpdate("restore from '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error restoring database from " + name);
