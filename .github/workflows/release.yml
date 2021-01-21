@@ -73,13 +73,13 @@ jobs:
         run: mvn --no-transfer-progress clean compile assembly:single
       - name: Get project version and set icon file name
         run: |
-          echo ::set-env name=PROJECT_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo ::set-env name=ICON_FILENAME::enchilada-icon.png
+          echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "ICON_FILENAME=enchilada-icon.png" >> $GITHUB_ENV
       - name: Set Windows-specific options
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          echo ::set-env name=ICON_FILENAME::enchilada-icon.ico
-          echo ::set-env name=OS_BUILD_OPTIONS::"--win-menu --win-shortcut --win-console"
+          echo "ICON_FILENAME=enchilada-icon.ico" >> $GITHUB_ENV
+          echo "OS_BUILD_OPTIONS=\"--win-menu --win-shortcut --win-console\"" >> $GITHUB_ENV
       - name: Show project version and make build
         run: |
           echo here-it-is-$PROJECT_VERSION
@@ -90,17 +90,17 @@ jobs:
       - name: Get install file for Linux
         if: ${{ matrix.os =='ubuntu-latest' }}
         run: |
-          echo ::set-env name=ICON_FILENAME::enchilada-icon.jpg
-          echo ::set-env name=OUTPUT_FILENAME::$(ls *.deb)
+          echo "ICON_FILENAME=enchilada-icon.jpg" >> $GITHUB_ENV
+          echo "OUTPUT_FILENAME=$(ls *.deb)" >> $GITHUB_ENV
       - name: Get install file for Mac
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          echo ::set-env name=OUTPUT_FILENAME::$(ls *.dmg)
+          echo "OUTPUT_FILENAME=$(ls *.dmg)" >> $GITHUB_ENV
       - name: Get install file for Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          echo ::set-env name=ICON_FILENAME::enchilada-icon.ico
-          echo ::set-env name=OUTPUT_FILENAME::$(ls *.exe)
+          echo "ICON_FILENAME=enchilada-icon.ico" >> $GITHUB_ENV
+          echo "OUTPUT_FILENAME=$(ls *.exe)" >> $GITHUB_ENV
       - name: Check output filenames
         run: |
           echo $OUTPUT_FILENAME
