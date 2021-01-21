@@ -2639,13 +2639,12 @@ public abstract class Database {
         String ret = "Succeeded";
 
         try (Statement stmt = getCon().createStatement()) {
-            stmt.executeUpdate("backup to " + name);
+            stmt.executeUpdate("backup to \'" + name + "\'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error backing up database to " + name);
             System.err.println("Error backing up database - executing BACKUP DATABASE");
-            ex.printStackTrace();
-            ret = ex.getMessage();
+            throw new ExceptionAdapter(ex);
         }
         return ret;
     }
@@ -2661,7 +2660,7 @@ public abstract class Database {
         openConnection();
         String ret = "Succeeded";
         try (Statement stmt = getCon().createStatement()) {
-            stmt.executeUpdate("restore from " + name);
+            stmt.executeUpdate("restore from \'" + name + "\'jjj");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error restoring database from " + name);
@@ -4345,7 +4344,10 @@ public abstract class Database {
         assert (infoDenseNames.size() > 0) : "no datatypes defined.";
 
         try {
+            closeConnection();
+            openConnection();
             Statement stmt = con.createStatement();
+            stmt.executeUpdate("DROP INDEX IF EXISTS iao_index;\n");
             stmt.executeUpdate("CREATE INDEX iao_index ON InternalAtomOrder (CollectionID);\n");
 
             StringBuilder sqlStr = new StringBuilder();

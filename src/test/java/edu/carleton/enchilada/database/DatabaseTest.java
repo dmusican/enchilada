@@ -2460,4 +2460,21 @@ public class DatabaseTest extends TestCase {
 			assertEquals(11, count);
 		}
 	}
+
+	public void testBackupAndRestoreDatabaseWithSpace() throws IOException, SQLException {
+		db.openConnection();
+		File tmpFile = File.createTempFile("backup test", ".sqlite");
+		tmpFile.deleteOnExit();
+		db.backupDatabase(tmpFile.getAbsolutePath());
+		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement()) {
+			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			int count = 0;
+			while (rs.next()) {
+				count++;
+			}
+			assertEquals(11, count);
+		}
+	}
 }
