@@ -65,10 +65,10 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Run headless test
-        uses: GabrielBB/xvfb-action@v1.0
-        with:
-          run: mvn --no-transfer-progress test
+#      - name: Run headless test
+#        uses: GabrielBB/xvfb-action@v1.0
+#        with:
+#          run: mvn --no-transfer-progress test
       - name: Build jar
         run: mvn --no-transfer-progress clean compile assembly:single
       - name: Get project version and set icon file name
@@ -79,7 +79,7 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           echo "ICON_FILENAME=enchilada-icon.ico" >> $GITHUB_ENV
-          echo "OS_BUILD_OPTIONS=\"--win-menu --win-shortcut --win-console\"" >> $GITHUB_ENV
+          echo "OS_BUILD_OPTIONS=--win-menu --win-shortcut --win-console" >> $GITHUB_ENV
       - name: Show project version and make build
         run: |
           echo here-it-is-$PROJECT_VERSION
