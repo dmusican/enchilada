@@ -1712,24 +1712,24 @@ public class DatabaseTest extends TestCase {
 		
 		//for non-ATOFMS data - these assertions should print SQLExceptions.
 		try {
-			db.getATOFMSFileName(12);
-			fail("Should have gotten exception");
+			String result = db.getATOFMSFileName(12);
+			assertNull("File name should be null", result);
 		} catch (ExceptionAdapter e) {
 			assertTrue(e.originalException instanceof SQLException);
 			// Test is good
 		}
 
 		try {
-			db.getATOFMSFileName(15);
-			fail("Should have gotten exception");
+			String result = db.getATOFMSFileName(15);
+			assertNull("File name should be null", result);
 		} catch (ExceptionAdapter e) {
 			assertTrue(e.originalException instanceof SQLException);
 			// Test is good
 		}
 
 		try {
-			db.getATOFMSFileName(22);
-			fail("Should have gotten exception");
+			String result = db.getATOFMSFileName(22);
+			assertNull("File name should be null", result);
 		} catch (ExceptionAdapter e) {
 			assertTrue(e.originalException instanceof SQLException);
 			// Test is good
@@ -1750,8 +1750,8 @@ public class DatabaseTest extends TestCase {
 		
 		//Should print an SQLException
 		try {
-			db.getCollectionDatatype(8);
-			fail("Should get SQLException.");
+			String result = db.getCollectionDatatype(8);
+			assertNull("Query should fail.", result);
 		} catch (ExceptionAdapter e) {
 			assertTrue(e.originalException instanceof SQLException);
 		}
