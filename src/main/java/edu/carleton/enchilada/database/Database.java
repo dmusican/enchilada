@@ -1968,8 +1968,12 @@ public abstract class Database {
                 throw new RuntimeException("Must initialize bulk insert first!");
             }
 
+            beginTransaction();
             bulkInsertStatementAtomMembership.executeBatch();
+            commitTransaction();
+            beginTransaction();
             bulkInsertStatementInternalAtomOrder.executeBatch();
+            commitTransaction();
 
             System.out.println("Time: " + (System.currentTimeMillis() - time));
             System.out.println("done inserting now time for altering collections");
