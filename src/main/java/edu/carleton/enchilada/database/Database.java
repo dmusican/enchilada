@@ -1081,21 +1081,21 @@ public abstract class Database {
     public HashMap<Integer, ArrayList<Integer>> getSubCollectionsHierarchy(Collection collection) {
         HashMap<Integer, ArrayList<Integer>> subHierarchy = new HashMap<Integer, ArrayList<Integer>>();
         HashMap<Integer, ArrayList<Integer>> completeHierarchy = new HashMap<Integer, ArrayList<Integer>>();
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT *\n" +
                                                      "FROM CollectionRelationships\n" +
-                                                     "ORDER BY ParentID, ChildID");
+                                                     "ORDER BY ParentID, ChildID"))  {
+
             int parent = -1;
             ArrayList<Integer> subChildren = new ArrayList<Integer>();
             while (rs.next()) {
                 if (rs.getInt("ParentID") == parent) {
-                    subChildren.add(new Integer(rs.getInt("ChildID")));
+                    subChildren.add(rs.getInt("ChildID"));
                 } else {
                     completeHierarchy.put(parent, subChildren);
                     subChildren = new ArrayList<Integer>();
                     parent = rs.getInt("ParentID");
-                    subChildren.add(new Integer(rs.getInt("ChildID")));
+                    subChildren.add(rs.getInt("ChildID"));
                 }
 
             }
@@ -1127,12 +1127,11 @@ public abstract class Database {
      */
     public String getCollectionName(int collectionID) {
         String name = "";
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT Name\n" +
                                                      "FROM Collections\n" +
                                                      "WHERE CollectionID = " +
-                                                     collectionID);
+                                                     collectionID)) {
             rs.next();
             name = rs.getString("Name");
             stmt.close();
@@ -1167,35 +1166,36 @@ public abstract class Database {
             description = "Name: " + name + " Comment: " + comment;
 
         int nextID = -1;
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
+
+
             //Assert datatype is valid.  (Only valid options given in GUI, but
             //still want to double-check.)
-            ResultSet rs = stmt.executeQuery("SELECT DISTINCT Datatype \n" +
-                                                     "FROM Metadata \n" +
-                                                     "WHERE Datatype = '" + datatype + "'");
-            assert (rs.next()) : "The datatype of the new collection doesn't exist.";
+            try (ResultSet rs = stmt.executeQuery("SELECT DISTINCT Datatype \n" +
+                    "FROM Metadata \n" +
+                    "WHERE Datatype = '" + datatype + "'")) {
+                assert (rs.next()) : "The datatype of the new collection doesn't exist.";
+            }
 
             // Get next CollectionID:
-            rs = stmt.executeQuery("SELECT MAX(CollectionID)\n" +
-                                           "FROM Collections\n");
-            rs.next();
-            nextID = rs.getInt(1) + 1;
+            try (ResultSet rs = stmt.executeQuery("SELECT MAX(CollectionID)\n" +
+                    "FROM Collections\n")) {
+                rs.next();
+                nextID = rs.getInt(1) + 1;
+            }
 
             stmt.executeUpdate("INSERT INTO Collections\n" +
-                                       "(CollectionID, Name, Comment, Description, Datatype)\n" +
-                                       "VALUES (" +
-                                       Integer.toString(nextID) +
-                                       ", '" + removeReservedCharacters(name) + "', '"
-                                       + removeReservedCharacters(comment) + "', '" +
-                                       removeReservedCharacters(description) + "', '" + datatype + "')");
+                    "(CollectionID, Name, Comment, Description, Datatype)\n" +
+                    "VALUES (" +
+                    Integer.toString(nextID) +
+                    ", '" + removeReservedCharacters(name) + "', '"
+                    + removeReservedCharacters(comment) + "', '" +
+                    removeReservedCharacters(description) + "', '" + datatype + "')");
             stmt.executeUpdate("INSERT INTO CollectionRelationships\n" +
-                                       "(ParentID, ChildID)\n" +
-                                       "VALUES (" + Integer.toString(parent) +
-                                       ", " + Integer.toString(nextID) + ")");
+                    "(ParentID, ChildID)\n" +
+                    "VALUES (" + Integer.toString(parent) +
+                    ", " + Integer.toString(nextID) + ")");
 
-
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception creating empty collection.");
             System.err.println("Exception creating empty collection:");
@@ -1313,49 +1313,49 @@ public abstract class Database {
                 throw new SQLException("Cannot copy a collection into itself");
 
             con.setAutoCommit(false);
-            Statement stmt = con.createStatement();
+            try (Statement stmt = con.createStatement()) {
 
-            // Get Collection info:
-            ResultSet rs = stmt.executeQuery("SELECT Name, Comment, Description\n" +
-                                                     "FROM Collections\n" +
-                                                     "WHERE CollectionID = " +
-                                                     collection.getCollectionID());
-            boolean next = rs.next();
-            assert (next) : "Error copying collection information";
-            newID = createEmptyCollection(collection.getDatatype(),
-                                          toCollection.getCollectionID(),
-                                          rs.getString(1), rs.getString(2), rs.getString(3));
-            Collection newCollection = getCollection(newID);
-            String description = getCollectionDescription(collection.getCollectionID());
-            if (description != null)
-                setCollectionDescription(newCollection, getCollectionDescription(collection.getCollectionID()));
+                // Get Collection info:
+                try (ResultSet rs = stmt.executeQuery("SELECT Name, Comment, Description\n" +
+                        "FROM Collections\n" +
+                        "WHERE CollectionID = " +
+                        collection.getCollectionID())) {
+                    boolean next = rs.next();
+                    assert (next) : "Error copying collection information";
+                    newID = createEmptyCollection(collection.getDatatype(),
+                            toCollection.getCollectionID(),
+                            rs.getString(1), rs.getString(2), rs.getString(3));
+                }
+                Collection newCollection = getCollection(newID);
+                String description = getCollectionDescription(collection.getCollectionID());
+                if (description != null)
+                    setCollectionDescription(newCollection, getCollectionDescription(collection.getCollectionID()));
 
-            rs = stmt.executeQuery("SELECT AtomID\n" +
-                                           "FROM AtomMembership\n" +
-                                           "WHERE CollectionID = " +
-                                           collection.getCollectionID());
-            PreparedStatement pstmt = con.prepareStatement(
-                    "INSERT INTO AtomMembership (CollectionID, AtomID) VALUES (?,?)");
-            while (rs.next()) {
-                pstmt.setInt(1, newID);
-                pstmt.setInt(2, rs.getInt("AtomID"));
-                pstmt.addBatch();
+                try (ResultSet rs = stmt.executeQuery("SELECT AtomID\n" +
+                        "FROM AtomMembership\n" +
+                        "WHERE CollectionID = " +
+                        collection.getCollectionID())) {
+                    PreparedStatement pstmt = con.prepareStatement(
+                            "INSERT INTO AtomMembership (CollectionID, AtomID) VALUES (?,?)");
+                    while (rs.next()) {
+                        pstmt.setInt(1, newID);
+                        pstmt.setInt(2, rs.getInt("AtomID"));
+                        pstmt.addBatch();
+                    }
+
+                    pstmt.executeBatch();
+                }
+                con.commit();
+                con.setAutoCommit(true);
+                // Get Children
+                ArrayList<Integer> children = getImmediateSubCollections(collection);
+                for (int i = 0; i < children.size(); i++) {
+                    copyCollection(getCollection(children.get(i)), newCollection);
+                }
+
+                // update new collection's ancestors.
+                updateAncestors(newCollection);
             }
-
-            pstmt.executeBatch();
-            con.commit();
-            con.setAutoCommit(true);
-            rs.close();
-            // Get Children
-            ArrayList<Integer> children = getImmediateSubCollections(collection);
-            for (int i = 0; i < children.size(); i++) {
-                copyCollection(getCollection(children.get(i)), newCollection);
-            }
-
-            stmt.close();
-
-            // update new collection's ancestors.
-            updateAncestors(newCollection);
             return newID;
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
@@ -1515,32 +1515,32 @@ public abstract class Database {
             int id = collection.getCollectionID();
 
             //ensure that this collection does not have subcollections or atoms
-            PreparedStatement pstmt = con.prepareStatement(
+            try (PreparedStatement pstmt = con.prepareStatement(
                     "SELECT AtomMembership.AtomID, CenterAtoms.AtomID, CollectionRelationships.ParentID " +
                             "FROM AtomMembership, CenterAtoms, CollectionRelationships WHERE " +
                             "AtomMembership.CollectionID = ? " +
                             "AND CenterAtoms.CollectionID = ? " +
-                            "AND CollectionRelationships.ParentID = ?");
-            pstmt.setInt(1, id);
-            pstmt.setInt(2, id);
-            pstmt.setInt(3, id);
-            ResultSet rs = pstmt.executeQuery();
+                            "AND CollectionRelationships.ParentID = ?")) {
+                pstmt.setInt(1, id);
+                pstmt.setInt(2, id);
+                pstmt.setInt(3, id);
+                try (ResultSet rs = pstmt.executeQuery()) {
 
-            if (rs.next()) {
-                System.err.println("Collection " + id +
-                                           " is not empty; cannot remove it with removeEmptyCollection");
-                pstmt.close();
-                return false;
-            } else {
-                pstmt.close();
+                    if (rs.next()) {
+                        System.err.println("Collection " + id +
+                                " is not empty; cannot remove it with removeEmptyCollection");
+                        return false;
+                    } else {
 
-                //delete the collection
-                Statement stmt = con.createStatement();
-                stmt.addBatch("DELETE FROM Collections WHERE CollectionID = " + id);
-                stmt.addBatch("DELETE FROM CollectionRelationships WHERE ChildID = " + id);
-                stmt.executeBatch();
-                stmt.close();
-                return true;
+                        //delete the collection
+                        try (Statement stmt = con.createStatement()) {
+                            stmt.addBatch("DELETE FROM Collections WHERE CollectionID = " + id);
+                            stmt.addBatch("DELETE FROM CollectionRelationships WHERE ChildID = " + id);
+                            stmt.executeBatch();
+                        }
+                        return true;
+                    }
+                }
             }
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Error removing empty collection.");
@@ -1726,15 +1726,14 @@ public abstract class Database {
      */
     public ArrayList<Integer> getImmediateSubCollections(Collection collection) {
         ArrayList<Integer> subChildren = new ArrayList<Integer>();
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT ChildID\n" +
                                                      "FROM CollectionRelationships\n" +
                                                      "WHERE ParentID = " +
                                                      Integer.toString(
-                                                             collection.getCollectionID()) + " ORDER BY ChildID");
+                                                             collection.getCollectionID()) + " ORDER BY ChildID")) {
             while (rs.next()) {
-                subChildren.add(new Integer(rs.getInt("ChildID")));
+                subChildren.add(rs.getInt("ChildID"));
             }
             stmt.close();
         } catch (SQLException e) {
@@ -2046,7 +2045,7 @@ public abstract class Database {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
-                subChildren.add(new Integer(rs.getInt("ChildID")));
+                subChildren.add(rs.getInt("ChildID"));
             }
             stmt.close();
         } catch (SQLException e) {
@@ -2065,29 +2064,30 @@ public abstract class Database {
         Collection collection;
         boolean isPresent = false;
         String datatype = "";
-        Statement stmt;
         try {
-            stmt = con.createStatement();
-            String query = "SELECT CollectionID FROM Collections WHERE CollectionID = " + collectionID;
-            ResultSet rs = stmt.executeQuery(query);
-            while (rs.next()) {
-                if (rs.getInt(1) == collectionID) {
-                    isPresent = true;
-                    break;
+            try (Statement stmt = con.createStatement()) {
+                String query = "SELECT CollectionID FROM Collections WHERE CollectionID = " + collectionID;
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    while (rs.next()) {
+                        if (rs.getInt(1) == collectionID) {
+                            isPresent = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isPresent) {
+                    try (ResultSet rs = stmt.executeQuery("SELECT Datatype FROM Collections WHERE CollectionID = "
+                            + collectionID)) {
+                        rs.next();
+                        datatype = rs.getString(1);
+                    }
+                } else {
+                    ErrorLogger.writeExceptionToLogAndPrompt(getName(),
+                            "Error retrieving collection for collectionID " + collectionID);
+                    throw new IllegalArgumentException("collectionID not created yet!! " + collectionID);
                 }
             }
-
-            if (isPresent) {
-                rs = stmt.executeQuery("SELECT Datatype FROM Collections WHERE CollectionID = " + collectionID);
-                rs.next();
-                datatype = rs.getString(1);
-            } else {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "Error retrieving collection for collectionID " + collectionID);
-                throw new IllegalArgumentException("collectionID not created yet!! " + collectionID);
-            }
-            stmt.close();
-
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "SQL Exception retrieving collection for collectionID " + collectionID);
@@ -2103,15 +2103,13 @@ public abstract class Database {
      */
     public String getCollectionComment(int collectionID) {
         String comment = "";
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT Comment\n" +
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT Comment\n" +
                                                      "FROM Collections\n" +
                                                      "WHERE CollectionID = " +
-                                                     collectionID);
+                                                     collectionID)) {
             rs.next();
             comment = rs.getString("Comment");
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error retrieving the collection comment for collectionID " + collectionID);
@@ -2126,15 +2124,13 @@ public abstract class Database {
      */
     public String getCollectionDatatype(int collectionID) {
         String datatype = "";
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
                     "SELECT Datatype \n" +
                             "FROM Collections \n" +
-                            "WHERE CollectionID = " + collectionID);
+                            "WHERE CollectionID = " + collectionID)) {
             rs.next();
             datatype = rs.getString("Datatype");
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error retrieving the collection's datatype for collection " + collectionID);
@@ -2148,15 +2144,13 @@ public abstract class Database {
      */
     public String getCollectionDescription(int collectionID) {
         String descrip = "";
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT Description\n" +
-                            "FROM Collections\n" +
-                            "WHERE CollectionID = " + collectionID);
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT Description\n" +
+                             "FROM Collections\n" +
+                             "WHERE CollectionID = " + collectionID)) {
             rs.next();
             descrip = rs.getString("Description");
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error retrieving the collection description for collectionID " + collectionID);
@@ -2172,14 +2166,12 @@ public abstract class Database {
      */
     public int getCollectionSize(int collectionID) {
         int returnThis = -1;
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(AtomID) FROM InternalAtomOrder WHERE CollectionID = " + collectionID);
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT COUNT(AtomID) FROM InternalAtomOrder WHERE CollectionID = " + collectionID)) {
             boolean test = rs.next();
             assert (test) : "error getting atomID count.";
             returnThis = rs.getInt(1);
-            stmt.close();
         } catch (SQLException e1) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                      "Error retrieving the collection size for collectionID " + collectionID);
@@ -2196,16 +2188,12 @@ public abstract class Database {
         ArrayList<Integer> ret = new ArrayList<Integer>();
 
         if (collectionIDs.size() > 0) {
-            try {
-                Statement stmt = con.createStatement();
-                ResultSet rs = stmt.executeQuery(
-                        "SELECT DISTINCT CollectionID FROM AtomMembership WHERE CollectionID in (" + join(collectionIDs,
-                                                                                                          ",") + ")");
-
+            try (Statement stmt = con.createStatement();
+                 ResultSet rs = stmt.executeQuery(
+                         "SELECT DISTINCT CollectionID FROM AtomMembership WHERE CollectionID in ("
+                                 + join(collectionIDs, ",") + ")")) {
                 while (rs.next())
                     ret.add(rs.getInt("CollectionID"));
-                rs.close();
-                stmt.close();
             } catch (SQLException e) {
                 ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving collections with atoms.");
                 System.err.println("Error retrieving collections with atoms.");
@@ -2236,10 +2224,9 @@ public abstract class Database {
      */
     public ArrayList<Integer> getAllDescendedAtoms(Collection collection) {
         ArrayList<Integer> results = new ArrayList<Integer>(1000);
-        try {
-            ResultSet rs = getAllAtomsRS(collection);
+        try (ResultSet rs = getAllAtomsRS(collection)) {
             while (rs.next())
-                results.add(new Integer(rs.getInt(1)));
+                results.add(rs.getInt(1));
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving children of the collection.");
             System.err.println("Error retrieving children.");
@@ -2253,20 +2240,15 @@ public abstract class Database {
      */
     public int getParentCollectionID(int collectionID) {
         int parentID = -1;
-        try {
-            Statement stmt = con.createStatement();
-
-            ResultSet rs = stmt.executeQuery("SELECT ParentID\n" +
-                                                     "FROM CollectionRelationships\n" +
-                                                     "WHERE ChildID = " + collectionID);
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT ParentID\n" +
+                     "FROM CollectionRelationships\n" +
+                     "WHERE ChildID = " + collectionID)) {
 
             // If there is no entry in the table for this collectionID,
             // it doesn't exist, so return false
             if (rs.next())
                 parentID = rs.getInt("ParentID");
-
-            rs.close();
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving parentID of the collection.");
             System.err.println("Error retrieving parentID of the collection.");
