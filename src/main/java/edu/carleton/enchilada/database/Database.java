@@ -193,15 +193,15 @@ public abstract class Database {
             database = "";
             openConnectionNoDB();
             Connection con = getCon();
-            Statement stmt = con.createStatement();
 
             // See if database exists.
-            ResultSet rs = stmt.executeQuery(command);
-            while (!foundDatabase && rs.next()) {
-                if (rs.getString(1).equalsIgnoreCase(testdb))
-                    foundDatabase = true;
+            try (Statement stmt = con.createStatement();
+                 ResultSet rs = stmt.executeQuery(command)) {
+                while (!foundDatabase && rs.next()) {
+                    if (rs.getString(1).equalsIgnoreCase(testdb))
+                        foundDatabase = true;
+                }
             }
-            stmt.close();
         } catch (SQLException e) {
             ErrorLogger.displayException(null, "Error in testing if " + testdb + " is present.");
         }
@@ -830,19 +830,17 @@ public abstract class Database {
 
         String table = this.getDynamicTableName(DynamicTable.AtomInfoDense, dataType);
 
-        Statement stmt = con.createStatement();
-        ResultSet r = stmt.executeQuery("EXEC sp_helpindex " + table);
+        try (Statement stmt = con.createStatement();
+            ResultSet r = stmt.executeQuery("EXEC sp_helpindex " + table)) {
 
-        String[] tmp;
-        while (r.next()) {
-            tmp = r.getString("index_keys").split(", ");
-            for (int i = 0; i < tmp.length; i++) {
-                indexed.add(tmp[i]);
+            String[] tmp;
+            while (r.next()) {
+                tmp = r.getString("index_keys").split(", ");
+                for (int i = 0; i < tmp.length; i++) {
+                    indexed.add(tmp[i]);
+                }
             }
         }
-
-        r.close();
-        stmt.close();
 
         return indexed;
     }
@@ -907,27 +905,26 @@ public abstract class Database {
     public void addSingleInternalAtomToTable(int atomID, int toParentID) {
         //update InternalAtomOrder; have to iterate through all
         // atoms sequentially in order to insert it.
-        Statement stmt;
         boolean exists = false;
         try {
             con.setAutoCommit(false);
-            stmt = con.createStatement();
+            try (Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT AtomID FROM" +
-                                                     " InternalAtomOrder WHERE CollectionID = " + toParentID + " ORDER BY AtomID");
+                            " InternalAtomOrder WHERE CollectionID = " + toParentID + " ORDER BY AtomID");) {
 
-            while (rs.next()) {
-                if (rs.getInt(1) == atomID)
-                    exists = true;
-            }
+                while (rs.next()) {
+                    if (rs.getInt(1) == atomID)
+                        exists = true;
+                }
 
-            if (!exists) {
-                stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("
-                                      + atomID + "," + toParentID + ")");
-                stmt.executeBatch();
+                if (!exists) {
+                    stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("
+                            + atomID + "," + toParentID + ")");
+                    stmt.executeBatch();
+                }
+                con.commit();
+                con.setAutoCommit(true);
             }
-            con.commit();
-            con.setAutoCommit(true);
-            stmt.close();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -1055,10 +1052,9 @@ public abstract class Database {
      */
     public String getVersion() {
         String version;
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT Value FROM DBInfo WHERE Name = 'Version'");
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT Value FROM DBInfo WHERE Name = 'Version'")) {
             if (!rs.next()) {
                 throw new Exception("Inconsistent DB State?");
                 // no version in DB (though this shouldn't happen?)
