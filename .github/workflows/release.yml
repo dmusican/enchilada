@@ -23,7 +23,7 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Fixed bug [Time Series Aggregation Issue That Might Be Something Else....](https://github.com/dmusican/enchilada/issues/14)
+            resolved multiple bugs relating to [Clustering and Deleting Collections Issues....](https://github.com/dmusican/enchilada/issues/16)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
