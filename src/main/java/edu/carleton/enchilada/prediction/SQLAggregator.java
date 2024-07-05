@@ -262,8 +262,7 @@ public class SQLAggregator {
 	 * Drops the temporary table RoundedDense from the database SpASMSdb.
 	 */
 	private static void dropTempTable(){
-		try {
-			Statement stmt = con.createStatement();
+		try (Statement stmt = con.createStatement()) {
 			stmt.executeUpdate("IF (OBJECT_ID('RoundedDense') " +
 					"IS NOT NULL)\n" +
 					" DROP TABLE RoundedDense\n");
@@ -303,8 +302,7 @@ public class SQLAggregator {
 	 * Import the filter data
 	 */
 	private static void importFilterData(String filename) {
-		try {
-			Statement stmt = con.createStatement();
+		try (Statement stmt = con.createStatement()) {
 
 			stmt.executeUpdate(
 				"IF (OBJECT_ID('AggData') IS NOT NULL) DROP TABLE AggData"

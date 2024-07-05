@@ -42,18 +42,17 @@ public class HomogeneityCalculator {
 		db.openConnection();
 		
 		Connection con = db.getCon();
-		
-		try {
-			Statement stmt = con.createStatement();
-			ArrayList<String> filenames = new ArrayList<String>();
-			ArrayList<Integer> counts = new ArrayList<Integer>();
-			
+
+		ArrayList<String> filenames = new ArrayList<String>();
+		ArrayList<Integer> counts = new ArrayList<Integer>();
+
+		try (Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(
 					"SELECT OrigFilename\n" +
 					"FROM ATOFMSAtomInfoDense, AtomMembership\n" +
 					"	WHERE AtomMembership.CollectionID = " + cID + "\n" +
 					"	AND AtomMembership.AtomID = ATOFMSAtomInfoDense" +
-					".AtomID");
+					".AtomID")) {
 			while (rs.next())
 			{
 				String filename = rs.getString(1);
@@ -72,18 +71,6 @@ public class HomogeneityCalculator {
 					counts.add(new Integer(1));
 				}
 			}
-			/*
-			for (int i = 0; i < filenames.size(); i++)
-			{
-				rs = stmt.executeQuery("(SELECT COUNT " +
-						"(AtomID)\n" +
-						"		FROM AtomMembership, AtomInfo\n" +
-						"			WHERE AtomMembership.CollectionID = " + cID + "\n" +
-						"			AND AtomMembership.AtomID = AtomInfo.AtomID" + "\n" +
-						"			AND OrigFilename = \"" + filenames.get(i) + "\"");
-				System.out.println("Filename " + filenames.get(i) + 
-						" occurs " + rs.getInt(1) + "times");
-			}*/
 			for (int i = 0; i < filenames.size(); i++)
 			{
 				System.out.println("Filename: " + filenames.get(i) + " = " +
@@ -105,17 +92,15 @@ public class HomogeneityCalculator {
 		db.openConnection();
 		
 		Connection con = db.getCon();
-		
-		try {
-			Statement stmt = con.createStatement();
-			ArrayList<String> filenames = new ArrayList<String>();
-			ArrayList<Integer> counts = new ArrayList<Integer>();
-			
-			ResultSet rs = stmt.executeQuery(
-					"SELECT OrigFilename\n" +
-					"FROM AtomInfo, AtomMembership\n" +
-					"	WHERE AtomMembership.CollectionID = " + cID + "\n" +
-					"	AND AtomMembership.AtomID = AtomInfo.AtomID");
+
+		ArrayList<String> filenames = new ArrayList<String>();
+		ArrayList<Integer> counts = new ArrayList<Integer>();
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery(
+					 "SELECT OrigFilename\n" +
+							 "FROM AtomInfo, AtomMembership\n" +
+							 "	WHERE AtomMembership.CollectionID = " + cID + "\n" +
+					"	AND AtomMembership.AtomID = AtomInfo.AtomID")) {
 			while (rs.next())
 			{
 				String filename = rs.getString(1);

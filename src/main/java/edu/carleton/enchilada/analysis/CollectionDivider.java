@@ -345,39 +345,41 @@ public abstract class CollectionDivider {
 		try  {
 			Connection dbCon = db.getCon();
 			dbCon.setAutoCommit(false);
-			Statement delStmt = dbCon.createStatement();
-			delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
-			delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
-			PreparedStatement pstmt = dbCon.prepareStatement(
-					"INSERT INTO temp.stuffToDelete VALUES (?)");
+			try (Statement delStmt = dbCon.createStatement();
+				 PreparedStatement pstmt = dbCon.prepareStatement(
+						 "INSERT INTO temp.stuffToDelete VALUES (?)")) {
 
-			//put stuff in the tempfile
-			System.out.println("Putting stuff in tempdelete.data...");
-			String atomIDsToDel = atomIDsToDelete.toString();
-			Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
-			while (atomIDs.hasNext()) {
-				pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
-				pstmt.addBatch();
+				delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
+				delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
+
+				//put stuff in the tempfile
+				System.out.println("Putting stuff in tempdelete.data...");
+				String atomIDsToDel = atomIDsToDelete.toString();
+				Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
+				while (atomIDs.hasNext()) {
+					pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
+					pstmt.addBatch();
+				}
+				pstmt.executeBatch();
+
+				//finally, delete what's in stuffToDelete from AtomMembership
+				//and drop the stuffToDelete table
+				System.out.println("Finally, deleting from AtomMembership...");
+				String deletionquery = "DELETE FROM AtomMembership\n" +
+						"WHERE CollectionID = " + collection.getCollectionID() +
+						"\n" + "AND AtomID IN \n" +
+						"(SELECT atoms FROM temp.stuffToDelete)";
+				System.out.println("Query:");
+				System.out.println(deletionquery);
+				delStmt.executeUpdate(deletionquery);
+				delStmt.executeUpdate("DROP TABLE temp.stuffToDelete");
+				System.out.println("...and dropping deletion table.");
+
+				System.out.println("Done with DELETEs.");
+
+				dbCon.commit();
+				dbCon.setAutoCommit(true);
 			}
-			pstmt.executeBatch();
-
-			//finally, delete what's in stuffToDelete from AtomMembership
-			//and drop the stuffToDelete table
-			System.out.println("Finally, deleting from AtomMembership...");
-			String deletionquery = "DELETE FROM AtomMembership\n" +
-					"WHERE CollectionID = " + collection.getCollectionID() +
-					"\n" + "AND AtomID IN \n" +
-					"(SELECT atoms FROM temp.stuffToDelete)";
-			System.out.println("Query:");
-			System.out.println(deletionquery);
-			delStmt.executeUpdate(deletionquery);
-			delStmt.executeUpdate("DROP TABLE temp.stuffToDelete");
-			System.out.println("...and dropping deletion table.");
-
-			System.out.println("Done with DELETEs.");
-
-			dbCon.commit();
-			dbCon.setAutoCommit(true);
 		}
 		catch (SQLException e) {
 			throw new ExceptionAdapter(e);

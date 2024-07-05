@@ -968,7 +968,6 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 	 */
 	private void getSpectrum() throws SQLException, IOException, Exception
 	{
-		ResultSet rs;
 		int origDataSetID=0;
 		String massCalFile;
 		boolean autocal;
@@ -986,55 +985,53 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		
 		Database db = MainFrame.db;
 		Connection con = db.getCon();
-		
-		try {
-			Statement stmt = con.createStatement();
-			rs = stmt.executeQuery("SELECT OrigDataSetID\n" +
-										"FROM DataSetMembers\n" +
-										"WHERE AtomID = " +
-										atomID);
+
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT OrigDataSetID\n" +
+					 "FROM DataSetMembers\n" +
+					 "WHERE AtomID = " +
+					atomID)) {
 			rs.next();
 			origDataSetID = rs.getInt("OrigDataSetID");
-			} catch (SQLException e) {
-				//System.err.println("Exception getting OrigDataSetID");
-				JOptionPane.showMessageDialog(null,
-						"An error occured retrieving the dataset ID from the database."+
-						"  Try reimporting the collection.  " +
-						"  Please check the ErrorLog.",
-						"Spectrum Display Error", JOptionPane.ERROR_MESSAGE);
-				ErrorLogger.writeExceptionToLog("ATOFMS Spetrum Viewing","Exception getting calibration data: "+e.toString());
-				//peakButton.setSelected(true);
-				posSpecDS = new Dataset();
-				negSpecDS = new Dataset();
-				
-				throw e;
-			}	
+		} catch (SQLException e) {
+			//System.err.println("Exception getting OrigDataSetID");
+			JOptionPane.showMessageDialog(null,
+					"An error occured retrieving the dataset ID from the database."+
+							"  Try reimporting the collection.  " +
+							"  Please check the ErrorLog.",
+					"Spectrum Display Error", JOptionPane.ERROR_MESSAGE);
+			ErrorLogger.writeExceptionToLog("ATOFMS Spetrum Viewing","Exception getting calibration data: "+e.toString());
+			//peakButton.setSelected(true);
+			posSpecDS = new Dataset();
+			negSpecDS = new Dataset();
+
+			throw e;
+		}
 			
 			
 		//Get Calibration data
-		try {
-			Statement stmt = con.createStatement();
-			rs = stmt.executeQuery("SELECT *\n" +
-					"FROM ATOFMSDataSetInfo\n" +
-					"WHERE DataSetID = " +
-					origDataSetID);
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT *\n" +
+					 "FROM ATOFMSDataSetInfo\n" +
+					 "WHERE DataSetID = " +
+					 origDataSetID)) {
 			rs.next();
 			massCalFile = rs.getString("MassCalFile");
 			autocal = rs.getBoolean(6);
-			} catch (SQLException e) {
-				//System.err.println("Exception getting calibration data");
-				JOptionPane.showMessageDialog(null,
-						"An error occured while retrieving the calibration data from the database." +
-						"  Try reimporting the collection.  " +
-						"Please check the ErrorLog.",
-						"Spectrum Display Error", JOptionPane.ERROR_MESSAGE);
-				ErrorLogger.writeExceptionToLog("ATOFMS Spetrum Viewing","Exception getting calibration data: "+e.toString());
-				//peakButton.setSelected(true);
-				posSpecDS = new Dataset();
-				negSpecDS = new Dataset();
-				
-				throw e;
-			}
+		} catch (SQLException e) {
+			//System.err.println("Exception getting calibration data");
+			JOptionPane.showMessageDialog(null,
+					"An error occured while retrieving the calibration data from the database." +
+							"  Try reimporting the collection.  " +
+							"Please check the ErrorLog.",
+					"Spectrum Display Error", JOptionPane.ERROR_MESSAGE);
+			ErrorLogger.writeExceptionToLog("ATOFMS Spetrum Viewing","Exception getting calibration data: "+e.toString());
+			//peakButton.setSelected(true);
+			posSpecDS = new Dataset();
+			negSpecDS = new Dataset();
+
+			throw e;
+		}
 		
 			//create CalInfo object
 		try{

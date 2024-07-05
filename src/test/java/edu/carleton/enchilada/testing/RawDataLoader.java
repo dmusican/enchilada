@@ -73,9 +73,9 @@ public class RawDataLoader {
 		
 		if (f.isDirectory()) {
 			for (String table : tables) {
-				try {
+				try (Statement stmt = db.getCon().createStatement()) {
 					//first remove all existing data
-					db.getCon().createStatement().execute("delete from " + table);
+					stmt.execute("delete from " + table);
 				}
 				catch (SQLException ex) {
 					ex.printStackTrace();
@@ -133,9 +133,9 @@ public class RawDataLoader {
 	 * @param fname the filename to gather data from
 	 */
 	private void loadFile(String table, String fname) {
-		try {
-			String query = "bulk insert " + table + " from \'" + fname + "\'";
-			db.getCon().createStatement().execute(query);
+		String query = "bulk insert " + table + " from \'" + fname + "\'";
+		try (Statement stmt = db.getCon().createStatement()) {
+			stmt.execute(query);
 		}
 		catch (SQLException ex) {
 			ex.printStackTrace();
@@ -148,13 +148,10 @@ public class RawDataLoader {
 	 */
 	public ArrayList<String> getTables() {
 		ArrayList<String> tables = new ArrayList<String>();
-	
-		try {
-			//SQL Server 2005
-			
-			//SQL Server 2000
-			String query = "select name from sysobjects where type=\'u\'";
-			ResultSet rs = db.getCon().createStatement().executeQuery(query);
+
+		String query = "select name from sysobjects where type=\'u\'";
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery(query)) {
 			
 			while (rs.next()) {
 				tables.add(rs.getString(1));
