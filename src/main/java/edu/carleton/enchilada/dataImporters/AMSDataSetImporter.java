@@ -120,171 +120,171 @@ public class AMSDataSetImporter {
 	public void processDataSet(int index) throws DisplayException, WriteException {
 		boolean skipFile = false;
 		String[] AMS_tables = {"AMSAtomInfoDense", "AtomMembership", "DataSetMembers", "AMSAtomInfoSparse"};
-		final Database.Data_bulkBucket ams_buckets = ((Database)db).getDatabulkBucket(AMS_tables);
-		
-		progressBar.setIndeterminate(true);
-		progressBar.setText("Reading time series file");
-		//put time series file and mz file into an array, since they will
-		//be accessed in the same way for every atom.
-		Scanner readTimeSeries;
-		try {
-			readTimeSeries = new Scanner(new File(timeSeriesFile));
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(timeSeriesFile+" was not found.");
-		}
-		readTimeSeries.next(); // skip name
-		timeSeries = new ArrayList<Date>();
-		BigInteger maxInt = new BigInteger(""+Integer.MAX_VALUE);
-		BigInteger bigInt;
-		String tempStr;
-		BigInteger prevBigInt = null, temp = null;
-		while (readTimeSeries.hasNext()) {
-			tempStr = readTimeSeries.next();
-			if (tempStr.indexOf('.') != -1) {
-				tempStr = tempStr.substring(0,tempStr.indexOf('.'));
-				bigInt = new BigInteger(""+tempStr);
-				bigInt = bigInt.add(new BigInteger(""+1));
-			}
-			else
-				bigInt = new BigInteger(""+tempStr);
-			//if this is the first time, then calculate it using the while loop.
-			if (prevBigInt == null) {
-				prevBigInt = bigInt;
-				convertedCalendar = (Calendar) startCalendar.clone();
-				while (bigInt.compareTo(maxInt) == 1) {
-					convertedCalendar.add(Calendar.SECOND, Integer.MAX_VALUE);
-					bigInt = bigInt.subtract(maxInt);
-				}
-				convertedCalendar.add(Calendar.SECOND, bigInt.intValue());
-			}
-			// else, subtract it from previous time to calculate.
-			else {
-				temp = bigInt.subtract(prevBigInt);
-				convertedCalendar.add(Calendar.SECOND, temp.intValue());
-				prevBigInt = bigInt;
-			}
-			timeSeries.add(convertedCalendar.getTime());
-		}
-		readTimeSeries.close();
-		
-		progressBar.setText("Reading m/z file");
-		Scanner readMZ;
-		try {
-			readMZ = new Scanner(new File(massToChargeFile));
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(massToChargeFile+" was not found.");
-		}
-		readMZ.next(); // skip name
-		massToCharge = new ArrayList<Double>();
-		while (readMZ.hasNext()) {
-			massToCharge.add(readMZ.nextDouble());
-		}
-		readMZ.close();
-		
-		// create empty collection.
-		try {
-			id = db.createEmptyCollectionAndDataset("AMS",parentID,getName(),"AMS import",
-					"'"+datasetName+"','"+timeSeriesFile+"','"+massToChargeFile+"'");
-		} catch (FileNotFoundException e1) {
-			throw new WriteException("Attempt to get name for collection not" +
-					" found because the file was not found.");
-		}
-	
-		
-		// get total number of particles for progress bar.
-		progressBar.setText("Finding number of items");
-		try {
-			readData = new Scanner(new File(datasetName));
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(datasetName+" was not found.");
-		}
-		readData.next();//skip name
-		int tParticles = 0;
-		while (readData.hasNextLine()) {
-			//Items are stored in matrix format: one line per item, with
-			//	massToCharge.size() number of space-separated values per line
-			readData.nextLine();
-			tParticles++;
-		}
-		readData.close();
-		final int totalParticles = tParticles - 1;
-		System.out.println("total items: " + totalParticles);
-		progressBar.setMaximum((totalParticles/10)+1);
-		progressBar.setIndeterminate(false);
-		
-		try {
-			Collection destination = db.getCollection(id[0]);
+		try (Database.Data_bulkBucket ams_buckets = ((Database)db).getDatabulkBucket(AMS_tables)) {
 
-			readData = new Scanner(new File(datasetName));
-			readData.next(); // skip name
-
-			//for skipped particles with no sparse information
-			java.util.Vector<Integer> nodataParticles = new java.util.Vector<Integer>();
-			particleNum = 0;
-			int nextID = db.getNextID();
-			while (readData.hasNext()) { // repeat until end of file.
-				if (particleNum % 10 == 0 && particleNum >= 10) {
-					String barText = "Importing Item # " + particleNum + " out of "
-							+ totalParticles;
-					if (nodataParticles.size() > 0)
-						barText += ", " + nodataParticles.size() + " have no data";
-					progressBar.increment(barText);
-				}
-				read(particleNum, nextID);
-				if (sparse != null && sparse.size() > 0) {
-					//db.insertParticle(dense,sparse,destination,id[1],nextID);
-					((Database) db).saveDataParticle(dense, sparse, destination, id[1], nextID, ams_buckets);
-					nextID++;
-				} else {
-					nodataParticles.add(particleNum);
-				}
-				particleNum++;
-			}
 			progressBar.setIndeterminate(true);
-			progressBar.setText("Inserting Items...");
-			((Database) db).BulkInsertDataParticles(ams_buckets);
-			((Database) db).updateInternalAtomOrder(destination);
-			//write information on no-data particles to Collection Information tab
-			if (nodataParticles.size() > 0) {
-				StringBuffer desc =
-						new StringBuffer(db.getCollectionDescription(destination.getCollectionID()));
-				desc.append("\n");
-				desc.append(nodataParticles.size());
-				desc.append(" items had no associated m/z spectrum data and were " +
-						"skipped during import. Their original indices are:\n");
-				Integer cur = null;
-				java.util.Iterator i = nodataParticles.iterator();
-				while (i.hasNext()) {
-					desc.append(((Integer) i.next()).intValue());
-					if (i.hasNext())
-						desc.append(", ");
-				}
-				db.setCollectionDescription(destination, desc.toString());
-			}
-
-			//percolate possession of new atoms up the hierarchy
-			progressBar.setText("Updating Ancestors...");
-			db.propagateNewCollection(destination);
-			readData.close();
-		} catch (Exception e) {
-
-			if (e instanceof ExceptionAdapter && ((ExceptionAdapter) e).originalException instanceof SQLException) {
-				throw (ExceptionAdapter)e;
-			}
+			progressBar.setText("Reading time series file");
+			//put time series file and mz file into an array, since they will
+			//be accessed in the same way for every atom.
+			Scanner readTimeSeries;
 			try {
-				e.printStackTrace();
-				final String exception = e.toString();
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run()
-					{
-						// don't throw an exception here because we want to keep going:
-						ErrorLogger.writeExceptionToLogAndPrompt("Importing","Corrupt datatset file or particle: "+ exception);
+				readTimeSeries = new Scanner(new File(timeSeriesFile));
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(timeSeriesFile + " was not found.");
+			}
+			readTimeSeries.next(); // skip name
+			timeSeries = new ArrayList<Date>();
+			BigInteger maxInt = new BigInteger("" + Integer.MAX_VALUE);
+			BigInteger bigInt;
+			String tempStr;
+			BigInteger prevBigInt = null, temp = null;
+			while (readTimeSeries.hasNext()) {
+				tempStr = readTimeSeries.next();
+				if (tempStr.indexOf('.') != -1) {
+					tempStr = tempStr.substring(0, tempStr.indexOf('.'));
+					bigInt = new BigInteger("" + tempStr);
+					bigInt = bigInt.add(new BigInteger("" + 1));
+				} else
+					bigInt = new BigInteger("" + tempStr);
+				//if this is the first time, then calculate it using the while loop.
+				if (prevBigInt == null) {
+					prevBigInt = bigInt;
+					convertedCalendar = (Calendar) startCalendar.clone();
+					while (bigInt.compareTo(maxInt) == 1) {
+						convertedCalendar.add(Calendar.SECOND, Integer.MAX_VALUE);
+						bigInt = bigInt.subtract(maxInt);
 					}
-				});
-			} catch (Exception e2) {
-				e2.printStackTrace();
-				// don't throw exception here because we want to keep going:
-				ErrorLogger.writeExceptionToLogAndPrompt("Importing","ParticleException: "+e2.toString());
+					convertedCalendar.add(Calendar.SECOND, bigInt.intValue());
+				}
+				// else, subtract it from previous time to calculate.
+				else {
+					temp = bigInt.subtract(prevBigInt);
+					convertedCalendar.add(Calendar.SECOND, temp.intValue());
+					prevBigInt = bigInt;
+				}
+				timeSeries.add(convertedCalendar.getTime());
+			}
+			readTimeSeries.close();
+
+			progressBar.setText("Reading m/z file");
+			Scanner readMZ;
+			try {
+				readMZ = new Scanner(new File(massToChargeFile));
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(massToChargeFile + " was not found.");
+			}
+			readMZ.next(); // skip name
+			massToCharge = new ArrayList<Double>();
+			while (readMZ.hasNext()) {
+				massToCharge.add(readMZ.nextDouble());
+			}
+			readMZ.close();
+
+			// create empty collection.
+			try {
+				id = db.createEmptyCollectionAndDataset("AMS", parentID, getName(), "AMS import",
+						"'" + datasetName + "','" + timeSeriesFile + "','" + massToChargeFile + "'");
+			} catch (FileNotFoundException e1) {
+				throw new WriteException("Attempt to get name for collection not" +
+						" found because the file was not found.");
+			}
+
+
+			// get total number of particles for progress bar.
+			progressBar.setText("Finding number of items");
+			try {
+				readData = new Scanner(new File(datasetName));
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(datasetName + " was not found.");
+			}
+			readData.next();//skip name
+			int tParticles = 0;
+			while (readData.hasNextLine()) {
+				//Items are stored in matrix format: one line per item, with
+				//	massToCharge.size() number of space-separated values per line
+				readData.nextLine();
+				tParticles++;
+			}
+			readData.close();
+			final int totalParticles = tParticles - 1;
+			System.out.println("total items: " + totalParticles);
+			progressBar.setMaximum((totalParticles / 10) + 1);
+			progressBar.setIndeterminate(false);
+
+			try {
+				Collection destination = db.getCollection(id[0]);
+
+				readData = new Scanner(new File(datasetName));
+				readData.next(); // skip name
+
+				//for skipped particles with no sparse information
+				java.util.Vector<Integer> nodataParticles = new java.util.Vector<Integer>();
+				particleNum = 0;
+				int nextID = db.getNextID();
+				while (readData.hasNext()) { // repeat until end of file.
+					if (particleNum % 10 == 0 && particleNum >= 10) {
+						String barText = "Importing Item # " + particleNum + " out of "
+								+ totalParticles;
+						if (nodataParticles.size() > 0)
+							barText += ", " + nodataParticles.size() + " have no data";
+						progressBar.increment(barText);
+					}
+					read(particleNum, nextID);
+					if (sparse != null && sparse.size() > 0) {
+						//db.insertParticle(dense,sparse,destination,id[1],nextID);
+						((Database) db).saveDataParticle(dense, sparse, destination, id[1], nextID, ams_buckets);
+						nextID++;
+					} else {
+						nodataParticles.add(particleNum);
+					}
+					particleNum++;
+				}
+				progressBar.setIndeterminate(true);
+				progressBar.setText("Inserting Items...");
+				((Database) db).BulkInsertDataParticles(ams_buckets);
+				((Database) db).updateInternalAtomOrder(destination);
+				//write information on no-data particles to Collection Information tab
+				if (nodataParticles.size() > 0) {
+					StringBuffer desc =
+							new StringBuffer(db.getCollectionDescription(destination.getCollectionID()));
+					desc.append("\n");
+					desc.append(nodataParticles.size());
+					desc.append(" items had no associated m/z spectrum data and were " +
+							"skipped during import. Their original indices are:\n");
+					Integer cur = null;
+					java.util.Iterator i = nodataParticles.iterator();
+					while (i.hasNext()) {
+						desc.append(((Integer) i.next()).intValue());
+						if (i.hasNext())
+							desc.append(", ");
+					}
+					db.setCollectionDescription(destination, desc.toString());
+				}
+
+				//percolate possession of new atoms up the hierarchy
+				progressBar.setText("Updating Ancestors...");
+				db.propagateNewCollection(destination);
+				readData.close();
+
+			} catch (Exception e) {
+
+				if (e instanceof ExceptionAdapter && ((ExceptionAdapter) e).originalException instanceof SQLException) {
+					throw (ExceptionAdapter) e;
+				}
+				try {
+					e.printStackTrace();
+					final String exception = e.toString();
+					SwingUtilities.invokeAndWait(new Runnable() {
+						public void run() {
+							// don't throw an exception here because we want to keep going:
+							ErrorLogger.writeExceptionToLogAndPrompt("Importing", "Corrupt datatset file or particle: " + exception);
+						}
+					});
+				} catch (Exception e2) {
+					e2.printStackTrace();
+					// don't throw exception here because we want to keep going:
+					ErrorLogger.writeExceptionToLogAndPrompt("Importing", "ParticleException: " + e2.toString());
+				}
 			}
 		}
 	}

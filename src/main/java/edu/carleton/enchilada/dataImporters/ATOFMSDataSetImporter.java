@@ -383,7 +383,6 @@ public class ATOFMSDataSetImporter {
 
 		//***SLH
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
 		String name = parent.getName();
 		name = parent.toString()+ File.separator + name + ".set";
 		if (new File(name).isFile()) {

@@ -169,77 +169,59 @@ public class PKLDataSetImporter {
 		boolean skipFile = false;
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", 
 				   "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
-		
-		//get total number of particles for progress bar.
-		progressBar.setIndeterminate(true);
-		progressBar.setText("Finding number of items");
-		try {
-			readData = new Scanner(new File(datasetName));
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(datasetName+" was not found.");
-		}
-		//String headers = readData.nextLine();//grab headers for later
-		
-		//Count # particles by counting lines after header
-		int tParticles = 0;
-		while (readData.hasNextLine()) {
-			readData.nextLine();
-			tParticles++;
-		}
-		readData.close();
-		final int totalParticles = tParticles;
-		int progressTextStep = tParticles/20;
-		System.out.println("total items: " + totalParticles);
-		
-		// no column headers in PKL files
-		
-		//progressBar.setText("Reading data headers");
-		//Skip past column labels
-		//Scanner readHeaders = new Scanner(headers);
-		//for (int i = 0; i < 6; i++)
-		//	readHeaders.next();
-	
-		//Generate m/z labels
-		//massToCharge = new ArrayList<Double>();
-		//double mzNum = 0;
-		//while (mzNum < 450) {
-		//	mzNum += 1;
-		//	massToCharge.add(mzNum);
-		//}
-		//readHeaders.close();
-		//System.out.println(massToCharge.size()+" mass/charge values found.");
-		
-		//Create empty ATOFMS collection
-		id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
-				"PKL Import dummy ATOFMS",
-				"'" + "PKL" + "','" + "PKL" + "'," +
-				"0" + "," + "0"  + "," + "0" + ",0");
-		
-		progressBar.setMaximum((totalParticles/10)+1);
-		progressBar.setIndeterminate(false);
-		try{
+		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+
+			//get total number of particles for progress bar.
+			progressBar.setIndeterminate(true);
+			progressBar.setText("Finding number of items");
+			try {
+				readData = new Scanner(new File(datasetName));
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(datasetName+" was not found.");
+			}
+			//String headers = readData.nextLine();//grab headers for later
+
+			//Count # particles by counting lines after header
+			int tParticles = 0;
+			while (readData.hasNextLine()) {
+				readData.nextLine();
+				tParticles++;
+			}
+			readData.close();
+			final int totalParticles = tParticles;
+			int progressTextStep = tParticles/20;
+			System.out.println("total items: " + totalParticles);
+
+			//Create empty ATOFMS collection
+			id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
+					"PKL Import dummy ATOFMS",
+					"'" + "PKL" + "','" + "PKL" + "'," +
+							"0" + "," + "0"  + "," + "0" + ",0");
+
+			progressBar.setMaximum((totalParticles/10)+1);
+			progressBar.setIndeterminate(false);
+
 			Collection destination = db.getCollection(id[0]);
-			
+
 			Pattern delims = Pattern.compile("\\)?, ?\\(?|\\) ?\\},? ?|[, ] ?\\{ ?\\(? ?\\}?,? ?|\\r?\\n");
 			readData = new Scanner(new File(datasetName)).useDelimiter(delims);
 			//readData.nextLine(); // skip headers again
-			
+
 			//Loop through particles in file
 			particleNum = 0;
 			int nextID = db.getNextID();
 			while (readData.hasNext()) { // repeat until end of file.
 				if(particleNum % 10 == 0 && particleNum >= 10) {
 					String barText =
-						"Importing Item # " + particleNum + " out of " 
+							"Importing Item # " + particleNum + " out of "
 									+ totalParticles;
 					progressBar.increment(barText);
 				}
 				if ((particleNum % progressTextStep) == 0)
 					System.out.println("Processing particle #" + particleNum);
-				
+
 				read(particleNum, nextID); //READ IN PARTICLE DATA HERE
-				
+
 				//Only copy in particles with peaks
 				if (sparse != null && sparse.size() > 0) {
 					((Database)db).saveDataParticle(dense,sparse,
@@ -248,12 +230,12 @@ public class PKLDataSetImporter {
 				}
 				particleNum++;
 			}
-			
+
 			progressBar.setIndeterminate(true);
 			progressBar.setText("Inserting Items...");
 			((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
 			((Database)db).updateInternalAtomOrder(destination);
-			
+
 			//percolate possession of new atoms up the hierarchy
 			progressBar.setText("Updating Ancestors...");
 			db.propagateNewCollection(destination);

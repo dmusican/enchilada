@@ -161,52 +161,52 @@ public class SPASSDataSetImporter {
 		boolean skipFile = false;
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", 
 				   "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
-		
-		//get total number of particles for progress bar.
-		progressBar.setIndeterminate(true);
-		progressBar.setText("Finding number of items");
-		try {
-			readData = new Scanner(new File(datasetName));//.useDelimiter("\t");
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(datasetName+" was not found.");
-		}
-		String headers = readData.nextLine();//grab headers for later
-		
-		//Count # particles by counting lines after header
-		int tParticles = 0;
-		while (readData.hasNextLine()) {
-			readData.nextLine();
-			tParticles++;
-		}
-		readData.close();
-		final int totalParticles = tParticles;
-		int progressTextStep = tParticles/20;
-		System.out.println("total items: " + totalParticles);
-		
-		progressBar.setText("Reading data headers");
-		//Skip past column labels
-		Scanner readHeaders = new Scanner(headers);
-		for (int i = 0; i < 6; i++)
-			readHeaders.next();
-	
-		//Read m/z labels
-		massToCharge = new ArrayList<Double>();
-		while (readHeaders.hasNext()) {
-			massToCharge.add(readHeaders.nextDouble());
-		}
-		readHeaders.close();
-		System.out.println(massToCharge.size()+" mass/charge values found.");
-		
-		//Create empty ATOFMS collection
-		id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
-				"SPASS Import dummy ATOFMS",
-				"'" + "SPASS" + "','" + "SPASS" + "'," +
-				"0" + "," + "0"  + "," + "0" + ",0");
-		
-		progressBar.setMaximum((totalParticles/10)+1);
-		progressBar.setIndeterminate(false);
-		try{
+		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+
+			//get total number of particles for progress bar.
+			progressBar.setIndeterminate(true);
+			progressBar.setText("Finding number of items");
+			try {
+				readData = new Scanner(new File(datasetName));//.useDelimiter("\t");
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(datasetName+" was not found.");
+			}
+			String headers = readData.nextLine();//grab headers for later
+
+			//Count # particles by counting lines after header
+			int tParticles = 0;
+			while (readData.hasNextLine()) {
+				readData.nextLine();
+				tParticles++;
+			}
+			readData.close();
+			final int totalParticles = tParticles;
+			int progressTextStep = tParticles/20;
+			System.out.println("total items: " + totalParticles);
+
+			progressBar.setText("Reading data headers");
+			//Skip past column labels
+			Scanner readHeaders = new Scanner(headers);
+			for (int i = 0; i < 6; i++)
+				readHeaders.next();
+
+			//Read m/z labels
+			massToCharge = new ArrayList<Double>();
+			while (readHeaders.hasNext()) {
+				massToCharge.add(readHeaders.nextDouble());
+			}
+			readHeaders.close();
+			System.out.println(massToCharge.size()+" mass/charge values found.");
+
+			//Create empty ATOFMS collection
+			id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
+					"SPASS Import dummy ATOFMS",
+					"'" + "SPASS" + "','" + "SPASS" + "'," +
+							"0" + "," + "0"  + "," + "0" + ",0");
+
+			progressBar.setMaximum((totalParticles/10)+1);
+			progressBar.setIndeterminate(false);
+
 			Collection destination = db.getCollection(id[0]);
 			
 			readData = new Scanner(new File(datasetName));

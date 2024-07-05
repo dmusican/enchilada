@@ -210,69 +210,58 @@ public class FlatFileATOFMSDataSetImporter {
 		
 		//***SLH
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
-		int numParticles = this.getNumParticles();
-		if (spassFile.isFile()) {
-			
-			progressBar.setMaximum(numParticles);
-			progressBar.reset();
-			
-			int particleNum = 0;
-			collection = db.getCollection(id[0]);
-			FlatFileATOFMSParticle currentParticle;
+		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+			int numParticles = this.getNumParticles();
+			if (spassFile.isFile()) {
+
+				progressBar.setMaximum(numParticles);
+				progressBar.reset();
+
+				int particleNum = 0;
+				collection = db.getCollection(id[0]);
+				FlatFileATOFMSParticle currentParticle;
 				Scanner readSet = new Scanner(spassFile);
 				readSet.useDelimiter("\r\n");
 				String header = readSet.nextLine();
 				setParameters(header);
-				
-		        
-					StringTokenizer token;
-					String particleFileName;
-					//int doDisplay = 4;
-					int nextID = db.getNextID();
-					Collection curCollection = db.getCollection(id[0]);
-					while (readSet.hasNextLine()) { // repeat until end of file.
 
-						if(progressBar.wasTerminated()){
-							throw new InterruptedException();
-						}
-						String line = readSet.nextLine();
-						
-						currentParticle = this.getParticle(line);
-						//System.out.println("new particle "+currentParticle);
-						/***SLH ((Database)db).insertParticle(
-								currentParticle.particleInfoDenseString(db.getDateFormat()),
-								currentParticle.particleInfoSparseString(),
-								destination,id[1],nextID, true);
-						**/
-						//***SLH
-						((Database)db).saveDataParticle(														// daves  do I need a try/catch around here?
-								currentParticle.particleInfoDenseStr(db.getDateFormat()),
-								currentParticle.particleInfoSparseString(),
-								collection,id[1],nextID, ATOFMS_buckets);
-						//***SLH
-					
-						nextID++;
-						particleNum++;
-						//doDisplay++;
-						//if((int)(100.0*particleNum/tParticles)>(int)(100.0*(particleNum-1)/tParticles)){
-						if(particleNum%10 == 0 && particleNum > 0){
-							//progressBar.increment("Importing Particle # "+particleNum+" out of "+tParticles);
-							//progressBar.setValue((int)(100.0*particleNum/tParticles));
-							progressBar.setValue(particleNum);
-							progressBar.setText("Importing Particle # "+particleNum+" out of "+numParticles);
-							
-						}
-					} //***SLH
-					((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
-					//Percolate new atoms upward
-					db.propagateNewCollection(curCollection);
-					readSet.close();
-		} else {
-			ErrorLogger.displayException(progressBar, 
-					"Dataset has no hits because " +name+" does not exist.");
+
+				StringTokenizer token;
+				String particleFileName;
+				//int doDisplay = 4;
+				int nextID = db.getNextID();
+				Collection curCollection = db.getCollection(id[0]);
+				while (readSet.hasNextLine()) { // repeat until end of file.
+
+					if (progressBar.wasTerminated()) {
+						throw new InterruptedException();
+					}
+					String line = readSet.nextLine();
+
+					currentParticle = this.getParticle(line);
+					((Database) db).saveDataParticle(
+							currentParticle.particleInfoDenseStr(db.getDateFormat()),
+							currentParticle.particleInfoSparseString(),
+							collection, id[1], nextID, ATOFMS_buckets);
+
+					nextID++;
+					particleNum++;
+					if (particleNum % 10 == 0 && particleNum > 0) {
+						progressBar.setValue(particleNum);
+						progressBar.setText("Importing Particle # " + particleNum + " out of " + numParticles);
+
+					}
+				} //***SLH
+				((Database) db).BulkInsertDataParticles(ATOFMS_buckets);
+				//Percolate new atoms upward
+				db.propagateNewCollection(curCollection);
+				readSet.close();
+
+			} else {
+				ErrorLogger.displayException(progressBar,
+						"Dataset has no hits because " + name + " does not exist.");
+			}
 		}
-
 	}
 	
 	private void setParameters(String header) throws DisplayException {

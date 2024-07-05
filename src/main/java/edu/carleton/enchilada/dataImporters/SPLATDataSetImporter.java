@@ -162,61 +162,49 @@ public class SPLATDataSetImporter {
 		boolean skipFile = false;
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", 
 				   "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
-		
-		//get total number of particles for progress bar.
-		progressBar.setIndeterminate(true);
-		progressBar.setText("Finding number of items");
-		try {
-			readData = new Scanner(new File(datasetName));//.useDelimiter(" ");
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(datasetName+" was not found.");
-		}
-		//String headers = readData.nextLine();//grab headers for later
-		
-		//Count # particles by counting lines after header
-		int tParticles = 0;
-		while (readData.hasNextLine()) {
-			readData.nextLine();
-			tParticles++;
-		}
-		readData.close();
-		final int totalParticles = tParticles;
-		int progressTextStep = tParticles/20;
-		System.out.println("total items: " + totalParticles);
-		
-		// no column headers in SPLAT files
-		
-		//progressBar.setText("Reading data headers");
-		//Skip past column labels
-		//Scanner readHeaders = new Scanner(headers);
-		//for (int i = 0; i < 6; i++)
-		//	readHeaders.next();
-	
-		//Generate m/z labels - SPLAT ranges from m/z=1 to m/z=450
-		massToCharge = new ArrayList<Double>();
-		double mzNum = 0;
-		while (mzNum < 450) {
-			mzNum += 1;
-			massToCharge.add(mzNum);
-		}
-		//readHeaders.close();
-		//System.out.println(massToCharge.size()+" mass/charge values found.");
-		
-		//Create empty ATOFMS collection
-		id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
-				"SPLAT Import dummy ATOFMS",
-				"'" + "SPLAT" + "','" + "SPLAT" + "'," +
-				"0" + "," + "0"  + "," + "0" + ",0");
-		
-		progressBar.setMaximum((totalParticles/10)+1);
-		progressBar.setIndeterminate(false);
-		try{
+		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+
+			//get total number of particles for progress bar.
+			progressBar.setIndeterminate(true);
+			progressBar.setText("Finding number of items");
+			try {
+				readData = new Scanner(new File(datasetName));//.useDelimiter(" ");
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(datasetName+" was not found.");
+			}
+
+			//Count # particles by counting lines after header
+			int tParticles = 0;
+			while (readData.hasNextLine()) {
+				readData.nextLine();
+				tParticles++;
+			}
+			readData.close();
+			final int totalParticles = tParticles;
+			int progressTextStep = tParticles/20;
+			System.out.println("total items: " + totalParticles);
+
+			//Generate m/z labels - SPLAT ranges from m/z=1 to m/z=450
+			massToCharge = new ArrayList<Double>();
+			double mzNum = 0;
+			while (mzNum < 450) {
+				mzNum += 1;
+				massToCharge.add(mzNum);
+			}
+
+			//Create empty ATOFMS collection
+			id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
+					"SPLAT Import dummy ATOFMS",
+					"'" + "SPLAT" + "','" + "SPLAT" + "'," +
+							"0" + "," + "0"  + "," + "0" + ",0");
+
+			progressBar.setMaximum((totalParticles/10)+1);
+			progressBar.setIndeterminate(false);
+
 			Collection destination = db.getCollection(id[0]);
 			
 			readData = new Scanner(new File(datasetName));
-			//readData.nextLine(); // skip headers again
-			
+
 			//Loop through particles in file
 			particleNum = 0;
 			int nextID = db.getNextID();

@@ -345,10 +345,7 @@ public abstract class CollectionDivider {
 		try  {
 			Connection dbCon = db.getCon();
 			dbCon.setAutoCommit(false);
-			try (Statement delStmt = dbCon.createStatement();
-				 PreparedStatement pstmt = dbCon.prepareStatement(
-						 "INSERT INTO temp.stuffToDelete VALUES (?)")) {
-
+			try (Statement delStmt = dbCon.createStatement()) {
 				delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
 				delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
 
@@ -356,12 +353,16 @@ public abstract class CollectionDivider {
 				System.out.println("Putting stuff in tempdelete.data...");
 				String atomIDsToDel = atomIDsToDelete.toString();
 				Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
-				while (atomIDs.hasNext()) {
-					pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
-					pstmt.addBatch();
-				}
-				pstmt.executeBatch();
+				try (PreparedStatement pstmt = dbCon.prepareStatement(
+						"INSERT INTO temp.stuffToDelete VALUES (?)")) {
 
+
+					while (atomIDs.hasNext()) {
+						pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
+						pstmt.addBatch();
+					}
+					pstmt.executeBatch();
+				}
 				//finally, delete what's in stuffToDelete from AtomMembership
 				//and drop the stuffToDelete table
 				System.out.println("Finally, deleting from AtomMembership...");

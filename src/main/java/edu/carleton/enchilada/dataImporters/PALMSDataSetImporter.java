@@ -182,85 +182,85 @@ public class PALMSDataSetImporter {
 		boolean skipFile = false;
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", 
 				   "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables) ;
-		
-		//Begin reading data file
-		progressBar.setIndeterminate(true);
-		progressBar.setText("Reading data headers");
-		try {
-			readData = new Scanner(new File(datasetName));//.useDelimiter("\t");
-		} catch (FileNotFoundException e1) {
-			throw new WriteException(datasetName+" was not found.");
-		}
-		
-		//Read in header block, adding to comments
-		String versionNumber1 = readData.nextLine();
-		comments = "Comments: ";
-		comments = comments.concat(readData.nextLine() + ", ");
-		comments = comments.concat(readData.nextLine() + ", ");
-		//Relying on a string here sounds like a terrible idea...
-		String negPosDetermine = readData.nextLine();
-		if(negPosDetermine.contains("Positive"))
-		{
-			System.out.println("Spectrum is positive");
-			peakScalar = 1;
-		}
-		else if(negPosDetermine.contains("Negative"))
-		{
-			System.out.println("Spectrum is negative");
-			peakScalar = -1;
-		}
-		else
-		{
-			System.out.println("Unknown whether spectrum is positive or negative.");
-			System.out.println("Assuming spectrum is positive");
-			peakScalar = 1;
-		}
-		comments = comments.concat(negPosDetermine + ", ");
-		comments = comments.concat(readData.nextLine());
-		System.out.println(comments);
-		String versionNumber2 = readData.nextLine();
-		//Get the date of mission for use during particle read
-		String temptimes = readData.nextLine();
-		missionDate = temptimes.substring(0,10);
-		
-		readData.nextLine();
-		readData.nextLine();
-		
-		numPeaks = readData.nextInt() - 4;
-		System.out.println(numPeaks+" peaks exist.");
-		
-		//Skip the (numpeaks+4)*2+4 worth of garbage info
-		for(int i = 0; i <= ((numPeaks + 4)*2+4); i++)
+		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+
+			//Begin reading data file
+			progressBar.setIndeterminate(true);
+			progressBar.setText("Reading data headers");
+			try {
+				readData = new Scanner(new File(datasetName));//.useDelimiter("\t");
+			} catch (FileNotFoundException e1) {
+				throw new WriteException(datasetName+" was not found.");
+			}
+
+			//Read in header block, adding to comments
+			String versionNumber1 = readData.nextLine();
+			comments = "Comments: ";
+			comments = comments.concat(readData.nextLine() + ", ");
+			comments = comments.concat(readData.nextLine() + ", ");
+			//Relying on a string here sounds like a terrible idea...
+			String negPosDetermine = readData.nextLine();
+			if(negPosDetermine.contains("Positive"))
+			{
+				System.out.println("Spectrum is positive");
+				peakScalar = 1;
+			}
+			else if(negPosDetermine.contains("Negative"))
+			{
+				System.out.println("Spectrum is negative");
+				peakScalar = -1;
+			}
+			else
+			{
+				System.out.println("Unknown whether spectrum is positive or negative.");
+				System.out.println("Assuming spectrum is positive");
+				peakScalar = 1;
+			}
+			comments = comments.concat(negPosDetermine + ", ");
+			comments = comments.concat(readData.nextLine());
+			System.out.println(comments);
+			String versionNumber2 = readData.nextLine();
+			//Get the date of mission for use during particle read
+			String temptimes = readData.nextLine();
+			missionDate = temptimes.substring(0,10);
+
+			readData.nextLine();
 			readData.nextLine();
 
-		//Skip the meaningless mass names
-		for(int i = 0; i < numPeaks; i++)
+			numPeaks = readData.nextInt() - 4;
+			System.out.println(numPeaks+" peaks exist.");
+
+			//Skip the (numpeaks+4)*2+4 worth of garbage info
+			for(int i = 0; i <= ((numPeaks + 4)*2+4); i++)
+				readData.nextLine();
+
+			//Skip the meaningless mass names
+			for(int i = 0; i < numPeaks; i++)
+				readData.nextLine();
+
+			//Get length of header 2 and skip the 0s, maxINTs, and header text
+			header2Length = readData.nextInt();
+			for (int i = 0; i <= header2Length*3; i++)
+				readData.nextLine();
+			//Skip 2 dead lines
 			readData.nextLine();
-		
-		//Get length of header 2 and skip the 0s, maxINTs, and header text
-		header2Length = readData.nextInt();
-		for (int i = 0; i <= header2Length*3; i++)
 			readData.nextLine();
-		//Skip 2 dead lines
-		readData.nextLine();
-		readData.nextLine();
-		//Finally no more garbage data, we are at the right place
-		//Leave readData hanging around so read() can grab it
-		
-		//Calculate peak height scalar here - no place better for it
-		decimalScalar = (int)Math.pow(10, significantFiguresToKeep);
-		
-		//Create empty ATOFMS collection
-		id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
-				comments,
-				"'" + "PALMS" + "','" + "PALMS" + "'," +
-				"0" + "," + "0"  + "," + "0" + ",0");
-		
-		progressBar.setText("Reading particle data");
-		try{
+			//Finally no more garbage data, we are at the right place
+			//Leave readData hanging around so read() can grab it
+
+			//Calculate peak height scalar here - no place better for it
+			decimalScalar = (int)Math.pow(10, significantFiguresToKeep);
+
+			//Create empty ATOFMS collection
+			id = db.createEmptyCollectionAndDataset("ATOFMS",parentID,getName(),
+					comments,
+					"'" + "PALMS" + "','" + "PALMS" + "'," +
+							"0" + "," + "0"  + "," + "0" + ",0");
+
+			progressBar.setText("Reading particle data");
+
 			Collection destination = db.getCollection(id[0]);
-			
+
 			//Loop through particles in file
 			particleNum = 0;
 			int nextID = db.getNextID();
@@ -268,13 +268,13 @@ public class PALMSDataSetImporter {
 				//Announce
 				if (particleNum % 100 == 0)
 					System.out.println("Reading particle #"+particleNum);
-				
+
 				read(particleNum, nextID); //READ IN PARTICLE DATA HERE
-				
+
 				//Only copy in particles with peaks
 				if (sparse != null && sparse.size() > 0) {
 					((Database)db).saveDataParticle(dense,sparse,
-							        destination,id[1],nextID, ATOFMS_buckets);
+							destination,id[1],nextID, ATOFMS_buckets);
 					nextID++;
 				}
 				particleNum++;

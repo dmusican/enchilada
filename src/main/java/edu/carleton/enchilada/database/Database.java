@@ -478,7 +478,7 @@ public abstract class Database {
      *
      * @author SLH
      */
-    public class Data_bulkBucket {
+    public class Data_bulkBucket implements AutoCloseable {
         String[] tables;
         PreparedStatement[] buckets;
 
