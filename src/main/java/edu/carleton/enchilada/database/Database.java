@@ -694,12 +694,16 @@ public abstract class Database {
                 }
             }
             // Update the database according to the stmts.
-            con.createStatement().executeUpdate(query);
+            try (Statement stmt = con.createStatement()) {
+                stmt.executeUpdate(query);
+            }
 
             while (in.hasNext()) {
                 query = in.nextLine();
                 //System.out.println(query);
-                con.createStatement().executeUpdate(query);
+                try (Statement stmt = con.createStatement()) {
+                    stmt.executeUpdate(query);
+                }
             }
 
         } catch (IOException | SQLException e) {
@@ -1334,9 +1338,10 @@ public abstract class Database {
                 try (ResultSet rs = stmt.executeQuery("SELECT AtomID\n" +
                         "FROM AtomMembership\n" +
                         "WHERE CollectionID = " +
-                        collection.getCollectionID())) {
-                    PreparedStatement pstmt = con.prepareStatement(
-                            "INSERT INTO AtomMembership (CollectionID, AtomID) VALUES (?,?)");
+                        collection.getCollectionID());
+                     PreparedStatement pstmt = con.prepareStatement(
+                             "INSERT INTO AtomMembership (CollectionID, AtomID) VALUES (?,?)");
+                ) {
                     while (rs.next()) {
                         pstmt.setInt(1, newID);
                         pstmt.setInt(2, rs.getInt("AtomID"));
@@ -1458,8 +1463,8 @@ public abstract class Database {
             return false;
         }
 
-        try {
-            con.createStatement().executeUpdate(
+        try (Statement stmt = con.createStatement()) {
+            stmt.executeUpdate(
                     "INSERT INTO AtomMembership \n" +
                             "VALUES(" + parentID + ", " + atomID + ")");
         } catch (SQLException e) {
@@ -2460,9 +2465,10 @@ public abstract class Database {
                     XlsDataSet.write(dataSet, new FileOutputStream(filename));
                     break;
                 case 3:
-                    FileWriter dummy = new FileWriter(filename);
-                    dummy.write("#this is a dummy file\n" +
-                                        "#the real data is stored in the directory of the same name");
+                    try (FileWriter dummy = new FileWriter(filename)) {
+                        dummy.write("#this is a dummy file\n" +
+                                "#the real data is stored in the directory of the same name");
+                    }
                     String dirName = filename.substring(0, filename.lastIndexOf("."));
                     File dir = new File(dirName);
                     boolean success = dir.mkdir();
@@ -2470,6 +2476,7 @@ public abstract class Database {
                         throw new FileNotFoundException();
                     }
                     CsvDataSetWriter.write(dataSet, dir);
+
                     break;
                 default:
                     System.err.println("Invalid fileType: " + fileType);
@@ -2518,12 +2525,9 @@ public abstract class Database {
     public ArrayList<HashMap<String, String>> getBackupLocations() {
         ArrayList<HashMap<String, String>> locations = new ArrayList<HashMap<String, String>>();
 
-        try {
-            //SQL Server 2005
-            ResultSet rs = con.createStatement().executeQuery("SELECT name,type,physical_name FROM sys.backup_devices");
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT name,type,physical_name FROM sys.backup_devices")) {
 
-            //SQL Server 2000
-            //ResultSet rs = con.createStatement().executeQuery("SELECT name,cntrltype,phyname FROM master..sysdevices");
             while (rs.next()) {
                 HashMap<String, String> loc = new HashMap<String, String>();
                 loc.put("name", rs.getString(1));
@@ -2572,8 +2576,9 @@ public abstract class Database {
         try {
             name = removeReservedCharacters(name);
             String query = "EXEC sp_addumpdevice \'disk\', \'" + name + "\', \'" + path + "\'";
-            con.createStatement().execute(query);
-
+            try (Statement stmt = con.createStatement()) {
+                stmt.execute(query);
+            }
             success = true;
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "Error adding backup file");
@@ -2599,7 +2604,9 @@ public abstract class Database {
             String query = "EXEC sp_dropdevice \'" + name + "\'";
             if (delfile)
                 query += ", \'DELFILE\'";
-            con.createStatement().execute(query);
+            try (Statement stmt = con.createStatement()) {
+                stmt.execute(query);
+            }
 
             success = true;
         } catch (SQLException ex) {
@@ -2848,43 +2855,52 @@ public abstract class Database {
             // ATOFMS machine in MS-Control.
             // TODO: Use rGetAllDescended in order to get the real first atom
 
-            ResultSet rs = rsStmt.executeQuery("SELECT MIN(Time) FROM temp.ParticlesToExport");
             long unixTime;
+            try (ResultSet rs = rsStmt.executeQuery("SELECT MIN(Time) FROM temp.ParticlesToExport")) {
 
-            if (rs.next()) {
-                startTime = TimeUtilities.iso8601ToDate(rs.getString(1));
-                unixTime = startTime.getTime() / 1000;
-            } else {
-                unixTime = 0;
+                if (rs.next()) {
+                    startTime = TimeUtilities.iso8601ToDate(rs.getString(1));
+                    unixTime = startTime.getTime() / 1000;
+                } else {
+                    unixTime = 0;
+                }
+            } catch (ParseException e) {
+                throw new ExceptionAdapter(e);
             }
 
             // find the end time in the same manner
             Date endTime = null;
-            rs = rsStmt.executeQuery("SELECT MAX(Time) FROM temp.ParticlesToExport");
-            if (rs.next()) {
-                endTime = TimeUtilities.iso8601ToDate(rs.getString(1));
+            try (ResultSet rs = rsStmt.executeQuery("SELECT MAX(Time) FROM temp.ParticlesToExport")) {
+                if (rs.next()) {
+                    endTime = TimeUtilities.iso8601ToDate(rs.getString(1));
+                }
+            } catch (ParseException e) {
+                throw new ExceptionAdapter(e);
             }
+
             String comment = " ";
 
             // Get the comment for the current collection to use
             // as the comment for the dataset
-            rs = rsStmt.executeQuery(
+            try (ResultSet rs = rsStmt.executeQuery(
                     "SELECT Comment \n" +
                             "FROM Collections\n" +
-                            "WHERE CollectionID = " + collection.getCollectionID());
-            if (rs.next())
-                comment = rs.getString(1);
-            if (comment.length() == 0)
-                comment = "Imported from Edam-Enchilada";
+                            "WHERE CollectionID = " + collection.getCollectionID())) {
+                if (rs.next())
+                    comment = rs.getString(1);
+                if (comment.length() == 0)
+                    comment = "Imported from Edam-Enchilada";
+            }
 
             int hitParticles = 0;
 
             // find out how many particles are in the collection
             // and pretend like that is the number of particles
             // hit in a powercycle.
-            rs = rsStmt.executeQuery("SELECT COUNT(AtomID) from temp.ParticlesToExport");
-            if (rs.next())
-                hitParticles = rs.getInt(1);
+            try (ResultSet rs = rsStmt.executeQuery("SELECT COUNT(AtomID) from temp.ParticlesToExport")) {
+                if (rs.next())
+                    hitParticles = rs.getInt(1);
+            }
 
             newName = newName.concat(Long.toString(unixTime));
 
@@ -2912,19 +2928,20 @@ public abstract class Database {
             }
 
             // get the values for the particles table so we can export them to MS Access
-            rs = rsStmt.executeQuery("SELECT * FROM temp.ParticlesToExport");
-            while (rs.next()) {
-                particlesTable.addRow(
-                        newName,
-                        (new File(rs.getString("Filename"))).getName(),
-                        TimeUtilities.iso8601ToDate(rs.getString("Time")),
-                        null,      // classes field, unused
-                        rs.getFloat("Size"),
-                        rs.getFloat("LaserPower"),
-                        rs.getInt("NumPeaks"),
-                        rs.getInt("TotalPosIntegral"),
-                        rs.getInt("TotalNegIntegral")
-                );
+            try (ResultSet rs = rsStmt.executeQuery("SELECT * FROM temp.ParticlesToExport")) {
+                while (rs.next()) {
+                    particlesTable.addRow(
+                            newName,
+                            (new File(rs.getString("Filename"))).getName(),
+                            TimeUtilities.iso8601ToDate(rs.getString("Time")),
+                            null,      // classes field, unused
+                            rs.getFloat("Size"),
+                            rs.getFloat("LaserPower"),
+                            rs.getInt("NumPeaks"),
+                            rs.getInt("TotalPosIntegral"),
+                            rs.getInt("TotalNegIntegral")
+                    );
+                }
             }
         } catch (ParseException e) {
             // A parse exception indicates something was stored incorrectly in the database; it's an internal error
@@ -2969,21 +2986,22 @@ public abstract class Database {
             }
 
 
-            ResultSet rs = rsStmt.executeQuery(
+            try (ResultSet rs = rsStmt.executeQuery(
                     "SELECT OrigFilename, PeakLocation, " +
                             "PeakArea, " +
                             "RelPeakArea, PeakHeight\n" +
-                            "FROM temp.PeaksToExport");
+                            "FROM temp.PeaksToExport")) {
 
-            while (rs.next()) {
-                peaksTable.addRow(
-                        newName,
-                        (new File(rs.getString("OrigFilename"))).getName(),
-                        rs.getFloat("PeakLocation"),
-                        rs.getInt("PeakArea"),
-                        rs.getFloat("RelPeakArea"),
-                        rs.getInt("PeakHeight")
-                );
+                while (rs.next()) {
+                    peaksTable.addRow(
+                            newName,
+                            (new File(rs.getString("OrigFilename"))).getName(),
+                            rs.getFloat("PeakLocation"),
+                            rs.getInt("PeakArea"),
+                            rs.getFloat("RelPeakArea"),
+                            rs.getInt("PeakHeight")
+                    );
+                }
             }
 
             stmt.executeUpdate("DROP TABLE temp.PeaksToExport");
@@ -3042,19 +3060,12 @@ public abstract class Database {
      * ATOFMS-specific.
      */
     public ArrayList<Peak> getPeaks(String datatype, int atomID) {
-        ResultSet rs = null;
-        try {
-            Statement stmt = con.createStatement();
-            rs = stmt.executeQuery(
-                    "SELECT * FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse, datatype) + " WHERE AtomID = " +
-                            atomID + " ORDER BY PeakLocation ");
-            //stmt.close();
-        } catch (SQLException e) {
-            System.err.println("Error selecting peaks");
-            e.printStackTrace();
-        }
         ArrayList<Peak> returnThis = new ArrayList<Peak>();
-        try {
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT * FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse, datatype) + " WHERE AtomID = " +
+                             atomID + " ORDER BY PeakLocation ")) {
+
             if (datatype.equals("ATOFMS")) {
                 float location = 0, relArea = 0;
                 int area = 0, height = 0;
@@ -3611,20 +3622,20 @@ public abstract class Database {
 
         public BinnedPeakList getPeakListfromAtomID(int atomID) {
             BinnedPeakList peakList = new BinnedPeakList(new Normalizer());
-            try {
-                ResultSet rs =
-                        con.createStatement().executeQuery(
+            try (Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery(
                                 "SELECT PeakLocation,PeakArea\n" +
                                         "FROM " + getDynamicTableName(DynamicTable.AtomInfoSparse,
                                                                       collection.getDatatype()) + "\n" +
-                                        "WHERE AtomID = " + atomID);
+                                        "WHERE AtomID = " + atomID)) {
                 while (rs.next()) {
                     peakList.add(
                             rs.getFloat(1),
                             rs.getInt(2));
                 }
-                rs.close();
+
                 return peakList;
+
             } catch (SQLException e) {
                 ErrorLogger.writeExceptionToLogAndPrompt(getName(),
                                                          "SQL Exception retrieving data through a AtomInfoOnly cursor.");
@@ -4498,69 +4509,71 @@ public abstract class Database {
             stmt.executeUpdate("DROP TABLE IF EXISTS temp.TimeBins;");
             stmt.executeUpdate(
                     "CREATE TEMPORARY TABLE TimeBins (AtomID INT, BinnedTime datetime, PRIMARY KEY (AtomID));");
-            PreparedStatement timeBinsInsertStmt = con.prepareStatement("INSERT INTO temp.TimeBins VALUES (?, ?);");
             counter++;
-            // get all times from collection to bin.
-            ResultSet collectionRS = stmt1.executeQuery("SELECT AID.AtomID, Time \n" +
-                                                                "FROM " + getDynamicTableName(
-                    DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
-                                                                "InternalAtomOrder IAO \n" +
-                                                                "WHERE IAO.AtomID = AID.AtomID\n" +
-                                                                "AND CollectionID = " + c.getCollectionID() + "\n" +
-                                                                "ORDER BY Time, AID.AtomID;\n");
 
-            // initialize first values:
-            collectionRS.next();
-            int atomID = collectionRS.getInt(1);
-            Date collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
-            Date basisTime = increment.getTime();
-            Date nextTime = null;
-            boolean next = true;
+            try (PreparedStatement timeBinsInsertStmt = con.prepareStatement("INSERT INTO temp.TimeBins VALUES (?, ?);");
+                 // get all times from collection to bin.
+                 ResultSet collectionRS = stmt1.executeQuery("SELECT AID.AtomID, Time \n" +
+                         "FROM " + getDynamicTableName(
+                         DynamicTable.AtomInfoDense, c.getDatatype()) + " AID,\n" +
+                         "InternalAtomOrder IAO \n" +
+                         "WHERE IAO.AtomID = AID.AtomID\n" +
+                         "AND CollectionID = " + c.getCollectionID() + "\n" +
+                         "ORDER BY Time, AID.AtomID;\n");
+            ) {
+                // initialize first values:
+                collectionRS.next();
+                int atomID = collectionRS.getInt(1);
+                Date collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
+                Date basisTime = increment.getTime();
+                Date nextTime = null;
+                boolean next = true;
 
-            // if there are times before the first bin, skip them.
-            while (basisTime.compareTo(collectionTime) > 0) {
-                next = collectionRS.next();
-                if (!next)
-                    break;
-                else {
-                    atomID = collectionRS.getInt(1);
-                    collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
-                }
-            }
-            // while the next time bin is legal...
-            while (next) {
-                increment.add(Calendar.DATE, interval.get(Calendar.DATE) - 1);
-                increment.add(Calendar.HOUR, interval.get(Calendar.HOUR_OF_DAY));
-                increment.add(Calendar.MINUTE, interval.get(Calendar.MINUTE));
-                increment.add(Calendar.SECOND, interval.get(Calendar.SECOND));
-                nextTime = increment.getTime();
-                while (next && nextTime.compareTo((Date) collectionTime) > 0) {
-                    timeBinsInsertStmt.setInt(1, atomID);
-                    timeBinsInsertStmt.setString(2, dateFormat.format(basisTime));
-                    timeBinsInsertStmt.addBatch();
-                    //stmt.executeUpdate("INSERT INTO temp.TimeBins VALUES ("+atomID+",'"+dateFormat.format(basisTime)+"');");
-                    counter++;
+                // if there are times before the first bin, skip them.
+                while (basisTime.compareTo(collectionTime) > 0) {
                     next = collectionRS.next();
                     if (!next)
                         break;
-                    atomID = collectionRS.getInt(1);
-                    collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
-                    if (counter > 1000) {
-                        timeBinsInsertStmt.executeBatch();
-                        counter = 0;
-                        timeBinsInsertStmt.clearBatch();
+                    else {
+                        atomID = collectionRS.getInt(1);
+                        collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
                     }
                 }
-                if (nextTime.compareTo(end.getTime()) > 0)
-                    next = false;
-                else
-                    basisTime = nextTime;
+                // while the next time bin is legal...
+                while (next) {
+                    increment.add(Calendar.DATE, interval.get(Calendar.DATE) - 1);
+                    increment.add(Calendar.HOUR, interval.get(Calendar.HOUR_OF_DAY));
+                    increment.add(Calendar.MINUTE, interval.get(Calendar.MINUTE));
+                    increment.add(Calendar.SECOND, interval.get(Calendar.SECOND));
+                    nextTime = increment.getTime();
+                    while (next && nextTime.compareTo((Date) collectionTime) > 0) {
+                        timeBinsInsertStmt.setInt(1, atomID);
+                        timeBinsInsertStmt.setString(2, dateFormat.format(basisTime));
+                        timeBinsInsertStmt.addBatch();
+                        //stmt.executeUpdate("INSERT INTO temp.TimeBins VALUES ("+atomID+",'"+dateFormat.format(basisTime)+"');");
+                        counter++;
+                        next = collectionRS.next();
+                        if (!next)
+                            break;
+                        atomID = collectionRS.getInt(1);
+                        collectionTime = TimeUtilities.iso8601ToDate(collectionRS.getString(2));
+                        if (counter > 1000) {
+                            timeBinsInsertStmt.executeBatch();
+                            counter = 0;
+                            timeBinsInsertStmt.clearBatch();
+                        }
+                    }
+                    if (nextTime.compareTo(end.getTime()) > 0)
+                        next = false;
+                    else
+                        basisTime = nextTime;
 
 
+                }
+
+                // if there are still more times, skip them.
+                timeBinsInsertStmt.executeBatch();
             }
-
-            // if there are still more times, skip them.
-            timeBinsInsertStmt.executeBatch();
         } catch (SQLException | ParseException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL exception creating aggregate basis temp table");
             throw new ExceptionAdapter(e);
@@ -4692,77 +4705,80 @@ public abstract class Database {
     }
 
     private void setNextAtomID(int nextID) throws SQLException {
-        Statement stmt = con.createStatement();
-        // SQLite stores the last sequence number added, so need to subtract one
-        // https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
-        int sqlLiteSequenceNumber = nextID - 1;
-        stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + sqlLiteSequenceNumber + " WHERE name='tmpatoms'");
-        stmt.executeUpdate("\n" +
-                                   "INSERT INTO sqlite_sequence (name,seq) SELECT 'tmpatoms', " + sqlLiteSequenceNumber + " WHERE NOT EXISTS \n" +
-                                   "           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);");
+        try (Statement stmt = con.createStatement()) {
+            // SQLite stores the last sequence number added, so need to subtract one
+            // https://stackoverflow.com/questions/692856/set-start-value-for-autoincrement-in-sqlite/692871#692871
+            int sqlLiteSequenceNumber = nextID - 1;
+            stmt.executeUpdate("UPDATE SQLITE_SEQUENCE SET seq = " + sqlLiteSequenceNumber + " WHERE name='tmpatoms'");
+            stmt.executeUpdate("\n" +
+                    "INSERT INTO sqlite_sequence (name,seq) SELECT 'tmpatoms', " + sqlLiteSequenceNumber + " WHERE NOT EXISTS \n" +
+                    "           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);");
+        }
     }
 
     private void aggregateAMSUpdate(
             ProgressBarWrapper progressBar, int rootCollectionID, int[] mzValues,
             String collectionName, AggregationOptions options) throws SQLException {
         //create and insert MZ Values into temporary #mz table.
-        Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
 
-        stmt.addBatch("DROP TABLE IF EXISTS temp.mz;\n");
-        stmt.addBatch("CREATE TEMPORARY TABLE mz (Value INT);\n");
-        for (int mzValue : mzValues) {
-            stmt.addBatch("INSERT INTO temp.mz VALUES(" + mzValue + ");\n");
-        }
-        // went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
-        stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
-                              "SELECT BinnedTime, MZ.Value AS Location," + options.getGroupMethodStr() + "(PeakHeight) AS PeakHeight \n" +
-                              "FROM temp.TimeBins TB\n" +
-                              "JOIN AMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n" +
-                              "JOIN temp.mz MZ on (abs(AIS.PeakLocation - MZ.Value) < " + options.peakTolerance + ")\n" +
-                              "GROUP BY BinnedTime,MZ.Value\n" +
-                              "ORDER BY Location, BinnedTime;\n");
+            stmt.addBatch("DROP TABLE IF EXISTS temp.mz;\n");
+            stmt.addBatch("CREATE TEMPORARY TABLE mz (Value INT);\n");
+            for (int mzValue : mzValues) {
+                stmt.addBatch("INSERT INTO temp.mz VALUES(" + mzValue + ");\n");
+            }
+            // went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
+            stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
+                    "SELECT BinnedTime, MZ.Value AS Location," + options.getGroupMethodStr() + "(PeakHeight) AS PeakHeight \n" +
+                    "FROM temp.TimeBins TB\n" +
+                    "JOIN AMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n" +
+                    "JOIN temp.mz MZ on (abs(AIS.PeakLocation - MZ.Value) < " + options.peakTolerance + ")\n" +
+                    "GROUP BY BinnedTime,MZ.Value\n" +
+                    "ORDER BY Location, BinnedTime;\n");
 
-        // build 2 child collections - one for time series, one for M/Z values.
-        int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
-        int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
-        int mzPeakLoc, mzCollectionID;
-        // for each mz value specified, make a new child collection and populate it.
-        for (int j = 0; j < mzValues.length; j++) {
-            mzPeakLoc = mzValues[j];
-            mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
-            progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
-            stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-                                  "select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = " + mzPeakLoc + "\n" +
-                                  "ORDER BY NewAtomID;\n");
-            stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-                                  "select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = " + mzPeakLoc +
-                                  " ORDER BY NewAtomID;\n");
+            // build 2 child collections - one for time series, one for M/Z values.
+            int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
+            int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
+            int mzPeakLoc, mzCollectionID;
+            // for each mz value specified, make a new child collection and populate it.
+            for (int j = 0; j < mzValues.length; j++) {
+                mzPeakLoc = mzValues[j];
+                mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
+                progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
+                stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+                        "select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = " + mzPeakLoc + "\n" +
+                        "ORDER BY NewAtomID;\n");
+                stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+                        "select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = " + mzPeakLoc +
+                        " ORDER BY NewAtomID;\n");
+            }
+            stmt.addBatch("DROP TABLE temp.mz;\n");
+            progressBar.increment("  Executing M/Z Queries...");
+            stmt.executeBatch();
         }
-        stmt.addBatch("DROP TABLE temp.mz;\n");
-        progressBar.increment("  Executing M/Z Queries...");
-        stmt.executeBatch();
     }
 
     private void aggregateTimeSeriesUpdate(
             ProgressBarWrapper progressBar, int rootCollectionID, String collectionName,
             AggregationOptions options) throws SQLException {
-        Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
 
-        stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
-                              "select BinnedTime, " + options.getGroupMethodStr() + "(AID.Value) AS Value \n" +
-                              "from temp.TimeBins TB \n" +
-                              "join TimeSeriesAtomInfoDense AID on (TB.AtomID = AID.AtomID) \n" +
-                              "group by BinnedTime \n" +
-                              "order by BinnedTime;\n");
+            stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
+                    "select BinnedTime, " + options.getGroupMethodStr() + "(AID.Value) AS Value \n" +
+                    "from temp.TimeBins TB \n" +
+                    "join TimeSeriesAtomInfoDense AID on (TB.AtomID = AID.AtomID) \n" +
+                    "group by BinnedTime \n" +
+                    "order by BinnedTime;\n");
 
-        int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
-        stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-                              "select " + newCollectionID + ", NewAtomID from tmpatoms;\n");
+            int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
+            stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+                    "select " + newCollectionID + ", NewAtomID from tmpatoms;\n");
 
-        stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-                              "select NewAtomID, Time, Value from tmpatoms;\n");
-        progressBar.increment("  " + collectionName);
-        stmt.executeBatch();
+            stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+                    "select NewAtomID, Time, Value from tmpatoms;\n");
+            progressBar.increment("  " + collectionName);
+            stmt.executeBatch();
+        }
     }
 
     private void aggreateATOFMSUpdate(
@@ -4770,85 +4786,86 @@ public abstract class Database {
             String collectionName, AggregationOptions options)
             throws SQLException, InterruptedException {
         int newCollectionID = createEmptyCollection("TimeSeries", rootCollectionID, collectionName, "", "");
-        Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
 
-        // if length actually is 0, do nothing
-        if (mzValues.length != 0) {
-
-
-            //This code does all of the joins in SQL.
-
-            // went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
-            // collects the sum of the Height/Area over all atoms at a given Time and for a specific m/z
-            stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
-                                  "SELECT BinnedTime, AIS.PeakLocation AS Location," + options.getGroupMethodStr() + "(PeakHeight) AS PeakHeight \n" +
-                                  "FROM temp.TimeBins TB\n" +
-                                  "JOIN ATOFMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n" +
-                                  "GROUP BY BinnedTime,AIS.PeakLocation\n" +
-                                  "ORDER BY Location, BinnedTime;\n");
+            // if length actually is 0, do nothing
+            if (mzValues.length != 0) {
 
 
-            // build 2 child collections - one for particle counts time-series,
-            // one for M/Z values time-series.
-            int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
-            int mzPeakLoc, mzCollectionID;
-            // for each mz value specified, make a new child collection and populate it.
-            for (int j = 0; j < mzValues.length; j++) {
+                //This code does all of the joins in SQL.
+
+                // went back to Greg's JOIN methodology, but retained #mz table, which speeds it up.
+                // collects the sum of the Height/Area over all atoms at a given Time and for a specific m/z
+                stmt.addBatch("INSERT INTO tmpatoms (Time, MZLocation, Value) \n" +
+                        "SELECT BinnedTime, AIS.PeakLocation AS Location," + options.getGroupMethodStr() + "(PeakHeight) AS PeakHeight \n" +
+                        "FROM temp.TimeBins TB\n" +
+                        "JOIN ATOFMSAtomInfoSparse AIS on (TB.AtomID = AIS.AtomID)\n" +
+                        "GROUP BY BinnedTime,AIS.PeakLocation\n" +
+                        "ORDER BY Location, BinnedTime;\n");
+
+
+                // build 2 child collections - one for particle counts time-series,
+                // one for M/Z values time-series.
+                int mzRootCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "M/Z", "", "");
+                int mzPeakLoc, mzCollectionID;
+                // for each mz value specified, make a new child collection and populate it.
+                for (int j = 0; j < mzValues.length; j++) {
+                    if (progressBar.wasTerminated()) {
+                        throw new InterruptedException();
+                    }
+                    mzPeakLoc = mzValues[j];
+                    mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
+                    progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
+                    stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+                            "select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = " + mzPeakLoc + "\n" +
+                            "ORDER BY NewAtomID;\n");
+                    stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
+                            "select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = " + mzPeakLoc +
+                            " ORDER BY NewAtomID;\n");
+                }
+
+                // if the user tried to cancel, STOP
                 if (progressBar.wasTerminated()) {
                     throw new InterruptedException();
                 }
-                mzPeakLoc = mzValues[j];
-                mzCollectionID = createEmptyCollection("TimeSeries", mzRootCollectionID, mzPeakLoc + "", "", "");
-                progressBar.increment("  " + collectionName + ", M/Z: " + mzPeakLoc);
-                stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-                                      "select " + mzCollectionID + ", NewAtomID from tmpatoms WHERE MZLocation = " + mzPeakLoc + "\n" +
-                                      "ORDER BY NewAtomID;\n");
-                stmt.addBatch("INSERT INTO TimeSeriesAtomInfoDense (AtomID, Time, Value) \n" +
-                                      "select NewAtomID, Time, Value from tmpatoms WHERE MZLocation = " + mzPeakLoc +
-                                      " ORDER BY NewAtomID;\n");
+                progressBar.increment("  Executing Queries...");
+                // if the particle count is selected, produce that time series as well.
+                // NOTE:  QUERY HAS CHANGED DRASTICALLY SINCE GREG'S IMPLEMENTATION!!!
+                // it now tracks number of particles instead of sum of m/z particles.
+                //System.out.println("Statement: "+sql.toString());
+                progressBar.setIndeterminate(true);
+                long start = System.currentTimeMillis();
+                stmt.executeBatch();
+                long stop = System.currentTimeMillis();
+                System.out.println("executed in " + (stop - start) + " milliseconds.");
+
             }
 
+            stmt.clearBatch();
+            setNextAtomID(getNextID());
+            stmt.executeUpdate("DELETE FROM tmpatoms");
+            if (options.produceParticleCountTS) {
+                int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
+                stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
+                        "SELECT BinnedTime, COUNT(AtomID) AS IDCount FROM temp.TimeBins TB\n" +
+                        "GROUP BY BinnedTime\n" +
+                        "ORDER BY BinnedTime;\n");
+                stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
+                        "select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
+                stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,
+                        "TimeSeries") + " (AtomID, Time, Value) \n" +
+                        "select NewAtomID, Time, Value from tmpatoms;\n");
+
+                progressBar.increment("  " + collectionName + ", Particle Counts");
+                long start = System.currentTimeMillis();
+                stmt.executeBatch();
+                long stop = System.currentTimeMillis();
+                System.out.println("executed in " + (stop - start) + " milliseconds.");
+            }
             // if the user tried to cancel, STOP
             if (progressBar.wasTerminated()) {
                 throw new InterruptedException();
             }
-            progressBar.increment("  Executing Queries...");
-            // if the particle count is selected, produce that time series as well.
-            // NOTE:  QUERY HAS CHANGED DRASTICALLY SINCE GREG'S IMPLEMENTATION!!!
-            // it now tracks number of particles instead of sum of m/z particles.
-            //System.out.println("Statement: "+sql.toString());
-            progressBar.setIndeterminate(true);
-            long start = System.currentTimeMillis();
-            stmt.executeBatch();
-            long stop = System.currentTimeMillis();
-            System.out.println("executed in " + (stop - start) + " milliseconds.");
-
-        }
-
-        stmt.clearBatch();
-        setNextAtomID(getNextID());
-        stmt.executeUpdate("DELETE FROM tmpatoms");
-        if (options.produceParticleCountTS) {
-            int combinedCollectionID = createEmptyCollection("TimeSeries", newCollectionID, "Particle Counts", "", "");
-            stmt.addBatch("INSERT INTO tmpatoms (Time, Value) \n" +
-                                  "SELECT BinnedTime, COUNT(AtomID) AS IDCount FROM temp.TimeBins TB\n" +
-                                  "GROUP BY BinnedTime\n" +
-                                  "ORDER BY BinnedTime;\n");
-            stmt.addBatch("INSERT INTO AtomMembership (CollectionID, AtomID) \n" +
-                                  "select " + combinedCollectionID + ", NewAtomID from tmpatoms;\n");
-            stmt.addBatch("INSERT INTO " + getDynamicTableName(DynamicTable.AtomInfoDense,
-                                                               "TimeSeries") + " (AtomID, Time, Value) \n" +
-                                  "select NewAtomID, Time, Value from tmpatoms;\n");
-
-            progressBar.increment("  " + collectionName + ", Particle Counts");
-            long start = System.currentTimeMillis();
-            stmt.executeBatch();
-            long stop = System.currentTimeMillis();
-            System.out.println("executed in " + (stop - start) + " milliseconds.");
-        }
-        // if the user tried to cancel, STOP
-        if (progressBar.wasTerminated()) {
-            throw new InterruptedException();
         }
     }
 
@@ -4990,17 +5007,14 @@ public abstract class Database {
 
         ArrayList<Date> retData = new ArrayList<Date>();
 
-        try {
-            Statement stmt = con.createStatement();
-            System.out.println("DATES:\n" + selectAllTimesStr);
-            ResultSet rs;
-            rs = stmt.executeQuery(selectAllTimesStr);
+        System.out.println("DATES:\n" + selectAllTimesStr);
+        try (Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(selectAllTimesStr)) {
             while (rs.next()) {
                 String dateTime = rs.getString("Time");
                 if (dateTime != null)
                     retData.add(TimeUtilities.iso8601ToDate(dateTime));
             }
-
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL exception retrieving time series data.");
             System.err.println("Error retrieving time series data.");
@@ -5164,33 +5178,39 @@ public abstract class Database {
 
         ArrayList<TreeMap<Date, Double>> plumes = new ArrayList<TreeMap<Date, Double>>();
         TreeMap<Date, Double> curPlume = new TreeMap<Date, Double>();
+        System.out.println(datesCountStr);
         try {
-            Statement stmt = con.createStatement();
+            try (Statement stmt = con.createStatement()) {
 
-            ResultSet rs;
-            System.out.println(datesCountStr);
-            rs = stmt.executeQuery(datesCountStr);
-            boolean hasRows = rs.next();
-            assert (hasRows);
-            int numParticles = rs.getInt("Count");
+                boolean hasRows;
+                int numParticles;
+                try (ResultSet rs = stmt.executeQuery(datesCountStr)) {
+                    hasRows = rs.next();
+                    assert (hasRows);
+                    numParticles = rs.getInt("Count");
+                }
 
-            System.out.println(valuesCountStr);
-            rs = stmt.executeQuery(valuesCountStr);
-            hasRows = rs.next();
-            assert (hasRows);
-            int numPeaks = rs.getInt("Count");
+                System.out.println(valuesCountStr);
+                int numPeaks;
+                try (ResultSet rs = stmt.executeQuery(valuesCountStr)) {
+                    hasRows = rs.next();
+                    assert (hasRows);
+                    numPeaks = rs.getInt("Count");
+                }
 
-            System.out.println(orderedByValue);
-            rs = stmt.executeQuery(orderedByValue);
-            System.out.println("numParticles: " + numParticles + "\nnumPeaks: " + numPeaks);
-            System.out.println("skip to " + (int) (magnitude * numParticles));
-            for (int i = 0; i < (int) (magnitude * numParticles); i++) {
-                hasRows = rs.next();
-                //System.out.println("Next value: "+rs.getDouble("Value"));
-                assert (hasRows);
+                System.out.println(orderedByValue);
+                double minValue;
+                try (ResultSet rs = stmt.executeQuery(orderedByValue)) {
+                    System.out.println("numParticles: " + numParticles + "\nnumPeaks: " + numPeaks);
+                    System.out.println("skip to " + (int) (magnitude * numParticles));
+                    for (int i = 0; i < (int) (magnitude * numParticles); i++) {
+                        hasRows = rs.next();
+                        assert (hasRows);
+                    }
+                    minValue = rs.getDouble("Value");
+                }
+                plumes = createAndDetectPlumesFromValue(collection, minValue, minDuration);
             }
-            double minValue = rs.getDouble("Value");
-            plumes = createAndDetectPlumesFromValue(collection, minValue, minDuration);
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL exception retrieving time series data.");
             System.err.println("Error retrieving time series data.");
@@ -5249,32 +5269,36 @@ public abstract class Database {
         String orderedByValue = selectAllAtomsTimesStr + "     Order BY Value;\n";
 
         ArrayList<TreeMap<Date, Double>> plumes = new ArrayList<TreeMap<Date, Double>>();
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
 
-            ResultSet rs;
             boolean hasRows = false;
+            int numParticles;
             System.out.println(datesCountStr);
-            rs = stmt.executeQuery(datesCountStr);
-            hasRows = rs.next();
-            assert (hasRows);
-            int numParticles = rs.getInt("Count");
+            try (ResultSet rs = stmt.executeQuery(datesCountStr)) {
+                hasRows = rs.next();
+                assert (hasRows);
+                numParticles = rs.getInt("Count");
+            }
 
             System.out.println(valuesCountStr);
-            rs = stmt.executeQuery(valuesCountStr);
-            hasRows = rs.next();
-            assert (hasRows);
-            int numPeaks = rs.getInt("Count");
+            int numPeaks;
+            try (ResultSet rs = stmt.executeQuery(valuesCountStr)) {
+                hasRows = rs.next();
+                assert (hasRows);
+                numPeaks = rs.getInt("Count");
+            }
 
             System.out.println(orderedByValue);
-            rs = stmt.executeQuery(orderedByValue);
-            for (int i = 0; i < (int) (numParticles - .50 * numPeaks); i++) {
-                hasRows = rs.next();
-                //System.out.println("Next value: "+rs.getDouble("Value"));
-                assert (hasRows);
+            double minValue;
+            try (ResultSet rs = stmt.executeQuery(orderedByValue)) {
+                for (int i = 0; i < (int) (numParticles - .50 * numPeaks); i++) {
+                    hasRows = rs.next();
+                    //System.out.println("Next value: "+rs.getDouble("Value"));
+                    assert (hasRows);
+                }
+                minValue = rs.getDouble("Value");
+                minValue *= factor;
             }
-            double minValue = rs.getDouble("Value");
-            minValue *= factor;
             plumes = createAndDetectPlumesFromValue(collection, minValue, minDuration);
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL exception retrieving time series data.");
@@ -5325,13 +5349,11 @@ public abstract class Database {
 
         ArrayList<TreeMap<Date, Double>> plumes = new ArrayList<TreeMap<Date, Double>>();
         TreeMap<Date, Double> curPlume = new TreeMap<Date, Double>();
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(orderedByTime)) {
 
-            ResultSet rs;
             System.out.println("MinValue: " + minValue);
             System.out.println(orderedByTime);
-            rs = stmt.executeQuery(orderedByTime);
             boolean more = true;
             more = rs.next();
             while (more) {
@@ -5581,12 +5603,10 @@ public abstract class Database {
      */
     public boolean collectionContainsAtom(int collectionID, int atomID) {
         boolean contains = false;
-        Statement stmt;
-        try {
-            stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from InternalAtomOrder"
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * from InternalAtomOrder"
                                                      + " WHERE CollectionID = " + collectionID + " AND AtomID = "
-                                                     + atomID);
+                                                     + atomID)) {
 
             if (rs.next())
                 contains = true;
@@ -5779,8 +5799,7 @@ public abstract class Database {
      * @param newCollection
      */
     public void propagateNewCollection(Collection newCollection) {
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("IF (OBJECT_ID('tempdb..#newCollection') " +
                                        "IS NOT NULL)\n" +
                                        "	DROP TABLE #newCollection\n");
@@ -5799,8 +5818,7 @@ public abstract class Database {
         if (parentCollection == null ||
                 parentCollection.getCollectionID() == 0 ||
                 parentCollection.getCollectionID() == 1) {
-            try {
-                Statement stmt = con.createStatement();
+            try (Statement stmt = con.createStatement()) {
                 String query = "DROP TABLE #newCollection;";
                 stmt.execute(query);
             } catch (SQLException e) {
@@ -5808,8 +5826,7 @@ public abstract class Database {
             }
             return;
         }
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
             stmt.execute("UPDATE #newCollection SET CollectionID = " + parentCollection.getCollectionID());
             stmt.execute("INSERT INTO InternalAtomOrder (AtomID, CollectionID) SELECT * FROM #newCollection;");
         } catch (SQLException e) {
@@ -5834,8 +5851,7 @@ public abstract class Database {
                 collection.getCollectionID() == 1)
             return;
         int cID = collection.getCollectionID();
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
             con.setAutoCommit(false);
 
             /*get atomIDs for collection in IAO and in AtomMembership.
@@ -5869,9 +5885,9 @@ public abstract class Database {
                     if (i < subCollections.size() - 1)
                         query += "OR (CollectionID = ";
                 }
-                try (ResultSet atomsToAdd = stmt.executeQuery(query)) {
+                try (ResultSet atomsToAdd = stmt.executeQuery(query);
                     PreparedStatement pstmt = con.prepareStatement(
-                            "INSERT OR IGNORE INTO InternalAtomOrder VALUES (?,?)");
+                            "INSERT OR IGNORE INTO InternalAtomOrder VALUES (?,?)")) {
                     while (atomsToAdd.next()) {
                         pstmt.setInt(1, atomsToAdd.getInt("AtomID"));
                         pstmt.setInt(2, cID);
@@ -5884,7 +5900,6 @@ public abstract class Database {
 
             con.commit();
             con.setAutoCommit(true);
-            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -5905,18 +5920,18 @@ public abstract class Database {
      */
     public String aggregateColumn(DynamicTable table, String string, ArrayList<Integer> curIDs, String oldDatatype) {
         double sum = 0;
-        try {
-            Statement stmt = con.createStatement();
-            StringBuilder query = new StringBuilder("SELECT SUM(" + string + ") FROM " +
-                                                            getDynamicTableName(table,
-                                                                                oldDatatype) + " WHERE AtomID IN (");
-            for (int i = 0; i < curIDs.size(); i++) {
-                query.append(curIDs.get(i));
-                if (i != curIDs.size() - 1)
-                    query.append(",");
-            }
-            query.append(");");
-            ResultSet rs = stmt.executeQuery(query.toString());
+        StringBuilder query = new StringBuilder("SELECT SUM(" + string + ") FROM " +
+                getDynamicTableName(table,
+                        oldDatatype) + " WHERE AtomID IN (");
+        for (int i = 0; i < curIDs.size(); i++) {
+            query.append(curIDs.get(i));
+            if (i != curIDs.size() - 1)
+                query.append(",");
+        }
+        query.append(");");
+
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(query.toString())) {
             rs.next();
             sum = rs.getDouble(1);
         } catch (SQLException e) {
@@ -5928,25 +5943,26 @@ public abstract class Database {
 
     public BinnedPeakList getAveragePeakListForCollection(Collection coll) {
         BinnedPeakList bpl = null;
-        try {
-            Statement stmt = con.createStatement();
+        try (Statement stmt = con.createStatement()) {
             StringBuilder query = new StringBuilder("SELECT PeakLocation, SUM(PeakArea) FROM " +
-                                                            getDynamicTableName(DynamicTable.AtomInfoSparse,
-                                                                                coll.getDatatype()) + " a, InternalAtomOrder b WHERE " +
-                                                            "b.CollectionID = " + coll.getCollectionID() + " and a.AtomID = b.AtomID GROUP BY PeakLocation");
-            ResultSet rs = stmt.executeQuery(query.toString());
-            bpl = new BinnedPeakList();
-            while (rs.next()) {
-                bpl.add(rs.getInt(1), rs.getFloat(2));
+                    getDynamicTableName(DynamicTable.AtomInfoSparse,
+                            coll.getDatatype()) + " a, InternalAtomOrder b WHERE " +
+                    "b.CollectionID = " + coll.getCollectionID() + " and a.AtomID = b.AtomID GROUP BY PeakLocation");
+            try (ResultSet rs = stmt.executeQuery(query.toString())) {
+                bpl = new BinnedPeakList();
+                while (rs.next()) {
+                    bpl.add(rs.getInt(1), rs.getFloat(2));
+                }
             }
             query = new StringBuilder("SELECT COUNT(DISTINCT a.AtomID) FROM " +
                                               getDynamicTableName(DynamicTable.AtomInfoSparse,
                                                                   coll.getDatatype()) + " a, InternalAtomOrder b WHERE " +
                                               "b.CollectionID = " + coll.getCollectionID() + " and a.AtomID = b.AtomID");
-            rs = stmt.executeQuery(query.toString());
-            rs.next();
-            int numAtoms = rs.getInt(1);
-            bpl.divideAreasBy(numAtoms);
+            try (ResultSet rs = stmt.executeQuery(query.toString())) {
+                rs.next();
+                int numAtoms = rs.getInt(1);
+                bpl.divideAreasBy(numAtoms);
+            }
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
