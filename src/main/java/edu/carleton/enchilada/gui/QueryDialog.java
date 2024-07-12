@@ -56,6 +56,8 @@ import edu.carleton.enchilada.externalswing.SwingWorker;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 /**
@@ -108,6 +110,7 @@ implements ActionListener, ItemListener
 	private Calendar epoch = Calendar.getInstance();
 	private TimePanel fromTime;
 	private TimePanel toTime;
+	private final SimpleDateFormat SQLite_iso8601 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	
 	private JTextField fromSize;
@@ -580,6 +583,9 @@ implements ActionListener, ItemListener
 				}
 				if (timeSelected)
 				{
+					System.out.println("aha" + fromTime.getTimeString());
+					System.out.println("aha2" + toTime.getTimeString());
+
 					if(fromTime.isBad())
 					{
 						JOptionPane.showMessageDialog(
@@ -609,10 +615,12 @@ implements ActionListener, ItemListener
 			    				JOptionPane.ERROR_MESSAGE);
 			    		return;
 					}
-					where += " [time] <= '" + 
-					toTime.getTimeString()
+					where += " [time] <= '" +
+					// SQLite needs ISO8601 format
+					SQLite_iso8601.format(toTime.getRawDate())
 					+ "' AND [time] >= '" + 
-					fromTime.getTimeString() + "'";
+					SQLite_iso8601.format(fromTime.getRawDate())
+					+ "'";
 					if (countSelected)
 						where += " AND";
 				}

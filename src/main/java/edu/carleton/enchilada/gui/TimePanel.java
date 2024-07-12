@@ -216,7 +216,11 @@ import javax.swing.event.DocumentListener;
 			c.setTime(currentTime);
 			return c;
 		}
-		
+
+		public Date getRawDate() {
+			return currentTime;
+		}
+
 		public void insertUpdate(DocumentEvent ev) {
 	        updateDate();
 	    }
