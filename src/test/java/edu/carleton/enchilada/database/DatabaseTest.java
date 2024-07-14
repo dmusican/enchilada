@@ -1157,7 +1157,17 @@ public class DatabaseTest extends TestCase {
 		db.setCollectionDescription(db.getCollection(2),description);
 		db.closeConnection();
 	}
-	
+
+	public void testGetAndSetCollectionLargeDescription() {
+		db.openConnection();
+		String description = db.getCollectionDescription(2);
+		String newDescription = "a".repeat((int)2e6);
+		assertTrue(db.setCollectionDescription(db.getCollection(2),newDescription));
+		assertEquals(newDescription, db.getCollectionDescription(2));
+		db.setCollectionDescription(db.getCollection(2),description);
+		db.closeConnection();
+	}
+
 	/* Can't try dropping db because it's in use.
 	public void testDropDatabase() {
 		db.openConnection();

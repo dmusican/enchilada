@@ -2720,18 +2720,16 @@ public abstract class Database {
     public boolean setCollectionDescription(
             Collection collection,
             String description) {
+
         description = removeReservedCharacters(description);
-        try {
-            Statement stmt = con.createStatement();
-            stmt.executeUpdate(
-                    "UPDATE Collections\n" +
-                            "SET Description = '" + description + "'\n" +
-                            "WHERE CollectionID = " + collection.getCollectionID());
-            stmt.close();
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "UPDATE Collections SET Description = ? WHERE CollectionID = ?")) {
+            pstmt.setString(1, description);
+            pstmt.setInt(2, collection.getCollectionID());
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception updating collection description.");
-            System.err.println("Error updating collection " +
-                                       "description:");
+            System.err.println("Error updating collection description:");
             e.printStackTrace();
         }
         return true;
