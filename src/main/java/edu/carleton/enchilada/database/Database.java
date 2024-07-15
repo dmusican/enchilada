@@ -4869,19 +4869,15 @@ public abstract class Database {
 
 
     public int[] getValidSelectedMZValuesForCollection(Collection collection, Date startDate, Date endDate) {
-        Set<Integer> collectionIDs = collection.getCollectionIDSubTree();
         AggregationOptions options = collection.getAggregationOptions();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        File tempFile = null;
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = null;
-            ArrayList<Integer> peakLocs = new ArrayList<Integer>();
-            StringBuilder sql = new StringBuilder();
 
-//			if we want to get all mz values:
+        try (Statement stmt = con.createStatement()) {
+            ArrayList<Integer> peakLocs = new ArrayList<>();
+
+            //	if we want to get all mz values:
             if (options.allMZValues) {
-                rs = stmt.executeQuery("select distinct PeakLocation as RoundedPeakLocation " +
+                try (ResultSet rs = stmt.executeQuery("select distinct PeakLocation as RoundedPeakLocation " +
                                                "from " +
                                                getDynamicTableName(DynamicTable.AtomInfoSparse,
                                                                    collection.getDatatype()) +
@@ -4894,48 +4890,36 @@ public abstract class Database {
                                                "AND IAO.AtomID = AID.AtomID \n" +
                                                "AND AID.Time >= '" + dateFormat.format(startDate) + "'\n" +
                                                "AND AID.Time <= '" + dateFormat.format(endDate) + "'\n" +
-                                               "ORDER BY RoundedPeakLocation;\n");
-                while (rs.next()) {
-                    peakLocs.add(rs.getInt("RoundedPeakLocation"));
+                                               "ORDER BY RoundedPeakLocation;\n")) {
+                    while (rs.next()) {
+                        peakLocs.add(rs.getInt("RoundedPeakLocation"));
+                    }
                 }
-                rs.close();
 
-                // if there's a list of mz values:
+            // if there's a list of mz values:
             } else if (options.mzValues != null && options.mzValues.size() > 0) {
-                sql.append("IF object_id('tempdb..#mz') IS NOT NULL\n" +
-                                   "DROP TABLE #mz;\n");
-                sql.append("CREATE TABLE #mz (Value INT);\n");
-                // Only bulk insert if client and server are on the same machine...
-                if (url.equals("localhost")) {
-                    PrintWriter bulkFile = null;
-                    try {
-                        //tempFile = File.createTempFile("bulkfile", ".txt");
-                        tempFile = new File("TEMP" + File.separator + "bulkfile" + ".txt");
-                        tempFile.deleteOnExit();
-                        bulkFile = new PrintWriter(new FileWriter(tempFile));
-                    } catch (IOException e) {
-                        System.err.println("Trouble creating " + tempFile.getAbsolutePath() + "");
-                        e.printStackTrace();
-                    }
+                stmt.executeUpdate("DROP TABLE IF EXISTS temp.mz;");
+                stmt.executeUpdate("CREATE TEMP TABLE mz (Value INT);");
+
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO temp.mz VALUES (?);")) {
+                    // Wrap this code in a transaction if it isn't already in one, for speed
+                    boolean autoCommitModeBeforeHere = con.getAutoCommit();
+                    con.setAutoCommit(false);
                     for (int i = 0; i < options.mzValues.size(); i++) {
-                        bulkFile.println(options.mzValues.get(i));
+                        pstmt.setInt(1, options.mzValues.get(i));
+                        pstmt.addBatch();
                     }
-                    bulkFile.close();
-                    sql.append("BULK INSERT #mz\n" +
-                                       "FROM '" + tempFile.getAbsolutePath() + "'\n" +
-                                       "WITH (FIELDTERMINATOR=',');\n");
-                } else {
-                    for (int i = 0; i < options.mzValues.size(); i++) {
-                        sql.append("INSERT INTO #mz VALUES (" + options.mzValues.get(i) + ");\n");
-                    }
+                    pstmt.executeBatch();
+                    con.commit();
+                    con.setAutoCommit(autoCommitModeBeforeHere);
                 }
-                stmt.execute(sql.toString());
+
                 /* If Datatype is ATOFMS */
-                rs = stmt.executeQuery("select distinct MZ.Value as RoundedPeakLocation " +
+                try (ResultSet rs = stmt.executeQuery("select distinct MZ.Value as RoundedPeakLocation " +
                                                "from " +
                                                getDynamicTableName(DynamicTable.AtomInfoSparse,
                                                                    collection.getDatatype()) +
-                                               " AIS, InternalAtomOrder IAO, #mz MZ, " +
+                                               " AIS, InternalAtomOrder IAO, temp.mz MZ, " +
                                                getDynamicTableName(DynamicTable.AtomInfoDense,
                                                                    collection.getDatatype()) +
                                                " AID \n" +
@@ -4945,20 +4929,15 @@ public abstract class Database {
                                                "AND PeakLocation = MZ.Value \n" +
                                                "AND AID.Time >= '" + dateFormat.format(startDate) + "'\n" +
                                                "AND AID.Time <= '" + dateFormat.format(endDate) + "'\n" +
-                                               "ORDER BY MZ.Value;\n");
-                while (rs.next()) {
-                    peakLocs.add(rs.getInt("RoundedPeakLocation"));
+                                               "ORDER BY MZ.Value;\n")) {
+                    while (rs.next()) {
+                        peakLocs.add(rs.getInt("RoundedPeakLocation"));
+                    }
                 }
-                stmt.execute("DROP TABLE #mz;\n");
-                rs.close();
+                stmt.execute("DROP TABLE IF EXISTS temp.mz;\n");
             } else {
                 System.err.println("BAD AGGREGATION OPTIONS");
 
-            }
-
-            stmt.close();
-            if (tempFile != null && tempFile.exists()) {
-                tempFile.delete();
             }
 
             int[] ret = new int[peakLocs.size()];
