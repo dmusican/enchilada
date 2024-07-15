@@ -47,6 +47,7 @@
 package edu.carleton.enchilada.database;
 
 import com.healthmarketscience.jackcess.*;
+import edu.carleton.enchilada.collection.AggregationOptions;
 import edu.carleton.enchilada.dataImporters.TSImport;
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.gui.ParticleAnalyzeWindow;
@@ -1667,10 +1668,30 @@ public class DatabaseTest extends TestCase {
 		
 		db.closeConnection();
 	}
-	
-	/**
-	 * @author shaferia
-	 */
+
+	public void testGetMzValues() {
+		db.openConnection();
+		Collection collection = db.getCollection(2);
+		AggregationOptions ao = new AggregationOptions();
+		ao.allMZValues = false;
+		ao.mzValues.add(12);
+		collection.setAggregationOptions(ao);
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try {
+			db.getValidSelectedMZValuesForCollection(collection,
+					dateFormat.parse("2003-09-02 17:30:38"),
+					dateFormat.parse("2003-09-02 17:30:38"));
+		} catch (ParseException e) {
+			throw new ExceptionAdapter(e);
+		}
+		db.closeConnection();
+	}
+
+
+		/**
+         * @author shaferia
+         */
 	public void testCreateIndex() {
 		db.openConnection();
 		
