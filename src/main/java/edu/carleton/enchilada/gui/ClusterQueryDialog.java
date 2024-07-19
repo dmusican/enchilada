@@ -42,16 +42,14 @@ import edu.carleton.enchilada.errorframework.*;
 
 public class ClusterQueryDialog extends JDialog implements ActionListener{
 	
-	private JButton okButton;
-	private JButton cancelButton;
-	private JTextField distance, commentField;
+	private final JButton okButton;
+	private final JButton cancelButton;
+	private final JTextField distance;
+    private final JTextField commentField;
 	private ClusterTableModel clusterTableModel;
-	private int dataSetCount;
-	private static JFrame parent = null;
-	private Database db;
-	private CollectionTree cTree;
-	private boolean kCluster = false;
-	
+	private final Database db;
+	private final CollectionTree cTree;
+
 	/**
 	 * Extends JDialog to form a modal dialogue box for setting
 	 * cluster centers.  
@@ -154,7 +152,7 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 			System.out.println("okay button");
 			float d = (float) 0.0;
 			try{
-				d = Float.valueOf(distance.getText());
+				d = Float.parseFloat(distance.getText());
 				System.out.println(d);
 				if(d>2.0||d<0.0){
 					System.out.println("out of range");
@@ -168,27 +166,15 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 							filenames.add((String) clusterTableModel.getValueAt(i,1));
 						}
 					}
-					if(filenames.size()>0){
+					if(!filenames.isEmpty()){
 						try{
 						ClusterQuery qc = new ClusterQuery(
 								cTree.getSelectedCollection().
 								getCollectionID(),db, 
 								"Cluster Query", commentField.getText(), false, filenames,d);
 						qc.setDistanceMetric(DistanceMetric.EUCLIDEAN_SQUARED);
-						//TODO:  When should we use disk based and memory based 
-						// cursors?
-						/*if (db.getCollectionSize(
-								cTree.getSelectedCollection().
-								getCollectionID()) < 10000) // Was 10000
-						{
-							System.out.println("setting cursor type");
-							qc.setCursorType(Cluster.STORE_ON_FIRST_PASS);
-						}
-						else*/
-					//	{
 							System.out.println("setting cursor type");
 							qc.setCursorType(Cluster.DISK_BASED);
-						//}
 						try{
 							qc.divide();
 						}catch (NoSubCollectionException sce){
@@ -210,37 +196,6 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 				e1.printStackTrace();
 				JOptionPane.showMessageDialog(this, "Please enter a number between 0.0 and 2.0 for the distance");
 			}
-			
-			//set necessary values in the data importer
-			//TODO Change the progress bar
-		/*	final ProgressBarWrapper progressBar = 
-				new ProgressBarWrapper(parent, AMSDataSetImporter.TITLE, 100);
-			//TODO Find out the paraments to clusterQuery
-			final clusterQuery cluster = 
-					new clusterQuery(clusterTableModel, parent, db, progressBar);
-			
-			//Create the progress bar and spin off a thread to do the work in
-			//Database transactions are not currently used.
-			progressBar.constructThis();
-			final SwingWorker worker = new SwingWorker() {
-				public Object construct() {
-					try {
-						clusterQuery.collectTableInfo();
-					}
-					catch (DisplayException e1) {
-						ErrorLogger.displayException(progressBar,e1.toString());
-					}
-					catch (WriteException e2) {
-						ErrorLogger.displayException(progressBar,e2.toString());
-					}
-					return null;
-				}
-				public void finished() {
-					progressBar.disposeThis();
-					dispose();
-				}
-			};
-			worker.start();*/
 			
 		}
 		else if (source == cancelButton) {
