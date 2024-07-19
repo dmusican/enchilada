@@ -60,7 +60,6 @@ public class ClusterQueryDialog extends JDialog implements ActionListener{
 	 */
 	public ClusterQueryDialog(JFrame owner, CollectionTree cTree, Database db) throws HeadlessException {
 		super(owner, "Cluster with Chosen Centers", true);
-		parent = owner;
 		this.db = db;
 		this.cTree = cTree;
 		setSize(500,400);
