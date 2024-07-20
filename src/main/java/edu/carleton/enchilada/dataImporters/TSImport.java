@@ -27,7 +27,7 @@ import edu.carleton.enchilada.gui.MainFrame;
  */
 
 /*
- * Complete list of needed SQLServerDatabase methods:
+ * Complete list of needed database methods:
  * getNextID - get new AtomID
  * createEmptyCollectionAndDataset
  * insertParticle

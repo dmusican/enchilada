@@ -117,7 +117,7 @@ public abstract class Database {
     private int randomSeed = 0;
 
     /**
-     * Construct an instance of either SQLServerDatabase or MySQLDatabase
+     * Construct an instance of database
      *
      * @param dbname the name of the database to use (SpASMSdb, TestDB, etc)
      * @return an InfoWarehouse backed by a relational database
@@ -131,7 +131,7 @@ public abstract class Database {
     }
 
     /**
-     * Construct an instance of either SQLServerDatabase or MySQLDatabase
+     * Construct an instance of database
      *
      * @return an InfoWarehouse backed by a relational database
      */
@@ -229,10 +229,6 @@ public abstract class Database {
         try {
             con = DriverManager.getConnection(connectionstr, user, pass);
             con.setAutoCommit(true);
-            //ResultSet rs = con.createStatement().executeQuery("SELECT db_name()");
-            //rs.next();
-            //System.out.println("use database: "+rs.getString(1));
-
         } catch (Exception e) {
             ErrorLogger.writeExceptionToLogAndPrompt("Database", "Failed to establish a connection to " + database);
             System.err.println("Failed to establish a connection to database");
