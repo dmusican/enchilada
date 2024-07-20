@@ -161,15 +161,16 @@ public class MSAnalyzeDataSetExporterTest extends TestCase {
 			boolean result;
 			
 			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
+			try (Statement stmt = con.createStatement()) {
 
-			// leave a temp table lying around
-			// this is what happens when the routine blows up trying to write
-			// to the access db
-			stmt.executeUpdate("CREATE TABLE temp.ParticlesToExport (AtomID INT " +
+				// leave a temp table lying around
+				// this is what happens when the routine blows up trying to write
+				// to the access db
+				stmt.executeUpdate("CREATE TABLE temp.ParticlesToExport (AtomID INT " +
 						"PRIMARY KEY, Filename TEXT, [Time] DATETIME, [Size] FLOAT, " +
 						"LaserPower FLOAT, NumPeaks INT, TotalPosIntegral INT, " +
-						"TotalNegIntegral INT)\n");
+						"TotalNegIntegral INT)");
+			}
 
 			Collection coll = db.getCollection(2);
 			parFile = File.createTempFile("test", ".par");

@@ -188,11 +188,12 @@ public class Art2ATest extends TestCase{
 	     */
 	    public void testArt2APosNeg() throws Exception {
 	    	Connection con = db.getCon();
-	    	Statement stmt = con.createStatement();
-	    	
-	    	stmt.executeUpdate("UPDATE ATOFMSAtomInfoSparse set peakarea = 1 " + 
-	    			"where atomid in (select atomid from atommembership where collectionid = 2) and " +
-	    			" peaklocation > 0");
+	    	try (Statement stmt = con.createStatement()) {
+
+				stmt.executeUpdate("UPDATE ATOFMSAtomInfoSparse set peakarea = 1 " +
+						"where atomid in (select atomid from atommembership where collectionid = 2) and " +
+						" peaklocation > 0");
+			}
 	    	
 	    	art2a.setCursorType(CollectionDivider.STORE_ON_FIRST_PASS);
 	    	int collectionID = art2a.cluster();

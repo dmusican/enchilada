@@ -2224,16 +2224,7 @@ public abstract class Database {
      * gets all the atoms underneath the given collection.
      */
     public ArrayList<Integer> getAllDescendedAtoms(Collection collection) {
-        ArrayList<Integer> results = new ArrayList<Integer>(1000);
-        try (ResultSet rs = getAllAtomsRS(collection)) {
-            while (rs.next())
-                results.add(rs.getInt(1));
-        } catch (SQLException e) {
-            ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving children of the collection.");
-            System.err.println("Error retrieving children.");
-            e.printStackTrace();
-        }
-        return results;
+        return getAllAtomsRS(collection);
     }
 
     /**
@@ -2337,22 +2328,20 @@ public abstract class Database {
      * @param collection
      * @return - resultset
      */
-    public ResultSet getAllAtomsRS(Collection collection) {
-        ResultSet returnThis = null;
-        try {
-            Statement stmt = con.createStatement();
-            returnThis = stmt.executeQuery("SELECT AtomID " +
+    public ArrayList<Integer> getAllAtomsRS(Collection collection) {
+        ArrayList<Integer> atoms = new ArrayList<>();
+        try (Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT AtomID " +
                                                    "FROM InternalAtomOrder WHERE CollectionID = " +
-                                                   collection.getCollectionID() + " ORDER BY AtomID");
-            //NOTE: Atoms are already ordered by AtomID, and this might be
-            // redundant.  If needed, you can take this out to optimize and
-            // only order when needed in each method. - AR
-            //stmt.close();
+                                                   collection.getCollectionID() + " ORDER BY AtomID")) {
+            while (rs.next()) {
+                atoms.add(rs.getInt(1));
+            }
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving children of the collection.");
             e.printStackTrace();
         }
-        return returnThis;
+        return atoms;
     }
 
     /**
@@ -3098,7 +3087,9 @@ public abstract class Database {
     /* Cursor classes */
     private class ClusteringCursor implements CollectionCursor {
         protected InstancedResultSet irs;
-        protected ResultSet rs;
+        private ArrayList<Integer> atoms;
+        private Iterator<Integer> atomsIterator;
+        private Integer currentAtom = null;
         protected Statement stmt = null;
         private Collection collection;
         private ClusterInformation cInfo;
@@ -3109,62 +3100,33 @@ public abstract class Database {
             this.collection = collection;
             datatype = collection.getDatatype();
             this.cInfo = cInfo;
-            rs = getAllAtomsRS(collection);
+            atoms = getAllAtomsRS(collection);
+            atomsIterator = atoms.iterator();
         }
 
         public boolean next() {
-            try {
-                return rs.next();
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error checking the " +
-                                           "bounds of " +
-                                           "the ResultSet.");
-                e.printStackTrace();
+            if (atomsIterator.hasNext()) {
+                currentAtom = atomsIterator.next();
+                return true;
+            } else {
+                currentAtom = null;
                 return false;
             }
         }
 
         public ParticleInfo getCurrent() {
-
             ParticleInfo particleInfo = new ParticleInfo();
-            try {
-                particleInfo.setID(rs.getInt(1));
-                particleInfo.setBinnedList(getPeakListfromAtomID(rs.getInt(1)));
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error retrieving the " +
-                                           "next row");
-                e.printStackTrace();
-                return null;
-            }
+            particleInfo.setID(currentAtom);
+            particleInfo.setBinnedList(getPeakListfromAtomID(currentAtom));
             return particleInfo;
         }
 
         public void close() {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                e.printStackTrace();
-            }
         }
 
         public void reset() {
-            try {
-                rs.close();
-                rs = getAllAtomsRS(collection);
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error resetting a " +
-                                           "resultset " +
-                                           "for that collection:");
-                e.printStackTrace();
-            }
+            atomsIterator = atoms.iterator();
+            currentAtom = null;
         }
 
         public ParticleInfo get(int i) throws NoSuchMethodException {

@@ -89,9 +89,10 @@ public class ClusterHierarchicalTest extends TestCase {
     // TEST DISABLED FOR NOW, as it seems as though it was never working
     public void disabledTestHierarchicalWithPreClustering() throws Exception {
     	Connection con = db.getCon();
-    	Statement stmt = con.createStatement();
-    	stmt.executeUpdate("update atommembership set collectionid = 2 where collectionid = 3");
-    	stmt.executeUpdate("update internalatomorder set collectionid = 2 where collectionid = 3");
+    	try (Statement stmt = con.createStatement()) {
+			stmt.executeUpdate("update atommembership set collectionid = 2 where collectionid = 3");
+			stmt.executeUpdate("update internalatomorder set collectionid = 2 where collectionid = 3");
+		}
 
     	// precluster
     	int cID = 2;

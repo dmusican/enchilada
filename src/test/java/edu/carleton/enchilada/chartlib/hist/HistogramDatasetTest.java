@@ -49,74 +49,78 @@ public class HistogramDatasetTest extends TestCase {
 	   Connection con2 = db2.getCon();
 	   con.setAutoCommit(false);
 	   con2.setAutoCommit(false);
-	   Statement stmt = con.createStatement();
-	   stmt.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
-	   Statement stmt2 = con2.createStatement();
-	   stmt2.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
-	
+	   try (Statement stmt = con.createStatement();
+			Statement stmt2 = con2.createStatement()) {
+		   stmt.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
+		   stmt2.executeUpdate("INSERT INTO Collections VALUES (2,'One', 'one', 'onedescrip', 'ATOFMS')\n");
 
-		// i becomes sorta an atomID.
-		int k = 0;
-		for (int i = 1; i <= 100; i++) {
-			// Create a binned peak list.
-			BinnedPeakList bpl = new BinnedPeakList();
-			int location;
-			int size;
-			String q;
-			for (int j = 0; j < rand.nextInt(60); j++) { // num peaks
-				int maxMZ = 30;
-				location = maxMZ - k;
-				size = (int) (300* Math.random());
-				bpl.add(location, size);
-				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
-				stmt.executeUpdate(q);
-				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
-				stmt2.executeUpdate(q);
-				k++;
-				}
-			
-			// put every other binned peak list in what will become the validation
-			// histogram.
-			if (i % 2 == 0) {
-				// add a peak that won't ever exist otherwise, for getSelection
-				location = testMZ;
-				size = (int) (300* Math.random());
-				
-				bpl.add(location, size);
-				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+i+","+location+","+size+","+size+","+size+")\n";
-				stmt.executeUpdate(q);
 
-				q = "INSERT INTO ATOFMSAtomInfoSparse VALUES("+(i)+","+location+","+size+","+size+","+size+")\n";
-				stmt2.executeUpdate(q);
-				
-				// keep is the list for testIntersect()
-				keep.add(i);
-			}
-			q = "INSERT INTO AtomMembership VALUES(2,"+i+")\n";
-			
-			stmt.executeUpdate(q);
-			q = "INSERT INTO AtomMembership VALUES(2,"+(i)+")\n";
-			stmt2.executeUpdate(q);
-		}
-		
-		ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
-		" CollectionID = 2");
-		while(rs.next())
-				stmt.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
-		stmt.executeBatch();
-		con.commit();
-		con.setAutoCommit(true);
-		rs = stmt2.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
-		" CollectionID = 2");
-		while(rs.next())
-				stmt2.addBatch("INSERT INTO InternalAtomOrder VALUES ("+rs.getInt(1)+",2)");
-		stmt2.executeBatch();
-		con2.commit();
-		con2.setAutoCommit(true);
-		
+		   // i becomes sorta an atomID.
+		   int k = 0;
+		   for (int i = 1; i <= 100; i++) {
+			   // Create a binned peak list.
+			   BinnedPeakList bpl = new BinnedPeakList();
+			   int location;
+			   int size;
+			   String q;
+			   for (int j = 0; j < rand.nextInt(60); j++) { // num peaks
+				   int maxMZ = 30;
+				   location = maxMZ - k;
+				   size = (int) (300 * Math.random());
+				   bpl.add(location, size);
+				   q = "INSERT INTO ATOFMSAtomInfoSparse VALUES(" + i + "," + location + "," + size + "," + size + "," + size + ")\n";
+				   stmt.executeUpdate(q);
+				   q = "INSERT INTO ATOFMSAtomInfoSparse VALUES(" + (i) + "," + location + "," + size + "," + size + "," + size + ")\n";
+				   stmt2.executeUpdate(q);
+				   k++;
+			   }
+
+			   // put every other binned peak list in what will become the validation
+			   // histogram.
+			   if (i % 2 == 0) {
+				   // add a peak that won't ever exist otherwise, for getSelection
+				   location = testMZ;
+				   size = (int) (300 * Math.random());
+
+				   bpl.add(location, size);
+				   q = "INSERT INTO ATOFMSAtomInfoSparse VALUES(" + i + "," + location + "," + size + "," + size + "," + size + ")\n";
+				   stmt.executeUpdate(q);
+
+				   q = "INSERT INTO ATOFMSAtomInfoSparse VALUES(" + (i) + "," + location + "," + size + "," + size + "," + size + ")\n";
+				   stmt2.executeUpdate(q);
+
+				   // keep is the list for testIntersect()
+				   keep.add(i);
+			   }
+			   q = "INSERT INTO AtomMembership VALUES(2," + i + ")\n";
+
+			   stmt.executeUpdate(q);
+			   q = "INSERT INTO AtomMembership VALUES(2," + (i) + ")\n";
+			   stmt2.executeUpdate(q);
+		   }
+
+		   try (ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+				   " CollectionID = 2")) {
+			   while (rs.next())
+				   stmt.addBatch("INSERT INTO InternalAtomOrder VALUES (" + rs.getInt(1) + ",2)");
+		   }
+		   stmt.executeBatch();
+		   con.commit();
+		   con.setAutoCommit(true);
+
+		   try (ResultSet rs = stmt2.executeQuery("SELECT AtomID FROM AtomMembership WHERE" +
+				   " CollectionID = 2")) {
+			   while (rs.next())
+				   stmt2.addBatch("INSERT INTO InternalAtomOrder VALUES (" + rs.getInt(1) + ",2)");
+		   }
+		   stmt2.executeBatch();
+		   con2.commit();
+		   con2.setAutoCommit(true);
+	   }
+
 		baseHist = HistogramDataset.analyseBPLs(db.getBPLOnlyCursor(db.getCollection(2)), Color.BLACK);
 		anotherBaseHist = HistogramDataset.analyseBPLs(db.getBPLOnlyCursor(db.getCollection(2)), Color.BLACK);
-		compHist = HistogramDataset.analyseBPLs(db2.getBPLOnlyCursor(db2.getCollection(2)), Color.BLACK);	
+		compHist = HistogramDataset.analyseBPLs(db2.getBPLOnlyCursor(db2.getCollection(2)), Color.BLACK);
 	}
 
 	protected void tearDown() throws Exception {

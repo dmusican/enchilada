@@ -44,6 +44,7 @@ import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -405,28 +406,31 @@ public class AMSDataSetImporterTest extends TestCase {
 	 * Ensure that AMSAtomInfoDense, AtomMembership, DataSetMembers, and AMSAtomInfoSparse
 	 * 	have the correct number of rows
 	 * @param items	the number of expected Items
-	 * @param peaks	the number of expected total peaks
+	 * @param numpeaks	the number of expected total peaks
 	 * 	(if all items have the same number of peaks, items * peaksPerItem)
 	 */
 	private void testDataLength(int items, int numpeaks) {
 		Connection con = db.getCon();
-		ResultSet rs = null;
-		try {
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM AMSAtomInfoDense");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
+		try (Statement stmt = con.createStatement()){
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM AMSAtomInfoDense")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
 
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM AtomMembership");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM AtomMembership")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
 
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM DataSetMembers");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM DataSetMembers")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
 
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM AMSAtomInfoSparse");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), numpeaks);
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM AMSAtomInfoSparse")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), numpeaks);
+			}
 		}
 		catch (SQLException ex) {
 			ex.printStackTrace();
@@ -451,62 +455,66 @@ public class AMSDataSetImporterTest extends TestCase {
 		double[] peakVals = {0.1, 0.2, 0.3, 0.4, 0.5};
 
 		Connection con = db.getCon();
-		ResultSet rs = null;
-		//Check dense atom info for ordering and timestamps
-		rs = con.createStatement().executeQuery(
-				"SELECT * FROM AMSAtomInfoDense WHERE AtomID >= " + AtomIDStart +
-						" AND AtomID < " + (AtomIDStart + items));
+		try (Statement stmt = con.createStatement()) {
+			//Check dense atom info for ordering and timestamps
+			try (ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM AMSAtomInfoDense WHERE AtomID >= " + AtomIDStart +
+							" AND AtomID < " + (AtomIDStart + items))) {
 
-		//check that timestamps are as expected
-		//	(subtract a base time from that used by the calendar and that used by the datafiles)
-		long curt = tstart - 3114199800l;
-		for (int i = 0; i < items; ++i) {
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), i + AtomIDStart);
+				//check that timestamps are as expected
+				//	(subtract a base time from that used by the calendar and that used by the datafiles)
+				long curt = tstart - 3114199800L;
+				for (int i = 0; i < items; ++i) {
+					assertTrue(rs.next());
+					assertEquals(rs.getInt(1), i + AtomIDStart);
 
-			Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"));
-			String dateRead = rs.getString(2);
-			c.setTime(TimeUtilities.iso8601ToDate(dateRead));
-			assertEquals((c.getTimeInMillis() - 1034055000000l) / 1000, curt);
-			curt += tdelta;
-		}
+					Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"));
+					String dateRead = rs.getString(2);
+					c.setTime(TimeUtilities.iso8601ToDate(dateRead));
+					assertEquals((c.getTimeInMillis() - 1034055000000L) / 1000, curt);
+					curt += tdelta;
+				}
 
-		assertFalse(rs.next());
+				assertFalse(rs.next());
+			}
+			//check for correct atom membership
+			try (ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID)) {
 
-		//check for correct atom membership
-		rs = con.createStatement().executeQuery(
-				"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID);
+				for (int i = 0; i < items; ++i) {
+					assertTrue(rs.next());
+					assertEquals(rs.getInt(1), CollectionID);
+					assertEquals(rs.getInt(2), i + AtomIDStart);
+				}
 
-		for (int i = 0; i < items; ++i) {
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), CollectionID);
-			assertEquals(rs.getInt(2), i + AtomIDStart);
-		}
+				assertFalse(rs.next());
+			}
 
-		assertFalse(rs.next());
+			//check for the correct OrigDataSetID on each Atom
+			try (ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID)) {
 
-		//check for the correct OrigDataSetID on each Atom
-		rs = con.createStatement().executeQuery(
-				"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID);
+				for (int i = 0; i < items; ++i) {
+					assertTrue(rs.next());
+					assertEquals(rs.getInt(1), OrigDataSetID);
+					assertEquals(rs.getInt(2), i + AtomIDStart);
+				}
+			}
 
-		for (int i = 0; i < items; ++i) {
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), OrigDataSetID);
-			assertEquals(rs.getInt(2), i + AtomIDStart);
-		}
+			//check that correct peaks were imported
+			try (ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM AMSAtomInfoSparse WHERE AtomID >= " + AtomIDStart +
+							" AND AtomID < " + (AtomIDStart + items))) {
 
-		//check that correct peaks were imported
-		rs = con.createStatement().executeQuery(
-				"SELECT * FROM AMSAtomInfoSparse WHERE AtomID >= " + AtomIDStart +
-						" AND AtomID < " + (AtomIDStart + items));
+				for (int i = 0; i < items * peaks.length; ++i) {
+					assertTrue(rs.next());
+					assertEquals(rs.getInt(1), i / peaks.length + AtomIDStart);
+					assertEquals(rs.getInt(2), peaks[i % peaks.length]);
 
-		for (int i = 0; i < items * peaks.length; ++i) {
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), i / peaks.length + AtomIDStart);
-			assertEquals(rs.getInt(2), peaks[i % peaks.length]);
-
-			//the 1e-7 tolerance for double comparison is arbitrary
-			assertEquals(rs.getDouble(3), peakVals[i % peakVals.length], 1e-7);
+					//the 1e-7 tolerance for double comparison is arbitrary
+					assertEquals(rs.getDouble(3), peakVals[i % peakVals.length], 1e-7);
+				}
+			}
 		}
 	}
 }

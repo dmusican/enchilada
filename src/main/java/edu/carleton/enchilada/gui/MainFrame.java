@@ -1803,6 +1803,7 @@ public class MainFrame extends JFrame implements ActionListener
 					System.exit(0);
 				
 			}
+
 		} catch (Exception e) {
 			System.out.println("SQL Exception retrieving version!");
 			e.printStackTrace();

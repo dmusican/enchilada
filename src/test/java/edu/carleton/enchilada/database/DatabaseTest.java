@@ -165,37 +165,39 @@ public class DatabaseTest extends TestCase {
 		
 		int[] ids = db.createEmptyCollectionAndDataset("ATOFMS", 0,
 				"dataset",  "comment", "'mCalFile', 'sCalFile', 12, 20, 0.005, 0");
-		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = con.createStatement().executeQuery(
+
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement()) {
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT *\n" +
 					"FROM ATOFMSDataSetInfo\n" +
-					"WHERE DataSetID = " + ids[1]);
-			assertTrue(rs.next());
-			assertEquals("dataset", rs.getString(2));
-			assertEquals("mCalFile", rs.getString(3));
-			assertEquals("sCalFile", rs.getString(4));
-			assertEquals(12, rs.getInt(5));
-			assertEquals(20, rs.getInt(6));
-			assertTrue(Math.abs(rs.getFloat(7) - (float)0.005) <= 0.00001);
-			assertFalse(rs.next());
-			rs = stmt.executeQuery(
+					"WHERE DataSetID = " + ids[1])) {
+				assertTrue(rs.next());
+				assertEquals("dataset", rs.getString(2));
+				assertEquals("mCalFile", rs.getString(3));
+				assertEquals("sCalFile", rs.getString(4));
+				assertEquals(12, rs.getInt(5));
+				assertEquals(20, rs.getInt(6));
+				assertTrue(Math.abs(rs.getFloat(7) - (float) 0.005) <= 0.00001);
+				assertFalse(rs.next());
+			}
+
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT * FROM Collections\n" +
-					"WHERE CollectionID = " + ids[0]);
-			rs.next();
-			assertEquals("dataset", rs.getString("Name"));
-			assertEquals("comment", rs.getString("Comment"));
-			assertFalse(rs.next());
-			rs = stmt.executeQuery(
+					"WHERE CollectionID = " + ids[0])) {
+				rs.next();
+				assertEquals("dataset", rs.getString("Name"));
+				assertEquals("comment", rs.getString("Comment"));
+				assertFalse(rs.next());
+			}
+
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT ParentID FROM CollectionRelationships\n" +
-					"WHERE ChildID = " + ids[0]);
-			assertTrue(rs.next());
-			assertEquals(0, rs.getInt(1));
-			assertFalse(rs.next());
-			rs.close();
-			stmt.close();
+					"WHERE ChildID = " + ids[0])) {
+				assertTrue(rs.next());
+				assertEquals(0, rs.getInt(1));
+				assertFalse(rs.next());
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -1478,11 +1480,10 @@ public class DatabaseTest extends TestCase {
 		db.openConnection();
 		
 		assertTrue(db.addCenterAtom(2, 3));
-		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms WHERE AtomID = 2");
+
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms WHERE AtomID = 2")) {
 			
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 2);
@@ -1494,19 +1495,17 @@ public class DatabaseTest extends TestCase {
 		
 		assertTrue(db.addCenterAtom(3, 4));
 		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms ORDER BY CollectionID");
-			
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms ORDER BY CollectionID")) {
+
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 2);
 			assertEquals(rs.getInt("CollectionID"), 3);
-			
+
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 3);
 			assertEquals(rs.getInt("CollectionID"), 4);
-			
+
 			assertFalse(rs.next());
 		}
 		catch (SQLException ex) {
@@ -1790,21 +1789,18 @@ public class DatabaseTest extends TestCase {
 	 */
 	public void testGetColNames() throws SQLException {
 		db.openConnection();
-		
+
 		//Test Metadata given by database (from ResultSetMetaData) 
 		//	against hardcoded MetaData in database
 		for (String type : db.getKnownDatatypes()) {
 			for (DynamicTable dynt : DynamicTable.values()) {
 				ArrayList<String> names = db.getColNames(type, dynt);
-				
-				try	{
-					Connection con = db.getCon();
-					Statement stmt = con.createStatement();
-					ResultSet rs = stmt.executeQuery(
-							";\n" +
-							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
+
+				Connection con = db.getCon();
+				try	(Statement stmt = con.createStatement();
+						ResultSet rs = stmt.executeQuery("SELECT * FROM " + db.getDynamicTableName(dynt, type))) {
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-					
+
 					for (int i = 1; i < rsmd.getColumnCount() + 1; ++i) {
 						assertTrue(names.get(i - 1).equalsIgnoreCase(
 								rsmd.getColumnName(i)));
@@ -1817,10 +1813,10 @@ public class DatabaseTest extends TestCase {
 				}
 			}
 		}
-		
+
 		db.closeConnection();
 	}
-	
+
 	/**
 	 * @author shaferia
 	 */
@@ -1842,20 +1838,12 @@ public class DatabaseTest extends TestCase {
 			for (DynamicTable dynt : DynamicTable.values()) {
 				ArrayList<ArrayList<String>> names = db.getColNamesAndTypes(type, dynt);
 				
-				//System.out.printf("*** %s%s *** \n", type, dynt);
-				
-				try	{
-					Connection con = db.getCon();
-					Statement stmt = con.createStatement();
-					ResultSet rs = stmt.executeQuery(
-							";\n" +
-							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
+				Connection con = db.getCon();
+				try	(Statement stmt = con.createStatement();
+						ResultSet rs = stmt.executeQuery("SELECT * FROM " + db.getDynamicTableName(dynt, type))) {
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
 
 					for (int i = 1; i < rsmd.getColumnCount() + 1; ++i) {
-						//System.out.printf("Name: %-20.20s - %-20.20s Type: %-20.20s - %-20.20s\n",
-						//		names.get(i - 1).get(0), rsmd.getColumnName(i),
-						//		names.get(i - 1).get(1), rsmd.getColumnTypeName(i));
 						assertEquals(names.get(i - 1).get(0),
 								rsmd.getColumnName(i));
 						//assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
@@ -1887,9 +1875,9 @@ public class DatabaseTest extends TestCase {
 	
 		//getKnownDatatypes uses Java for creating distinctness of datatypes:
 		//	see if that's the same result as using SQL SELECT DISTINCT
-		try {
-			ResultSet rs = db.getCon().createStatement().executeQuery(
-					"SELECT DISTINCT Datatype FROM MetaData");
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery(
+					"SELECT DISTINCT Datatype FROM MetaData")) {
 			
 			for (int i = 0; rs.next(); ++i){
 				assertEquals(types.get(i), rs.getString(1));
@@ -2325,17 +2313,13 @@ public class DatabaseTest extends TestCase {
 	{
 		Collection c;
 		Vector<Vector<Object>> particleInfo = new Vector<Vector<Object>>();
-		Connection con;
-		Statement stmt;
 
 		String manual = " INSERT INTO Collections VALUES "+
 		"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
 
 		db.openConnection();
-		con = db.getCon();
-		try
-		{
-			stmt = con.createStatement();
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement()) {
 			stmt.executeUpdate("INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n");
 			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,1)\n");
 			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,3)\n");
@@ -2447,10 +2431,12 @@ public class DatabaseTest extends TestCase {
 		File tmpFile = File.createTempFile("backup-test", ".sqlite");
 		tmpFile.deleteOnExit();
 		db.backupDatabase(tmpFile.getAbsolutePath());
-		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
-		db.restoreDatabase(tmpFile.getAbsolutePath());
 		try (Statement stmt = db.getCon().createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			stmt.executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		}
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense")) {
 			int count = 0;
 			while (rs.next()) {
 				count++;
@@ -2464,10 +2450,12 @@ public class DatabaseTest extends TestCase {
 		File tmpFile = File.createTempFile("backup test", ".sqlite");
 		tmpFile.deleteOnExit();
 		db.backupDatabase(tmpFile.getAbsolutePath());
-		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
-		db.restoreDatabase(tmpFile.getAbsolutePath());
 		try (Statement stmt = db.getCon().createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			stmt.executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		}
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense")) {
 			int count = 0;
 			while (rs.next()) {
 				count++;

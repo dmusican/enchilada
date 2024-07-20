@@ -251,11 +251,11 @@ public class KMeansTest extends TestCase {
     public void testKMeansPosNeg() throws Exception
     {
     	Connection con = db.getCon();
-    	Statement stmt = con.createStatement();
-    	
-    	stmt.executeUpdate("UPDATE ATOFMSAtomInfoSparse set peakarea = 1 " + 
-    			"where atomid in (select atomid from atommembership where collectionid = 2) and " +
-    			" peaklocation > 0");
+    	try (Statement stmt = con.createStatement()) {
+			stmt.executeUpdate("UPDATE ATOFMSAtomInfoSparse set peakarea = 1 " +
+					"where atomid in (select atomid from atommembership where collectionid = 2) and " +
+					" peaklocation > 0");
+		}
     	
     	setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
@@ -284,12 +284,12 @@ public class KMeansTest extends TestCase {
      */
     public void testKMeansOneParticle() throws Exception {
     	Connection con = db.getCon();
-    	Statement stmt = con.createStatement();
-
-    	stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
-    	stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
-		stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
-		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+    	try (Statement stmt = con.createStatement()) {
+			stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
+			stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+		}
 		
         ArrayList<String> list = new ArrayList<String>();
         list.add("ATOFMSAtomInfoSparse.PeakArea");
@@ -317,14 +317,14 @@ public class KMeansTest extends TestCase {
      */
     public void testKMeansTwoParticlesZeroPeaks() throws Exception {
     	Connection con = db.getCon();
-    	Statement stmt = con.createStatement();
-
-    	stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
-    	stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
-		stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,1)");
-		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(1,2)");
-		stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
-		stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+    	try (Statement stmt = con.createStatement()) {
+			stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
+			stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,1)");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(1,2)");
+			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
+			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+		}
 		
 		setupStandardKmeans(ClusterK.CentroidsApproach.FARTHEST_DIST_CENTROIDS);
     	int collectionID = kmeans.cluster(false);
