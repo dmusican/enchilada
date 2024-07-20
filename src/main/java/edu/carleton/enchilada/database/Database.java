@@ -91,9 +91,6 @@ import java.util.*;
  * Mass spectrum querying added by Michael Murphy, University of Toronto, 2013.
  */
 public abstract class Database {
-    private static final String accessDBURLPrefix = "jdbc:odbc:Driver={Microsoft Access Driver (*.mdb)};DBQ=";
-    private static final String accessDBURLSuffix = ";READONLY=false}";
-
     protected Connection con;
     protected String url;
     protected String port;
@@ -181,35 +178,6 @@ public abstract class Database {
     }
 
     /**
-     * Find if the database is present
-     *
-     * @param command the SQL to get a list of databases
-     * @return true if present
-     */
-    protected boolean isPresentImpl(String command) {
-        boolean foundDatabase = false;
-        String testdb = database;
-        try {
-            database = "";
-            openConnectionNoDB();
-            Connection con = getCon();
-
-            // See if database exists.
-            try (Statement stmt = con.createStatement();
-                 ResultSet rs = stmt.executeQuery(command)) {
-                while (!foundDatabase && rs.next()) {
-                    if (rs.getString(1).equalsIgnoreCase(testdb))
-                        foundDatabase = true;
-                }
-            }
-        } catch (SQLException e) {
-            ErrorLogger.displayException(null, "Error in testing if " + testdb + " is present.");
-        }
-        database = testdb;
-        return foundDatabase;
-    }
-
-    /**
      * Retrieve the {@link java.sql.Connection Connection} for this database
      */
     public Connection getCon() {
@@ -294,179 +262,6 @@ public abstract class Database {
             Collection collection,
             int datasetID, int nextID, boolean importing);
 
-    /**
-     * Abstract representation of something that adds and executes batches.
-     * Used since SQL Server can execute batches more quickly with StringBuilders -
-     * but these are incompatible in MySQL.
-     *
-     * @author shaferia
-     */
-    protected abstract class BatchExecuter {
-        protected Statement stmt;
-
-        /**
-         * Create a BatchExecuter that will add to the given statement
-         *
-         * @param stmt the statement to add SQL to
-         */
-        public BatchExecuter(Statement stmt) {
-            this.stmt = stmt;
-        }
-
-        /**
-         * Add an SQL string to the statement
-         *
-         * @param sql the query to add
-         */
-        public abstract void append(String sql) throws SQLException;
-
-        /**
-         * Execute all SQL held in this BatchExecuter
-         */
-        public abstract void execute() throws SQLException;
-    }
-
-    protected abstract class Inserter {
-        protected BatchExecuter stmt;
-        protected String table;
-
-        public Inserter(BatchExecuter stmt, String table) {
-            this.stmt = stmt;
-            this.table = table;
-        }
-
-        /**
-         * Add values to the series of INSERT commands or bulk file that
-         * this Inserter will insert
-         *
-         * @param values the delimited set of values to insert
-         * @throws SQLException
-         */
-        public abstract void append(String values) throws SQLException;
-
-        /**
-         * @return free any resources used by this Inserter
-         */
-        public abstract void close();
-
-        /**
-         * Get rid of any files or other system stuff we've created.
-         */
-        public abstract void cleanUp();
-    }
-
-    /**
-     * Executes bulk insert statements using bulk files
-     *
-     * @author shaferia
-     */
-    protected abstract class BulkInserter extends Inserter {
-        protected File tempFile;
-        protected BufferedWriter file;
-
-        public BulkInserter(BatchExecuter stmt, String table) {
-            super(stmt, table);
-            try {
-                //tempFile = File.createTempFile("bulkfile", ".txt");
-                tempFile = new File("TEMP" + File.separator + "bulkfile" + ".txt");
-                tempFile.deleteOnExit();
-                file = new BufferedWriter(new FileWriter(tempFile));
-            } catch (IOException ex) {
-                System.err.println("Couldn't create bulk file " + tempFile.getAbsolutePath() + "" +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-            try {
-                stmt.append(getBatchSQL());
-            } catch (SQLException ex) {
-                System.err.println("Couldn't attach bulk SQL for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        /**
-         * @return the SQL string needed to import the batch file
-         */
-        protected abstract String getBatchSQL();
-
-        public void append(String values) throws SQLException {
-            try {
-                file.write(values);
-                file.newLine();
-            } catch (IOException ex) {
-                throw new SQLException("Couldn't write to file: " + tempFile.getAbsolutePath());
-            }
-        }
-
-        public void close() {
-            try {
-                file.close();
-            } catch (IOException ex) {
-                System.err.println("Couldn't close bulk file " + tempFile.getAbsolutePath() +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public void cleanUp() {
-            tempFile.delete();
-        }
-    }
-
-    /**
-     * Basic BulkBucket class to construct a flat file and to prepare statement for Bulk Inserting.
-     *
-     * @author SLH
-     */
-    public class BulkBucket {
-        protected BufferedWriter file;
-        protected String table;
-        protected File tempFile;
-
-        public BulkBucket(String tableName) throws SQLException {
-
-            table = tableName;
-
-            try {
-                tempFile = File.createTempFile(table, ".txt");
-//				tempFile = new File("TEMP"+File.separator+"table"+".txt");
-                tempFile.deleteOnExit();
-                System.out.println(tempFile);
-                file = new BufferedWriter(new FileWriter(tempFile));
-            } catch (IOException ex) {
-                System.err.println("Couldn't create bulk file " + table +
-                                           ".txt for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public void append(String values) throws SQLException {
-            try {
-                file.write(values);
-                file.newLine();
-            } catch (IOException ex) {
-                throw new SQLException("Couldn't write to file: " + tempFile.getAbsolutePath());
-            }
-        }
-
-        public void close() {
-            try {
-                file.close();
-            } catch (IOException ex) {
-                System.err.println("Couldn't close bulk file " + tempFile.getAbsolutePath() +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public String sqlCmd() {
-            return "BULK INSERT " + table + " FROM '" + tempFile.getAbsolutePath() + "' WITH (FIELDTERMINATOR=',')\n";
-        }
-
-        public void cleanUp() {
-            tempFile.delete();
-        }
-    }
 
     /**
      * Data_bulkBucket class constructs mutiple flat files for Bulk Inserting AMS/ATOFMS/Time Series particle data.
@@ -633,27 +428,6 @@ public abstract class Database {
     }
 
     /**
-     * Executes bulk insert statements with a sequence of INSERTs.
-     *
-     * @author shaferia
-     */
-    protected class BatchInserter extends Inserter {
-        public BatchInserter(BatchExecuter stmt, String table) {
-            super(stmt, table);
-        }
-
-        public void append(String values) throws SQLException {
-            stmt.append("INSERT INTO " + table + " VALUES(" + values + ")");
-        }
-
-        public void close() {
-        }
-
-        public void cleanUp() {
-        }
-    }
-
-    /**
      * rebuilds the database; sets the static tables.
      *
      * @param dbName
@@ -724,14 +498,9 @@ public abstract class Database {
         Database blankDb = Database.getDatabase("");
         try {
             blankDb.openConnectionNoDB();
-            Statement stmt = blankDb.getCon().createStatement();
-            //TODO-POSTGRES
-            //stmt.executeUpdate("create database " + dbName);
-            stmt.executeUpdate("create database \"" + dbName + "\"");
-            //String sql = "ALTER DATABASE "+dbName+" SET RECOVERY SIMPLE";
-            //stmt.executeUpdate(sql);
-            //TODO-POSTGRES
-            stmt.close();
+            try (Statement stmt = blankDb.getCon().createStatement()) {
+                stmt.executeUpdate("create database \"" + dbName + "\"");
+            }
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(blankDb.getName(), "Error rebuilding database.");
             System.err.println("Error in rebuilding database.");
@@ -749,7 +518,6 @@ public abstract class Database {
      */
     public static boolean dropDatabase(String dbName) {
         Database db = null;
-        Connection con = null;
 
         // Connect to SQL Server independent of a particular database,
         // and drop and add the database.
@@ -1851,42 +1619,6 @@ public abstract class Database {
     }
 
     /**
-     * adds a move-atom call to a batch statement.
-     * @return true if successful
-     *
-     * NOT USED AS OF 12/05
-
-    public boolean moveAtomBatch(int atomID, int fromParentID, int toParentID)
-    {
-    if (toParentID == 0)
-    {
-    System.err.println("Cannot move atoms to the root " +
-    "collection.");
-    return false;
-    }
-
-    try {
-    Statement stmt = con.createStatement();
-    //System.out.println("AtomID: " + atomID + " from: " +
-    //		fromParentID + " to: " + toParentID);
-    stmt.addBatch(
-    "UPDATE AtomMembership\n" +
-    "SET CollectionID = " + toParentID + "\n" +
-    "WHERE AtomID = " + atomID + " AND CollectionID = " +
-    fromParentID);
-    stmt.close();
-    } catch (SQLException e) {
-    new ExceptionDialog("SQL Exception updating AtomMembership table.");
-    System.err.println("Exception updating membership table");
-    e.printStackTrace();
-    }
-    return true;
-    }
-     */
-
-    /* Atom Batch Init and Execute */
-
-    /**
      * initializes atom batches for moving atoms and adding atoms.
      */
     public void atomBatchInit() {
@@ -2284,37 +2016,6 @@ public abstract class Database {
         return descCollections;
     }
 
-    public Set<Integer> getAllDescendantCollectionsNew(int collectionID, boolean includeTopLevel) {
-
-        // Construct a set of all collections that descend from this one,
-        // including this one.
-        ArrayList<Integer> lookUpNext = new ArrayList<Integer>();
-        boolean status = lookUpNext.add(new Integer(collectionID));
-        assert status : "lookUpNext queue full";
-
-        Set<Integer> descCollections = new HashSet<Integer>();
-        if (includeTopLevel)
-            descCollections.add(new Integer(collectionID));
-
-        // As long as there is at least one collection to lookup, find
-        // all subchildren for all of these collections. Add them to the
-        // set of all collections we have visited and plan to visit
-        // then next time (if we haven't). (This is essentially a breadth
-        // first search on the graph of collection relationships).
-        while (!lookUpNext.isEmpty()) {
-            ArrayList<Integer> subChildren =
-                    getImmediateSubCollections(lookUpNext);
-            lookUpNext.clear();
-            for (Integer col : subChildren)
-                if (!descCollections.contains(col)) {
-                    descCollections.add(col);
-                    lookUpNext.add(col);
-                }
-        }
-
-        return descCollections;
-    }
-
     /**
      * This method has CHANGED as of 11/15/05.
      * It used to recurse through all the collection's subcollections
@@ -2432,70 +2133,6 @@ public abstract class Database {
             e.printStackTrace();
         }
         return particleInfo;
-    }
-
-    public void exportDatabase(String filename, int fileType) throws FileNotFoundException {
-        DatabaseConnection dbconn = null;
-        IDataSet dataSet = null;
-        PrintWriter output = new PrintWriter(filename);
-        dbconn = new DatabaseConnection(con);
-        try {
-            ITableFilter filter = new DatabaseSequenceFilter(dbconn);
-            dataSet = new FilteredDataSet(filter, dbconn.createDataSet());
-            switch (fileType) {
-                case 1:
-                    FlatXmlDataSet.write(dataSet, output);
-                    break;
-                case 2:
-                    XlsDataSet.write(dataSet, new FileOutputStream(filename));
-                    break;
-                case 3:
-                    try (FileWriter dummy = new FileWriter(filename)) {
-                        dummy.write("#this is a dummy file\n" +
-                                "#the real data is stored in the directory of the same name");
-                    }
-                    String dirName = filename.substring(0, filename.lastIndexOf("."));
-                    File dir = new File(dirName);
-                    boolean success = dir.mkdir();
-                    if (!success) {
-                        throw new FileNotFoundException();
-                    }
-                    CsvDataSetWriter.write(dataSet, dir);
-
-                    break;
-                default:
-                    System.err.println("Invalid fileType: " + fileType);
-            }
-
-            //
-            //dbconn.close();
-        } catch (Exception e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-    }
-
-    public void importDatabase(String filename, int fileType) throws FileNotFoundException {
-        DatabaseConnection dbconn = null;
-        //IDataSet dataSet = null;
-        FileInputStream input = new FileInputStream(filename);
-        try {
-            dbconn = new DatabaseConnection(con);
-            //dataSet = dbconn.createDataSet();
-            FlatXmlDataSet data = new FlatXmlDataSet(input);
-            InsertIdentityOperation.CLEAN_INSERT.execute(dbconn, data);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-		/*try {
-			dbconn.close();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		*/
     }
 
     /**
@@ -3086,11 +2723,9 @@ public abstract class Database {
 
     /* Cursor classes */
     private class ClusteringCursor implements CollectionCursor {
-        protected InstancedResultSet irs;
         private ArrayList<Integer> atoms;
         private Iterator<Integer> atomsIterator;
         private Integer currentAtom = null;
-        protected Statement stmt = null;
         private Collection collection;
         private ClusterInformation cInfo;
         private String datatype;
@@ -3466,7 +3101,6 @@ public abstract class Database {
      */
     private class AtomInfoOnlyCursor
             implements CollectionCursor {
-        protected InstancedResultSet irs;
         protected ResultSet partInfRS = null;
         protected Statement stmt = null;
         Collection collection;
@@ -3956,7 +3590,6 @@ public abstract class Database {
      * info kept in memory.
      */
     public class MemoryBinnedCursor extends BinnedCursor {
-        Database db;
         boolean firstPass = true;
         int position = -1;
 
