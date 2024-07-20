@@ -18,6 +18,8 @@ import junit.framework.TestCase;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 
+import javax.xml.transform.Result;
+
 import static junit.framework.TestCase.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -177,71 +179,79 @@ public class AggregatorTest extends TestCase {
 				db.getCollection(4),db.getCollection(5)};
 		Test test = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				Statement stmt = db.getCon().createStatement();
+				try (Statement stmt = db.getCon().createStatement();) {
 
-				// check number of collections:
-				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;\n");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),35);
+					// check number of collections:
+					try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;\n")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 35);
+					}
 
-				// check ATOFMS m/z collection:
-				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
-						" WHERE CollectionID = 13 ORDER BY AtomID;\n");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),35);
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),36);
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),37);
-				assertFalse(rs.next());
+					// check ATOFMS m/z collection:
+					try (ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
+							" WHERE CollectionID = 13 ORDER BY AtomID;\n")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 35);
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 36);
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 37);
+						assertFalse(rs.next());
+					}
 
-				rs = stmt.executeQuery("SELECT Time, Value FROM " +
-						"TimeSeriesAtomInfoDense WHERE AtomID = 35;");
-				rs.next();
-				assertEquals("2003-09-02 17:30:31", rs.getString(1));
-				assertEquals(12, rs.getInt(2));
-				assertFalse(rs.next());
+					try (ResultSet rs = stmt.executeQuery("SELECT Time, Value FROM " +
+							"TimeSeriesAtomInfoDense WHERE AtomID = 35;")) {
+						rs.next();
+						assertEquals("2003-09-02 17:30:31", rs.getString(1));
+						assertEquals(12, rs.getInt(2));
+						assertFalse(rs.next());
+					}
 
-				// check TimeSeries collection:
-				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
-				" WHERE CollectionID = 29 ORDER BY AtomID;\n");
-				assertTrue(rs.next());
-				assertEquals(67, rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(68, rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(69, rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(70, rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(71, rs.getInt(1));
-				assertFalse(rs.next());
+					// check TimeSeries collection:
+					try (ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
+							" WHERE CollectionID = 29 ORDER BY AtomID;\n")) {
+						assertTrue(rs.next());
+						assertEquals(67, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(68, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(69, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(70, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(71, rs.getInt(1));
+						assertFalse(rs.next());
+					}
 
-				rs = stmt.executeQuery("SELECT Time, Value FROM " +
-						"TimeSeriesAtomInfoDense WHERE AtomID = 67;");
-				assertTrue(rs.next());
-				assertEquals("2003-09-02 17:30:30", rs.getString(1));
-				assertEquals(rs.getInt(2),0);
-				assertFalse(rs.next());
+					try (ResultSet rs = stmt.executeQuery("SELECT Time, Value FROM " +
+							"TimeSeriesAtomInfoDense WHERE AtomID = 67;")) {
+						assertTrue(rs.next());
+						assertEquals("2003-09-02 17:30:30", rs.getString(1));
+						assertEquals(rs.getInt(2), 0);
+						assertFalse(rs.next());
+					}
 
-				// check AMS m/z collections:
-				rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
-				" WHERE CollectionID = 32 ORDER BY AtomID;\n");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),72);
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),73);
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),74);
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),75);
-				assertFalse(rs.next());
+					// check AMS m/z collections:
+					try (ResultSet rs = stmt.executeQuery("SELECT AtomID FROM AtomMembership" +
+							" WHERE CollectionID = 32 ORDER BY AtomID;\n")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 72);
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 73);
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 74);
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 75);
+						assertFalse(rs.next());
+					}
 
-				rs = stmt.executeQuery("SELECT Time, Value FROM " +
-				"TimeSeriesAtomInfoDense WHERE AtomID = 72;");
-				assertTrue(rs.next());
-				assertEquals("2003-09-02 17:30:30", rs.getString(1));
-				assertEquals(rs.getInt(2),1);
+					try (ResultSet rs = stmt.executeQuery("SELECT Time, Value FROM " +
+							"TimeSeriesAtomInfoDense WHERE AtomID = 72;")) {
+						assertTrue(rs.next());
+						assertEquals("2003-09-02 17:30:30", rs.getString(1));
+						assertEquals(rs.getInt(2), 1);
+					}
+				}
 			}
 		};
 		testAggregation(aggregator, collections, test);
@@ -262,13 +272,13 @@ public class AggregatorTest extends TestCase {
 		Collection[] collections1 = {db.getCollection(2)};
 		Test test1 = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				Statement stmt = db.getCon().createStatement();
-				
 				// check number of collections:
-				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;\n");
-				assertTrue(rs.next());
-				System.out.println("Output = " + rs.getInt(1));
-				assertEquals(rs.getInt(1),29);
+				try (Statement stmt = db.getCon().createStatement();
+					 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;")) {
+					assertTrue(rs.next());
+					System.out.println("Output = " + rs.getInt(1));
+					assertEquals(rs.getInt(1),29);
+				}
 			}
 		};
 		testAggregation(aggregator, collections1, test1);
@@ -278,10 +288,11 @@ public class AggregatorTest extends TestCase {
 		Collection[] collections2 = {db.getCollection(3)};
 		Test test2 = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				Statement stmt = db.getCon().createStatement();
-				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;\n");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),47);
+				try (Statement stmt = db.getCon().createStatement();
+					 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Collections;")) {
+					assertTrue(rs.next());
+					assertEquals(rs.getInt(1), 47);
+				}
 			}
 		};
 		testAggregation(aggregator, collections2, test2);
@@ -322,46 +333,53 @@ public class AggregatorTest extends TestCase {
 		collections = new Collection[] {db.getCollection(2), db.getCollection(3)};
 		test = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				ResultSet rs;
-				
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT COUNT(*) FROM AtomMembership WHERE CollectionID > 5");
-				assertTrue(rs.next());
-				assertEquals(37, rs.getInt(1));
-				
-				//check proper collections hierarchy
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 8 ORDER BY ChildID");
-				for (int i = 9; i <= 24; ++i) {
-					rs.next();
-					assertEquals(rs.getInt(1), i);
+				try (Statement stmt = db.getCon().createStatement()) {
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM AtomMembership WHERE CollectionID > 5")) {
+						assertTrue(rs.next());
+						assertEquals(37, rs.getInt(1));
+					}
+
+					//check proper collections hierarchy
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 8 ORDER BY ChildID")) {
+						for (int i = 9; i <= 24; ++i) {
+							rs.next();
+							assertEquals(rs.getInt(1), i);
+						}
+						assertFalse(rs.next());
+					}
+
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 27 ORDER BY ChildID")) {
+						for (int i = 28; i <= 39; ++i) {
+							rs.next();
+							assertEquals(rs.getInt(1), i);
+						}
+						assertFalse(rs.next());
+					}
+
+					//check that new collections were created
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM Collections")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 41);
+					}
+
+					try (ResultSet rs = stmt.executeQuery(
+								"SELECT Datatype FROM Collections WHERE Name='M/Z'")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getString(1), "TimeSeries");
+					}
+
+					//make sure there are no times outside of our boundaries
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM TimeSeriesAtomInfoDense WHERE AtomID > 20 AND " +
+									"(Time > '2003-09-02 17:30:35.0' OR Time < '2003-09-02 17:30:32.0')")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 0);
+					}
 				}
-				assertFalse(rs.next());
-				
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 27 ORDER BY ChildID");
-				for (int i = 28; i <= 39; ++i) {
-					rs.next();
-					assertEquals(rs.getInt(1), i);
-				}
-				assertFalse(rs.next());
-				
-				//check that new collections were created
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT COUNT(*) FROM Collections");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), 41);
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT Datatype FROM Collections WHERE Name='M/Z'");
-				assertTrue(rs.next());
-				assertEquals(rs.getString(1), "TimeSeries");
-				
-				//make sure there are no times outside of our boundaries
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT COUNT(*) FROM TimeSeriesAtomInfoDense WHERE AtomID > 20 AND " +
-						"(Time > '2003-09-02 17:30:35.0' OR Time < '2003-09-02 17:30:32.0')");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),0);
 			}
 		};
 		testAggregation(aggregator, collections, test);
@@ -379,53 +397,57 @@ public class AggregatorTest extends TestCase {
 		collections = new Collection[] {db.getCollection(4)};
 		test = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				ResultSet rs;
-				
-				//check that three Atoms were binned, one for each second
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT AtomID FROM AtomMembership WHERE CollectionID = 7 ORDER BY AtomID");
-				assertTrue(rs.next());
-				assertEquals(31, rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(32,  rs.getInt(1));
-				assertTrue(rs.next());
-				assertEquals(33, rs.getInt(1));
-				assertFalse(rs.next());
-				
-				//check for the new collection
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT CollectionID, Name, Datatype FROM Collections WHERE CollectionID > 5 ORDER BY CollectionID");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),6);
-				assertEquals(rs.getString(2),"aggregated");
-				assertEquals(rs.getString(3),"TimeSeries");
-				assertTrue(rs.next());
-				assertFalse(rs.next());
-				
-				//check for properly binned Atoms, correct peak heights
-				//	at 17:30:33, value should be 0.4+0.5=0.9 (Atoms 14+15)
-				//	at 17:30:34, value should be 0.6=0.6 (Atom 16)
-				//	at 17:30:35, value should be 0.7+0.8=1.5 (Atoms 17+18)
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33) ORDER BY Time");
-				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:33");
-				assertEquals(rs.getDouble(2),0.9,1e-5);
-				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:34");
-				assertEquals(rs.getDouble(2),0.6,1e-5);
-				assertTrue(rs.next());
-				assertEquals(rs.getString(1),"2003-09-02 17:30:35");
-				assertEquals(rs.getDouble(2),1.5,1e-5);
-				assertFalse(rs.next());
+				try (Statement stmt = db.getCon().createStatement()) {
+
+					//check that three Atoms were binned, one for each second
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT AtomID FROM AtomMembership WHERE CollectionID = 7 ORDER BY AtomID")) {
+						assertTrue(rs.next());
+						assertEquals(31, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(32, rs.getInt(1));
+						assertTrue(rs.next());
+						assertEquals(33, rs.getInt(1));
+						assertFalse(rs.next());
+					}
+
+					//check for the new collection
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT CollectionID, Name, Datatype FROM Collections WHERE CollectionID > 5 ORDER BY CollectionID")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 6);
+						assertEquals(rs.getString(2), "aggregated");
+						assertEquals(rs.getString(3), "TimeSeries");
+						assertTrue(rs.next());
+						assertFalse(rs.next());
+					}
+
+					//check for properly binned Atoms, correct peak heights
+					//	at 17:30:33, value should be 0.4+0.5=0.9 (Atoms 14+15)
+					//	at 17:30:34, value should be 0.6=0.6 (Atom 16)
+					//	at 17:30:35, value should be 0.7+0.8=1.5 (Atoms 17+18)
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33) ORDER BY Time")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getString(1), "2003-09-02 17:30:33");
+						assertEquals(rs.getDouble(2), 0.9, 1e-5);
+						assertTrue(rs.next());
+						assertEquals(rs.getString(1), "2003-09-02 17:30:34");
+						assertEquals(rs.getDouble(2), 0.6, 1e-5);
+						assertTrue(rs.next());
+						assertEquals(rs.getString(1), "2003-09-02 17:30:35");
+						assertEquals(rs.getDouble(2), 1.5, 1e-5);
+						assertFalse(rs.next());
+					}
+				}
 			}
 		};
 		testAggregation(aggregator, collections, test);
-		
+
 		tearDown();
 		setUp();
 		db.openConnection();
-		
+
 		//for AMS
 		start = getDate(9, 2, 2003, 5+12, 30, 32);
 		end = getDate(9, 2, 2003, 5+12, 30, 35);
@@ -435,56 +457,60 @@ public class AggregatorTest extends TestCase {
 		collections = new Collection[] {db.getCollection(5)};
 		test = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				ResultSet rs;
-				
-				//verify that correct atoms were placed in new aggregation collections
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT CollectionID, AtomID FROM AtomMembership WHERE CollectionID > 5 ORDER BY AtomID");
-				int[] colls = {9,9,9,10,11};
-				int[] atoms = {31,32,33,34,35};
-				for (int i = 0; i < colls.length; ++i) {
-					assertTrue(rs.next());
-					assertEquals(rs.getInt(1), colls[i]);
-					assertEquals(rs.getInt(2), atoms[i]);
+				try (Statement stmt = db.getCon().createStatement()) {
+					//verify that correct atoms were placed in new aggregation collections
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT CollectionID, AtomID FROM AtomMembership WHERE CollectionID > 5 ORDER BY AtomID")) {
+						int[] colls = {9, 9, 9, 10, 11};
+						int[] atoms = {31, 32, 33, 34, 35};
+						for (int i = 0; i < colls.length; ++i) {
+							assertTrue(rs.next());
+							assertEquals(rs.getInt(1), colls[i]);
+							assertEquals(rs.getInt(2), atoms[i]);
+						}
+						assertFalse(rs.next());
+					}
+
+					//m/z values for AMS in the test database: (1,2,3)
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT Name FROM Collections WHERE CollectionID > 5 AND Datatype ='TimeSeries' ORDER BY CollectionID")) {
+						String[] expected = {"aggregated", "AMS", "M/Z", "1", "2", "3"};
+						for (String s : expected) {
+							assertTrue(rs.next());
+							assertEquals(s, rs.getString(1));
+						}
+						assertFalse(rs.next());
+					}
+
+					//verify the collection hierarchy
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT ParentID, ChildID FROM CollectionRelationships WHERE ChildID > 5 ORDER BY ChildID")) {
+						int[] parents = {1, 6, 7, 8, 8, 8};
+						int[] children = {6, 7, 8, 9, 10, 11};
+						for (int i = 0; i < parents.length; ++i) {
+							assertTrue(rs.next());
+							assertEquals(rs.getInt(1), parents[i]);
+							assertEquals(rs.getInt(2), children[i]);
+						}
+						assertFalse(rs.next());
+					}
+
+					//verify the inserted TimeSeries data
+					//	by comparing with the AMSAtomInfoSparse values for AtomID in (24,25,26,27,28,29)
+					//	and the dense information times for the items
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33,34,35) ORDER BY Time")) {
+						String[] times = {"2003-09-02 17:30:32", "2003-09-02 17:30:32", "2003-09-02 17:30:32",
+								"2003-09-02 17:30:34", "2003-09-02 17:30:35"};
+						int[] values = {2, 1, 0, 1, 1};
+						for (int i = 0; i < 5; ++i) {
+							rs.next();
+							assertEquals(rs.getString(1), times[i]);
+							assertEquals(rs.getInt(2), values[i]);
+						}
+						assertFalse(rs.next());
+					}
 				}
-				assertFalse(rs.next());
-				
-				//m/z values for AMS in the test database: (1,2,3)
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT Name FROM Collections WHERE CollectionID > 5 AND Datatype ='TimeSeries' ORDER BY CollectionID");
-				String[] expected = {"aggregated", "AMS", "M/Z", "1", "2", "3"};
-				for (String s : expected) {
-					assertTrue(rs.next());
-					assertEquals(s, rs.getString(1));
-				}
-				assertFalse(rs.next());
-				
-				//verify the collection hierarchy
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT ParentID, ChildID FROM CollectionRelationships WHERE ChildID > 5 ORDER BY ChildID");
-				int[] parents = {1,6,7,8,8,8};
-				int[] children = {6,7,8,9,10,11};
-				for (int i = 0; i < parents.length; ++i) {
-					assertTrue(rs.next());
-					assertEquals(rs.getInt(1), parents[i]);
-					assertEquals(rs.getInt(2), children[i]);
-				}
-				assertFalse(rs.next());
-				
-				//verify the inserted TimeSeries data
-				//	by comparing with the AMSAtomInfoSparse values for AtomID in (24,25,26,27,28,29)
-				//	and the dense information times for the items
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT Time, Value FROM TimeSeriesAtomInfoDense WHERE AtomID in (31,32,33,34,35) ORDER BY Time");
-				String[] times = {"2003-09-02 17:30:32", "2003-09-02 17:30:32", "2003-09-02 17:30:32",
-						"2003-09-02 17:30:34", "2003-09-02 17:30:35"};
-				int[] values = {2, 1, 0, 1, 1};
-				for (int i = 0; i < 5; ++i) {
-					rs.next();
-					assertEquals(rs.getString(1), times[i]);
-					assertEquals(rs.getInt(2), values[i]);
-				}
-				assertFalse(rs.next());
 			}
 		};
 		testAggregation(aggregator, collections, test);
@@ -518,46 +544,53 @@ public class AggregatorTest extends TestCase {
 		collections = new Collection[] {db.getCollection(2), db.getCollection(3)};
 		test = new Test() {
 			public void run(int CollectionID) throws SQLException {
-				ResultSet rs;
-				
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT COUNT(*) FROM AtomMembership WHERE CollectionID > 5");
-				assertTrue(rs.next());
-				assertEquals(55, rs.getInt(1));
-				
-				//check proper collections hierarchy
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 8 ORDER BY ChildID");
-				for (int i = 9; i <= 27; ++i) {
-					rs.next();
-					assertEquals(rs.getInt(1), i);
-				}
-				assertFalse(rs.next());
-				
-				rs = db.getCon().createStatement().executeQuery(
-					"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 30 ORDER BY ChildID");
-				for (int i = 31; i <= 44; ++i) {
-					rs.next();
-					assertEquals(rs.getInt(1), i);
-				}
-				assertFalse(rs.next());
-				
-				//check that new collections were created
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT COUNT(*) FROM Collections");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1), 46);
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT Datatype FROM Collections WHERE Name='M/Z'");
-				assertTrue(rs.next());
-				assertEquals(rs.getString(1), "TimeSeries");
+				try (Statement stmt = db.getCon().createStatement()) {
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM AtomMembership WHERE CollectionID > 5")) {
+						assertTrue(rs.next());
+						assertEquals(55, rs.getInt(1));
+					}
 
-				//make sure there are no times outside of our boundaries
-				rs = db.getCon().createStatement().executeQuery(
-						"SELECT COUNT(*) FROM TimeSeriesAtomInfoDense WHERE AtomID > 30 AND " +
-						"(Time > '2003-09-11 17:30:35' OR Time < '2003-09-03 17:30:32')");
-				assertTrue(rs.next());
-				assertEquals(rs.getInt(1),0);
+					//check proper collections hierarchy
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 8 ORDER BY ChildID")) {
+						for (int i = 9; i <= 27; ++i) {
+							rs.next();
+							assertEquals(rs.getInt(1), i);
+						}
+						assertFalse(rs.next());
+					}
+
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT ChildID FROM CollectionRelationships WHERE ParentID = 30 ORDER BY ChildID")) {
+						for (int i = 31; i <= 44; ++i) {
+							rs.next();
+							assertEquals(rs.getInt(1), i);
+						}
+						assertFalse(rs.next());
+					}
+
+					//check that new collections were created
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM Collections")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 46);
+					}
+
+					try (ResultSet rs = stmt.executeQuery(
+								"SELECT Datatype FROM Collections WHERE Name='M/Z'")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getString(1), "TimeSeries");
+					}
+
+					//make sure there are no times outside of our boundaries
+					try (ResultSet rs = stmt.executeQuery(
+							"SELECT COUNT(*) FROM TimeSeriesAtomInfoDense WHERE AtomID > 30 AND " +
+									"(Time > '2003-09-11 17:30:35' OR Time < '2003-09-03 17:30:32')")) {
+						assertTrue(rs.next());
+						assertEquals(rs.getInt(1), 0);
+					}
+				}
 			}
 		};
 		testAggregation(aggregator, collections, test);
@@ -575,16 +608,17 @@ public class AggregatorTest extends TestCase {
 	 */
 	private void spreadOutParticlesInTime() throws Exception {
 		String atofms = "update ATOFMSAtomInfoDense set Time = ? where AtomId = ?";
-		PreparedStatement stmt = db.getCon().prepareStatement(atofms);
+		try (PreparedStatement stmt = db.getCon().prepareStatement(atofms)) {
 
-		Calendar cal = getDate(9, 2, 2003, 0, 0, 0);
+			Calendar cal = getDate(9, 2, 2003, 0, 0, 0);
 
-		for (int i = 0; i < 10; i++) {
-			stmt.setString(1, TimeUtilities.dateToIso8601(cal.getTime()));
-			stmt.setInt(2, i + 1);
-			cal.add(Calendar.DATE, 1);
-			cal.add(Calendar.SECOND, 2);
-			stmt.executeUpdate();
+			for (int i = 0; i < 10; i++) {
+				stmt.setString(1, TimeUtilities.dateToIso8601(cal.getTime()));
+				stmt.setInt(2, i + 1);
+				cal.add(Calendar.DATE, 1);
+				cal.add(Calendar.SECOND, 2);
+				stmt.executeUpdate();
+			}
 		}
 	}
 }
