@@ -210,57 +210,57 @@ public class FlatFileATOFMSDataSetImporter {
 		
 		//***SLH
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
-			int numParticles = this.getNumParticles();
-			if (spassFile.isFile()) {
+		Database.BulkInserter bulkInserter = db.new BulkInserter(ATOFMS_tables);
 
-				progressBar.setMaximum(numParticles);
-				progressBar.reset();
+		int numParticles = this.getNumParticles();
+		if (spassFile.isFile()) {
 
-				int particleNum = 0;
-				collection = db.getCollection(id[0]);
-				FlatFileATOFMSParticle currentParticle;
-				Scanner readSet = new Scanner(spassFile);
-				readSet.useDelimiter("\r\n");
-				String header = readSet.nextLine();
-				setParameters(header);
+			progressBar.setMaximum(numParticles);
+			progressBar.reset();
+
+			int particleNum = 0;
+			collection = db.getCollection(id[0]);
+			FlatFileATOFMSParticle currentParticle;
+			Scanner readSet = new Scanner(spassFile);
+			readSet.useDelimiter("\r\n");
+			String header = readSet.nextLine();
+			setParameters(header);
 
 
-				StringTokenizer token;
-				String particleFileName;
-				//int doDisplay = 4;
-				int nextID = db.getNextID();
-				Collection curCollection = db.getCollection(id[0]);
-				while (readSet.hasNextLine()) { // repeat until end of file.
+			StringTokenizer token;
+			String particleFileName;
+			//int doDisplay = 4;
+			int nextID = db.getNextID();
+			Collection curCollection = db.getCollection(id[0]);
+			while (readSet.hasNextLine()) { // repeat until end of file.
 
-					if (progressBar.wasTerminated()) {
-						throw new InterruptedException();
-					}
-					String line = readSet.nextLine();
+				if (progressBar.wasTerminated()) {
+					throw new InterruptedException();
+				}
+				String line = readSet.nextLine();
 
-					currentParticle = this.getParticle(line);
-					((Database) db).saveDataParticle(
-							currentParticle.particleInfoDenseStr(db.getDateFormat()),
-							currentParticle.particleInfoSparseString(),
-							collection, id[1], nextID, ATOFMS_buckets);
+				currentParticle = this.getParticle(line);
+				bulkInserter.queueInsertion(
+						currentParticle.particleInfoDenseStr(db.getDateFormat()),
+						currentParticle.particleInfoSparseString(),
+						collection, id[1], nextID);
 
-					nextID++;
-					particleNum++;
-					if (particleNum % 10 == 0 && particleNum > 0) {
-						progressBar.setValue(particleNum);
-						progressBar.setText("Importing Particle # " + particleNum + " out of " + numParticles);
+				nextID++;
+				particleNum++;
+				if (particleNum % 10 == 0 && particleNum > 0) {
+					progressBar.setValue(particleNum);
+					progressBar.setText("Importing Particle # " + particleNum + " out of " + numParticles);
 
-					}
-				} //***SLH
-				((Database) db).BulkInsertDataParticles(ATOFMS_buckets);
-				//Percolate new atoms upward
-				db.propagateNewCollection(curCollection);
-				readSet.close();
+				}
+			} //***SLH
+			bulkInserter.executeBatch();
+			//Percolate new atoms upward
+			db.propagateNewCollection(curCollection);
+			readSet.close();
 
-			} else {
-				ErrorLogger.displayException(progressBar,
-						"Dataset has no hits because " + name + " does not exist.");
-			}
+		} else {
+			ErrorLogger.displayException(progressBar,
+					"Dataset has no hits because " + name + " does not exist.");
 		}
 	}
 	

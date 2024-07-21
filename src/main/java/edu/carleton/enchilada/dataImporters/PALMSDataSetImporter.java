@@ -182,7 +182,7 @@ public class PALMSDataSetImporter {
 		boolean skipFile = false;
 		final String[] ATOFMS_tables = {"ATOFMSAtomInfoDense", "AtomMembership", 
 				   "DataSetMembers", "ATOFMSAtomInfoSparse","InternalAtomOrder"};
-		try (Database.Data_bulkBucket ATOFMS_buckets = ((Database)db).getDatabulkBucket(ATOFMS_tables)) {
+		Database.BulkInserter bulkInserter = db.new BulkInserter(ATOFMS_tables);
 
 			//Begin reading data file
 			progressBar.setIndeterminate(true);
@@ -272,38 +272,20 @@ public class PALMSDataSetImporter {
 				read(particleNum, nextID); //READ IN PARTICLE DATA HERE
 
 				//Only copy in particles with peaks
-				if (sparse != null && sparse.size() > 0) {
-					((Database)db).saveDataParticle(dense,sparse,
-							destination,id[1],nextID, ATOFMS_buckets);
+				if (sparse != null && !sparse.isEmpty()) {
+					bulkInserter.queueInsertion(dense,sparse,
+							destination,id[1],nextID);
 					nextID++;
 				}
 				particleNum++;
 			}
 			progressBar.setText("Inserting Items...");
-			((Database)db).BulkInsertDataParticles(ATOFMS_buckets);
-			((Database)db).updateInternalAtomOrder(destination);
+			bulkInserter.executeBatch();
+			db.updateInternalAtomOrder(destination);
 			//percolate possession of new atoms up the hierarchy
 			progressBar.setText("Updating Ancestors...");
 			db.propagateNewCollection(destination);
 			readData.close();
-		}catch (Exception e) {
-			try {
-				e.printStackTrace();
-				final String exception = e.toString();
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run()
-					{
-						// don't throw an exception here because we want to keep going:
-						ErrorLogger.writeExceptionToLogAndPrompt("Importing",
-								"Corrupt datatset file or particle: "+ exception);
-					}
-				});
-			} catch (Exception e2) {
-				e2.printStackTrace();
-				// don't throw exception here because we want to keep going:
-				ErrorLogger.writeExceptionToLogAndPrompt("Importing","ParticleException: "+e2.toString());
-			}
-		}
 	}
 
 	
