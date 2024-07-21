@@ -116,7 +116,7 @@ public abstract class Database {
     /**
      * Construct an instance of database
      *
-     * @param dbname the name of the database to use (SpASMSdb, TestDB, etc)
+     * @param dbName the name of the database to use (SpASMSdb, TestDB, etc)
      * @return an InfoWarehouse backed by a relational database
      */
     public static Database getDatabase(String dbName) {
@@ -178,7 +178,7 @@ public abstract class Database {
     }
 
     /**
-     * Retrieve the {@link java.sql.Connection Connection} for this database
+     * Retrieve the {@link Connection Connection} for this database
      */
     public Connection getCon() {
         return con;
@@ -1121,8 +1121,8 @@ public abstract class Database {
     /* Copy and Move Collections */
 
     /**
-     * @param collectionID The collection id of the collection to move.
-     * @param toParentID   The collection id of the new parent.
+     * @param collection The collection id of the collection to move.
+     * @param toCollection   The collection id of the new parent.
      * @return The collection id of the copy.
      * @author steinbel - altered method Oct. 2006
      * Similar to moveCollection, except instead of removing the
@@ -1190,8 +1190,8 @@ public abstract class Database {
     }
 
     /**
-     * @param collectionID The collection id of the collection to move.
-     * @param toParentID   The collection id of the new parent.
+     * @param collection The collection id of the collection to move.
+     * @param toCollection   The collection id of the new parent.
      * @return True on success.
      * @author steinbel - altered Oct. 2006
      * <p>
@@ -1321,8 +1321,8 @@ public abstract class Database {
             e.printStackTrace();
             return false;
         }
-        if (!alteredCollections.contains(new Integer(parentID)))
-            alteredCollections.add(new Integer(parentID));
+        if (!alteredCollections.contains(parentID))
+            alteredCollections.add(parentID);
         return true;
     }
 
@@ -1380,7 +1380,7 @@ public abstract class Database {
      * the ownership of all its children (collections and atoms) to
      * their grandparent collection.
      *
-     * @param collectionID The ID of the collection to remove.
+     * @param collection The ID of the collection to remove.
      * @return true on success.
      */
     public boolean orphanAndAdopt(Collection collection) {
@@ -2046,12 +2046,12 @@ public abstract class Database {
         // Construct a set of all collections that descend from this one,
         // including this one.
         ArrayList<Integer> lookUpNext = new ArrayList<Integer>();
-        boolean status = lookUpNext.add(new Integer(collectionID));
+        boolean status = lookUpNext.add(collectionID);
         assert status : "lookUpNext queue full";
 
         Set<Integer> descCollections = new HashSet<Integer>();
         if (includeTopLevel)
-            descCollections.add(new Integer(collectionID));
+            descCollections.add(collectionID);
 
         // As long as there is at least one collection to lookup, find
         // all subchildren for all of these collections. Add them to the
@@ -2454,7 +2454,7 @@ public abstract class Database {
      *                   overrides sOdbcConnection
      * @return date associated with the mock dataset.
      */
-    public java.util.Date exportToMSAnalyzeDatabase(
+    public Date exportToMSAnalyzeDatabase(
             Collection collection,
             String newName,
             String fileName) throws IOException, SQLException {
@@ -2728,10 +2728,6 @@ public abstract class Database {
     }
 
     /**
-     * (non-Javadoc)
-     *
-     * @see database.InfoWarehouse#getPeaks(int)
-     * <p>
      * gets an arraylist of peaks given a datatype and atomID.
      * ATOFMS-specific.
      */
@@ -3410,9 +3406,6 @@ public abstract class Database {
         public Collection collection;
         Database db;
 
-        /**
-         * @param collectionID
-         */
         public SQLCursor(Collection col, String where, Database db) {
             super(col);
             collection = col;
@@ -3538,7 +3531,7 @@ public abstract class Database {
     private class BinnedCursor extends PeakCursor {
 
         /**
-         * @param collectionID
+         * @param collection
          */
         public BinnedCursor(Collection collection) {
             super(collection);
@@ -4640,7 +4633,7 @@ public abstract class Database {
     /* @guru Jamie Olson
      * @see database.InfoWarehouse#getConditionalTSCollectionData(collection.Collection, java.util.ArrayList, java.util.ArrayList)
      */
-    public Hashtable<java.util.Date, Double> getConditionalTSCollectionData(
+    public Hashtable<Date, Double> getConditionalTSCollectionData(
             Collection seq,
             ArrayList<Collection> conditionalSeqs, ArrayList<String> conditionStrs) {
 		/*String s = null;
@@ -4707,7 +4700,7 @@ public abstract class Database {
                     "		WHERE M.CollectionID = " + seq.getCollectionID() + ") A " +
                     "ON (T.AtomID = A.AtomID)" + " \n";
         }
-        Hashtable<java.util.Date, Double> retData = new Hashtable<java.util.Date, Double>();
+        Hashtable<Date, Double> retData = new Hashtable<Date, Double>();
 
         try {
             Statement stmt = con.createStatement();
