@@ -238,8 +238,12 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		try {
 			String[] filesToCopy = {"pion-sigs.txt", "nion-sigs.txt", "run.bat", "spectrum.exe"};
 			for (String fileToCopy : filesToCopy) {
-				Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/" + fileToCopy),
-						labelingDir.resolve(fileToCopy), StandardCopyOption.REPLACE_EXISTING);
+				try (var fileToCopyStream =
+							 ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/" + fileToCopy)) {
+                    assert fileToCopyStream != null;
+                    Files.copy(fileToCopyStream,
+							labelingDir.resolve(fileToCopy), StandardCopyOption.REPLACE_EXISTING);
+				}
 			}
 		} catch (IOException e) {
 			throw new ExceptionAdapter(e);

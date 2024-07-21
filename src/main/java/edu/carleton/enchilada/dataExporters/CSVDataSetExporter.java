@@ -109,7 +109,6 @@ public class CSVDataSetExporter {
 		throws DisplayException {
 		double mzConstraint = new Double(maxMZValue);
 		boolean showingNegatives;
-		CollectionCursor atomInfoCur;
 		ParticleInfo particleInfo;
 		
 		if (fileName == null) {
@@ -127,25 +126,24 @@ public class CSVDataSetExporter {
 	
 			progressBar.setText("Exporting peak data");
 			progressBar.setIndeterminate(true);
-			
-			atomInfoCur = db.getAtomInfoOnlyCursor(coll);
 
-			ArrayList<ParticleInfo> particleList = new ArrayList<ParticleInfo>();
-			int fileIndex = 0;
-			while (atomInfoCur.next()) {
-				particleInfo = atomInfoCur.getCurrent();
-				particleInfo.setBinnedList(atomInfoCur.getPeakListfromAtomID(particleInfo.getID()));
-				particleList.add(particleInfo);
-				if (onePerFile) {
-					writeOutSingleParticle(particleInfo, fileName, fileIndex++);
-				} else if (particleList.size() == 127) {
-					writeOutParticlesToFile(particleList, fileName, fileIndex++, maxMZValue);
-					particleList.clear();
+			try (CollectionCursor atomInfoCur = db.getAtomInfoOnlyCursor(coll)) {
+				ArrayList<ParticleInfo> particleList = new ArrayList<>();
+				int fileIndex = 0;
+				while (atomInfoCur.next()) {
+					particleInfo = atomInfoCur.getCurrent();
+					particleInfo.setBinnedList(atomInfoCur.getPeakListfromAtomID(particleInfo.getID()));
+					particleList.add(particleInfo);
+					if (onePerFile) {
+						writeOutSingleParticle(particleInfo, fileName, fileIndex++);
+					} else if (particleList.size() == 127) {
+						writeOutParticlesToFile(particleList, fileName, fileIndex++, maxMZValue);
+						particleList.clear();
+					}
 				}
-			}
-			if (particleList.size() > 0 && !onePerFile)
-			{
-				writeOutParticlesToFile(particleList, fileName, fileIndex++, maxMZValue);
+				if (!particleList.isEmpty() && !onePerFile) {
+					writeOutParticlesToFile(particleList, fileName, fileIndex++, maxMZValue);
+				}
 			}
 		} catch (IOException e) {
 			ErrorLogger.writeExceptionToLogAndPrompt("CSV Data Exporter","Error writing file please ensure the application can write to the specified file.");

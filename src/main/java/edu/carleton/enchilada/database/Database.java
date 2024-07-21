@@ -554,7 +554,7 @@ public abstract class Database {
         Database blankDb = Database.getDatabase("");
         try {
             blankDb.openConnectionNoDB();
-            try (Statement stmt = blankDb.getCon().createStatement()) {
+            try (Statement stmt = blankDb.con.createStatement()) {
                 stmt.executeUpdate("create database \"" + dbName + "\"");
             }
         } catch (SQLException e) {
@@ -2305,7 +2305,7 @@ public abstract class Database {
     public String backupDatabase(String name) {
         String ret = "Succeeded";
 
-        try (Statement stmt = getCon().createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("backup to '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
@@ -2326,7 +2326,7 @@ public abstract class Database {
         closeConnection();
         openConnection();
         String ret = "Succeeded";
-        try (Statement stmt = getCon().createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("restore from '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
@@ -3350,7 +3350,7 @@ public abstract class Database {
                     "        )\n" +
                     ") AS temptable " + densewhere;
 
-            try (Statement stmt = getCon().createStatement();
+            try (Statement stmt = con.createStatement();
                  ResultSet rs = stmt.executeQuery(query)) {
                 atoms = new ArrayList<>();
                 while (rs.next()) {

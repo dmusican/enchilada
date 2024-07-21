@@ -404,18 +404,19 @@ public class ClusterHierarchical extends Cluster {
 		public ClusterContents(int collID) {
 			this.clusterCollectionID = collID;
 			atomIDList = new ArrayList<Integer>();
-			CollectionCursor curs = getCursor(collID);
-			while (curs.next()) {
-				ParticleInfo particle = curs.getCurrent();
-				atomIDList.add(particle.getID());
-				if (peaks == null) {
-					peaks = particle.getBinnedList();
-				}
-				else {
-					peaks.addAnotherParticle(particle.getBinnedList());
-				}
-			}
-			if (peaks != null) {
+            try (CollectionCursor curs = getCursor(collID)) {
+				assert curs != null;
+                while (curs.next()) {
+                    ParticleInfo particle = curs.getCurrent();
+                    atomIDList.add(particle.getID());
+                    if (peaks == null) {
+                        peaks = particle.getBinnedList();
+                    } else {
+                        peaks.addAnotherParticle(particle.getBinnedList());
+                    }
+                }
+            }
+            if (peaks != null) {
 				peaks.divideAreasBy(atomIDList.size());
 			}
 		}
