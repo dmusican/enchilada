@@ -269,6 +269,228 @@ public abstract class Database {
      *
      * @author SLH
      */
+
+    private record ATOFMSAtomInfoDenseRow(int atomId, String timestamp, double laserPower,
+                                          double size, int scatDelay, String origFilename) {}
+    private record ATOFMSAtomInfoSparseRow(int atomId, double peakLocation, int peakArea,
+                                           double relPeakArea, int peakHeight) {}
+    private record AMSAtomInfoDenseRow(int atomId, String timestamp) {}
+    private record AMSAtomInfoSparseRow(int atomId, double peakLocation, double relPeakArea) {}
+    private record AtomMembershipRow(int collectionId, int atomId) {}
+    private record DataSetMembersRow(int origDatasetId, int atomId) {}
+    private record InternalAtomOrderRow(int atomId, int collectionId) {}
+
+    public class BulkInserter {
+        String[] tables;
+        ArrayList<ATOFMSAtomInfoDenseRow> ATOFMSAtomInfoDenseRows = new ArrayList<>();
+        ArrayList<ATOFMSAtomInfoSparseRow> ATOFMSAtomInfoSparseRows = new ArrayList<>();
+        ArrayList<AMSAtomInfoDenseRow> AMSAtomInfoDenseRows = new ArrayList<>();
+        ArrayList<AMSAtomInfoSparseRow> AMSAtomInfoSparseRows = new ArrayList<>();
+        ArrayList<AtomMembershipRow> AtomMembershipRows = new ArrayList<>();
+        ArrayList<DataSetMembersRow> DataSetMembersRows = new ArrayList<>();
+        ArrayList<InternalAtomOrderRow> InternalAtomOrderRows = new ArrayList<>();
+
+        public BulkInserter(String[] tables) {
+            this.tables = tables;
+        }
+
+        /**
+         * saveDataParticle takes a string of dense info, a string of sparse info,
+         * the collection, the datasetID and the nextID to prepare for bulk insertion
+         *
+         * @param dense      - string of dense info
+         * @param sparse     - string of sparse info
+         * @param collection - current collection
+         * @param datasetID  - current datasetID
+         * @param nextID     - next ID
+         */
+        public void saveDataParticle(String dense, ArrayList<String> sparse,
+                                     Collection collection, int datasetID, int nextID) {
+            String commaDelimitedRegex = "\\s*,\\s*";
+
+            for (String table : tables) {
+                switch (table) {
+                    case "ATOFMSAtomInfoDense" -> {
+                        String[] delimitedValues = dense.split(commaDelimitedRegex);
+                        ATOFMSAtomInfoDenseRows.add(new ATOFMSAtomInfoDenseRow(
+                                nextID,
+                                delimitedValues[0],
+                                Double.parseDouble(delimitedValues[1]),
+                                Double.parseDouble(delimitedValues[2]),
+                                Integer.parseInt(delimitedValues[3]),
+                                delimitedValues[4]));
+                    }
+                    case "ATOFMSAtomInfoSparse" -> {
+                        for (String row : sparse) {
+                            String[] delimitedValues = row.split(commaDelimitedRegex);
+                            ATOFMSAtomInfoSparseRows.add(new ATOFMSAtomInfoSparseRow(
+                                    nextID,
+                                    Double.parseDouble(delimitedValues[0]),
+                                    Integer.parseInt(delimitedValues[1]),
+                                    Double.parseDouble(delimitedValues[2]),
+                                    Integer.parseInt(delimitedValues[3])));
+                        }
+                    }
+                    case "AMSAtomInfoDense" -> {
+                        String[] delimitedValues = dense.split(commaDelimitedRegex);
+                        AMSAtomInfoDenseRows.add(new AMSAtomInfoDenseRow(
+                                nextID,
+                                delimitedValues[0]));
+                    }
+                    case "AMSAtomInfoSparse" -> {
+                        for (String row : sparse) {
+                            String[] delimitedValues = row.split(commaDelimitedRegex);
+                            AMSAtomInfoSparseRows.add(new AMSAtomInfoSparseRow(
+                                    nextID,
+                                    Double.parseDouble(delimitedValues[0]),
+                                    Double.parseDouble(delimitedValues[1])));
+                        }
+                    }
+                    case "AtomMembership" -> {
+                        AtomMembershipRows.add(new AtomMembershipRow(
+                                collection.getCollectionID(),
+                                nextID));
+                    }
+                    case "DataSetMembers" -> {
+                        DataSetMembersRows.add(new DataSetMembersRow(
+                                datasetID,
+                                nextID));
+                    }
+                    case "InternalAtomOrder" -> {
+                        InternalAtomOrderRows.add(new InternalAtomOrderRow(
+                                nextID,
+                                collection.getCollectionID()));
+                    }
+                    default -> {
+                        throw new UnsupportedOperationException();
+                    }
+                }
+            }
+
+        }
+
+        private void commitBatch(Statement stmt) {
+            try {
+                con.setAutoCommit(false);
+                stmt.executeBatch();
+                con.commit();
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new ExceptionAdapter(e);
+            }
+        }
+        public void executeBatch() {
+            try {
+                for (String table : tables) {
+                    switch (table) {
+                        case "ATOFMSAtomInfoDense" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO ATOFMSAtomInfoDense VALUES(?,?,?,?,?,?);")) {
+                                for (ATOFMSAtomInfoDenseRow row : ATOFMSAtomInfoDenseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setString(2, row.timestamp);
+                                    stmt.setDouble(3, row.laserPower);
+                                    stmt.setDouble(4, row.size);
+                                    stmt.setInt(5, row.scatDelay);
+                                    stmt.setString(6, row.origFilename);
+                                    stmt.addBatch();
+                                }
+                                ATOFMSAtomInfoDenseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "ATOFMSAtomInfoSparse" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO ATOFMSAtomInfoSparse VALUES(?,?,?,?,?);")) {
+                                for (ATOFMSAtomInfoSparseRow row : ATOFMSAtomInfoSparseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setDouble(2, row.peakLocation);
+                                    stmt.setInt(3, row.peakArea);
+                                    stmt.setDouble(4, row.relPeakArea);
+                                    stmt.setInt(5, row.peakHeight);
+                                    stmt.addBatch();
+                                }
+                                ATOFMSAtomInfoSparseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AMSAtomInfoDense" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AMSAtomInfoDense VALUES(?,?);")) {
+                                for (AMSAtomInfoDenseRow row : AMSAtomInfoDenseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setString(2, row.timestamp);
+                                    stmt.addBatch();
+                                }
+                                AMSAtomInfoDenseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AMSAtomInfoSparse" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AMSAtomInfoSparse VALUES(?,?,?);")) {
+                                for (AMSAtomInfoSparseRow row : AMSAtomInfoSparseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setDouble(2, row.peakLocation);
+                                    stmt.setDouble(3, row.relPeakArea);
+                                    stmt.addBatch();
+                                }
+                                AMSAtomInfoSparseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AtomMembership" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AtomMembership VALUES(?,?);")) {
+                                for (AtomMembershipRow row : AtomMembershipRows) {
+                                    stmt.setInt(1, row.collectionId);
+                                    stmt.setInt(2, row.atomId);
+                                    stmt.addBatch();
+                                }
+                                AtomMembershipRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "DataSetMembers" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO DataSetMembers VALUES(?,?);")) {
+                                for (DataSetMembersRow row : DataSetMembersRows) {
+                                    stmt.setInt(1, row.origDatasetId);
+                                    stmt.setInt(2, row.atomId);
+                                    stmt.addBatch();
+                                }
+                                DataSetMembersRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "InternalAtomOrder" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO InternalAtomOrder VALUES(?,?);")) {
+                                for (InternalAtomOrderRow row : InternalAtomOrderRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setInt(2, row.collectionId);
+                                    stmt.addBatch();
+                                }
+                                InternalAtomOrderRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                throw new ExceptionAdapter(e);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+    /////////////////////
     public class Data_bulkBucket implements AutoCloseable {
         String[] tables;
         PreparedStatement[] buckets;
@@ -3248,9 +3470,9 @@ public abstract class Database {
      * you'll get five particles--rownum >= 1 and rownum <= 5 does.)
      */
     private class SQLAtomIDCursor implements CollectionCursor {
-        private final String query;
-        private Statement stmt;
-        private ResultSet rs;
+        private ArrayList<Integer> atoms;
+        private Iterator<Integer> atomsIterator;
+        private Integer currentAtom = null;
 
         /**
          * Sets up a cursor that returns only the AtomIDs in the collection
@@ -3272,15 +3494,16 @@ public abstract class Database {
             String sparsewhere = "";
             String[] splitwhere = where.split(";", -1);
 
-            if (splitwhere[0].length() > 0)
+            if (!splitwhere[0].isEmpty())
                 densewhere += "WHERE " + splitwhere[0];
-            if (splitwhere.length > 1 && splitwhere[1].length() > 0)
+            if (splitwhere.length > 1 && !splitwhere[1].isEmpty())
                 sparsewhere += "AND " + splitwhere[1];
 
             String densename = getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype());
             String sparsename = getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype());
             // MM: This query allows Enchilada to filter for criteria from both the dense and sparse datatables
-            query = "SELECT DISTINCT AtomID FROM (\n" + // DISTINCT should be redundant here...
+            // DISTINCT should be redundant here...
+            String query = "SELECT DISTINCT AtomID FROM (\n" + // DISTINCT should be redundant here...
                     "    SELECT DISTINCT d.*, ROW_NUMBER() OVER (ORDER BY InternalAtomOrder.AtomID) AS rownum\n" +
                     "        FROM " + densename + " AS d, InternalAtomOrder\n" +
                     "        WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND d.AtomID = InternalAtomOrder.AtomID\n" +
@@ -3293,9 +3516,13 @@ public abstract class Database {
                     "        )\n" +
                     ") AS temptable " + densewhere;
 
-            try {
-                stmt = getCon().createStatement();
-                rs = stmt.executeQuery(query);
+            try (Statement stmt = getCon().createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
+                atoms = new ArrayList<>();
+                while (rs.next()) {
+                    atoms.add(rs.getInt(1));
+                }
+                atomsIterator = atoms.iterator();
             } catch (SQLException ex) {
                 ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception creating SQLAtomIDCursor.");
                 ex.printStackTrace();
@@ -3303,13 +3530,6 @@ public abstract class Database {
         }
 
         public void close() {
-            try {
-                stmt.close();
-                rs.close();
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception closing SQLAtomIDCursor.");
-                ex.printStackTrace();
-            }
         }
 
         public ParticleInfo get(int i) throws NoSuchMethodException {
@@ -3319,15 +3539,8 @@ public abstract class Database {
 
         public ParticleInfo getCurrent() {
             ParticleInfo p = new ParticleInfo();
-            try {
-                p.setID(rs.getInt(1));
-                return p;
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving AtomID with SQLAtomIDCursor.");
-                ex.printStackTrace();
-                return null;
-            }
+            p.setID(currentAtom);
+            return p;
         }
 
         /**
@@ -3339,23 +3552,18 @@ public abstract class Database {
         }
 
         public boolean next() {
-            try {
-                return rs.next();
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "Could not advance to next AtomID with SQLAtomIDCursor");
+            if (atomsIterator.hasNext()) {
+                currentAtom = atomsIterator.next();
+                return true;
+            } else {
+                currentAtom = null;
                 return false;
             }
         }
 
         public void reset() {
-            try {
-                stmt = getCon().createStatement();
-                rs = stmt.executeQuery(query);
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception resetting SQLAtomIDCursor.");
-                ex.printStackTrace();
-            }
+            atomsIterator = atoms.iterator();
+            currentAtom = null;
         }
     }
 
