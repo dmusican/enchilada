@@ -304,7 +304,7 @@ public abstract class Database {
          * @param datasetID  - current datasetID
          * @param nextID     - next ID
          */
-        public void saveDataParticle(String dense, ArrayList<String> sparse,
+        public void queueInsertion(String dense, ArrayList<String> sparse,
                                      Collection collection, int datasetID, int nextID) {
             String commaDelimitedRegex = "\\s*,\\s*";
 
