@@ -235,7 +235,7 @@ public class AMSDataSetImporterTest extends TestCase {
 
 		//perform the import
 		try {
-			importer.processDataSet(0);
+			importer.processDataSet();
 		}
 		catch (WriteException e1) {
 			e1.printStackTrace();
@@ -277,7 +277,7 @@ public class AMSDataSetImporterTest extends TestCase {
 		assertTrue(new File(deleteFiles.get(1)).renameTo(new File(deleteFiles.get(1) + ".old")));
 
 		try {
-			importer.processDataSet(0);
+			importer.processDataSet();
 			fail("A WriteException should have been thrown if the AMS time series file does not exist");
 		} catch (WriteException ex) {
 			// expected
@@ -291,7 +291,7 @@ public class AMSDataSetImporterTest extends TestCase {
 		assertTrue(new File(deleteFiles.get(2)).renameTo(new File(deleteFiles.get(2) + ".old")));
 
 		try {
-			importer.processDataSet(0);
+			importer.processDataSet();
 			fail("A WriteException should have been thrown if the AMS m/z does not exist");
 		} catch (WriteException ex) {
 			// expected
@@ -305,7 +305,7 @@ public class AMSDataSetImporterTest extends TestCase {
 		assertTrue(new File(deleteFiles.get(0)).renameTo(new File(deleteFiles.get(0) + ".old")));
 
 		try {
-			importer.processDataSet(0);
+			importer.processDataSet();
 			fail("A WriteException should have been thrown if the AMS datafile does not exist");
 		} catch (WriteException ex) {
 			// expected
