@@ -1720,6 +1720,68 @@ public abstract class Database {
         }
     }
 
+    public record BulkInsertAtomRow (int atomId, int parentId) {};
+
+    public void bulkInsertAtom(List<BulkInsertAtomRow> bulkInsertAtomRows) {
+        try (PreparedStatement bulkInsertStatementAtomMembership =
+                con.prepareStatement("INSERT INTO AtomMembership VALUES (?, ?)");
+             PreparedStatement bulkInsertStatementInternalAtomOrder =
+                con.prepareStatement("INSERT INTO InternalAtomOrder VALUES (?, ?)");) {
+            ArrayList<Integer> alteredCollections = new ArrayList<>();
+
+            for (BulkInsertAtomRow row : bulkInsertAtomRows) {
+                if (!alteredCollections.contains(row.parentId))
+                    alteredCollections.add(row.parentId);
+
+                bulkInsertStatementAtomMembership.setInt(1, row.parentId);
+                bulkInsertStatementAtomMembership.setInt(2, row.atomId);
+                bulkInsertStatementAtomMembership.addBatch();
+
+                bulkInsertStatementInternalAtomOrder.setInt(1, row.atomId);
+                bulkInsertStatementInternalAtomOrder.setInt(2, row.parentId);
+                bulkInsertStatementInternalAtomOrder.addBatch();
+            }
+
+
+            long time = System.currentTimeMillis();
+            beginTransaction();
+            bulkInsertStatementAtomMembership.executeBatch();
+            commitTransaction();
+            beginTransaction();
+            bulkInsertStatementInternalAtomOrder.executeBatch();
+            commitTransaction();
+
+            System.out.println("Time: " + (System.currentTimeMillis() - time));
+            System.out.println("done inserting now time for altering collections");
+
+            time = System.currentTimeMillis();
+            System.out.println("alteredCollections.size() " + alteredCollections.size());
+            for (Integer alteredCollection : alteredCollections)
+                updateInternalAtomOrder(getCollection(alteredCollection));
+
+            //when the parents of all the altered collections are the same
+            //don't need to update the parent FOR EACH subcollection, just at end
+            ArrayList<Collection> parents = new ArrayList<Collection>();
+            Collection temp;
+            for (Integer alteredCollection : alteredCollections) {
+                temp = getCollection(alteredCollection).getParentCollection();
+                if (!parents.contains(temp))
+                    parents.add(temp);
+            }
+            //only update each distinct parent once
+            for (Collection parent : parents) updateAncestors(parent);
+            if (batchStatement != null) {
+                batchStatement.close();
+            }
+
+        } catch (SQLException e) {
+            throw new ExceptionAdapter(e);
+        }
+
+
+    }
+
+
     /**
      * Initializes atom batches for moving atoms and adding atoms.
      *

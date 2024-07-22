@@ -45,6 +45,8 @@ package edu.carleton.enchilada.analysis;
 
 import edu.carleton.enchilada.database.Database;
 
+import java.util.ArrayList;
+
 /**
  * SQLDivider implements the abstract methods of CollectionDivider.
  * It results in a single subcollection of the collection you are 
@@ -95,21 +97,14 @@ public class SQLDivider extends CollectionDivider {
 	 */
 	public int divide() {
 		try {
-			//db.atomBatchInit();
-			db.bulkInsertInit();
+			ArrayList<Database.BulkInsertAtomRow> atomRows = new ArrayList<>();
 			System.out.println("Begin divide");
-			while (curs.next())
-			{
+			while (curs.next()) {
 				int temp = curs.getCurrent().getID();
-				//putInHostSubCollection(temp);
-				//Change to batch add atoms to the subcollection instead of moving them individually
-				//	@author shaferia 1-11-07
-				//db.addAtomBatch(temp, newHostID);
-				db.bulkInsertAtom(temp,newHostID);
+				atomRows.add(new Database.BulkInsertAtomRow(temp, newHostID));
 			}
 			System.out.println("Begin execute");
-			//db.atomBatchExecute();
-			db.bulkInsertExecute();
+			db.bulkInsertAtom(atomRows);
 			db.setCollectionDescription(db.getCollection(newHostID), "Divided on:\n" +
 				where);
 		} catch (Exception e) {

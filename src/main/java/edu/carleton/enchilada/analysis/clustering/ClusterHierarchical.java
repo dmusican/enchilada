@@ -451,13 +451,12 @@ public class ClusterHierarchical extends Cluster {
 
 		private void addAtomsToCollection() {
 			try {
-				db.bulkInsertInit();
+				ArrayList<Database.BulkInsertAtomRow> atomRows = new ArrayList<>();
 				System.out.println("AtomIDList = " + atomIDList);
 				for (int atomID : atomIDList) {
-					db.bulkInsertAtom(atomID,
-							clusterCollectionID);
+					atomRows.add(new Database.BulkInsertAtomRow(atomID, clusterCollectionID));
 				}
-				db.bulkInsertExecute();
+				db.bulkInsertAtom(atomRows);
 			}
 			catch (Exception e) {
 				throw new ExceptionAdapter(e);
