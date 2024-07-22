@@ -138,24 +138,43 @@ public class ClusterQueryTest extends TestCase {
 		assertTrue(par3.toFile().delete());
 	    assertTrue(tempDir.toFile().delete());
 	}
-		
+
 	public void testGoodCluster(){
 		ArrayList<String> filenamesGood = new ArrayList<String>();
-		
+
 		filenamesGood.add(par1.toString());
 		filenamesGood.add(par2.toString());
 
 		qc = new ClusterQuery(
 					cID,db, "Cluster Query", "GoodTest", false, filenamesGood,d);
-		
+
 		qc.setDistanceMetric(DistanceMetric.EUCLIDEAN_SQUARED);
-		
+
 		System.out.println("setting cursor type");
 		qc.setCursorType(Cluster.DISK_BASED);
-		
+
 		qc.divide();
 	}
-	
+	public void testClusterTwice(){
+		ArrayList<String> filenamesGood = new ArrayList<String>();
+
+		filenamesGood.add(par1.toString());
+		filenamesGood.add(par2.toString());
+
+		for (int i=0; i < 2; i++) {
+			qc = new ClusterQuery(
+					cID, db, "Cluster Query", "GoodTest", false, filenamesGood, d);
+
+			qc.setDistanceMetric(DistanceMetric.EUCLIDEAN_SQUARED);
+
+			System.out.println("setting cursor type");
+			qc.setCursorType(Cluster.DISK_BASED);
+
+			qc.divide();
+		}
+	}
+
+
 	public void testNoCluster(){
 		ArrayList<String> filenamesNoClusters = new ArrayList<String>();
 		
