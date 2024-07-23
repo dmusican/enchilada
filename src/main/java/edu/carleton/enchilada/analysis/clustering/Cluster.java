@@ -63,6 +63,7 @@ import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.DummyNormalizer;
 import edu.carleton.enchilada.analysis.Normalizer;
 import edu.carleton.enchilada.analysis.PeakTransform;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.errorframework.NoSubCollectionException;
 import gnu.trove.map.hash.TIntShortHashMap;
 
@@ -502,7 +503,7 @@ public abstract class Cluster extends CollectionDivider {
 			}// end with no particle remaining
 			putInSubCollectionBulkExecute();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		curs.reset();
 		if(!changeCentroids){

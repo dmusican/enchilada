@@ -155,13 +155,13 @@ public class ClusterQueryTest extends TestCase {
 
 		qc.divide();
 	}
-	public void testClusterTwice(){
+	public void testClusterMultipleTimes(){
 		ArrayList<String> filenamesGood = new ArrayList<String>();
 
 		filenamesGood.add(par1.toString());
 		filenamesGood.add(par2.toString());
 
-		for (int i=0; i < 2; i++) {
+		for (int i=0; i < 10; i++) {
 			qc = new ClusterQuery(
 					cID, db, "Cluster Query", "GoodTest", false, filenamesGood, d);
 
