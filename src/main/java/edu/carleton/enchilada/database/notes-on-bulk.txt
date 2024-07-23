@@ -1,0 +1,38 @@
+Bulk/batch files summary, to help manage cleaning up:
+
+============
+atomBatchInit(). Sets up the below.
+- Doesn't use a prepared statement; the below methods directly add the SQL strings that they need.
+- It also creates an ArrayList named alteredCollections that is used to track necessary changes.
+
+addAtomBatch(atomID, parentID). Adds atomID, with parentID, into AtomMembership.
+- Also adds parentID to alteredCollections
+
+deleteAtomsBatch(atomIDs, collection). Deletes multiple atomIDs (supplied as a comma delimited string) from a particular collection.
+
+deleteAtomBatch(atomID, collection). Deletes single atomID from a particular collection.
+
+atomBatchExecute(). Executes all of the above queued up queries.
+- Additionally, updates the InternalAtomOrder table based on what is in alteredCollections.
+
+--- Fixing all of the above looks mostly straightforward. Each of them just runs a single query. The alteredCollections piece is messier, since it also requires keeping track of that. I DID FIX ALL OF THIS in my new bulkInsertAtom, which takes a list of atom rows. That works great on its own, but the above structure is tangles up with subcollections.
+
+===============
+
+bulkInsertInit(). Sets up the below.
+- This version is very similar to the above atomBatch methods, but inserts both atomID pairs and also updates into InternalAtomOrder as it goes.
+- Also sets up alteredCollections.
+
+bulkInsertBatch(atomID, parentID).
+- Adds parentID and atomID to AtomMembership, similar to addAtomBatch above.
+- Also adds pair (in reverse order) to InternalAtomOrder.
+
+bulkInsertExecute(). Executes the above queued up queries.
+
+
+
+
+
+
+BulkInserter. This one is fixed, and should likely just get renamed. It is generally used when importing data, and inserts data into multiple tables. It is a class of its own, and is self-contained.
+

@@ -670,57 +670,6 @@ public abstract class Database {
     }
 
     /**
-     * Returns the adjacent atom for the collection, according to InternalAtomOrder.
-     * @param collection    The ID of the collection under scrutiny.
-     * @param currentID        The current atom's ID.
-     * @param position        1 for next atomID, -1 for previous atomID.
-     * @return index[0] The ID of the adjacent atom in the collection.
-     * 			index[1] The position of the adjacent atom in the collection.
-     */
-// COMMENTED OUT BECAUSE WE DON'T USE THIS FOR ANYTHING AND IT'S NOT RELIABLE ANYWAY - jtbigwoo
-//	public int[] getAdjacentAtomInCollection(int collection, int currentID, int position){
-//		int nextID = -99;
-//		int pos = -77;
-//		String query = "";
-//		//have to deal with which window ("page" of collection) we're starting in
-//		int startingID = getFirstAtomInCollection(getCollection(collection));
-//
-//		//we want the starting id of the window in which this atom lives
-//		int i = currentID / 1000;
-//		for (int j = 0; j<i; j++)
-//			if ( !((startingID + 1000) >= currentID) )
-//				startingID +=1000;
-//
-//		//if looking for previous atom
-//		if (position <0){
-//			query = "SELECT MAX(AtomID) FROM InternalAtomOrder " +
-//			"WHERE (CollectionID = " + collection + ") AND (AtomID < " +
-//			currentID + ")";
-//		} else if (position >0){	//if looking for next atom
-//			query = "SELECT MIN(AtomID)FROM InternalAtomOrder " +
-//			"WHERE (CollectionID = " + collection + ") AND (AtomID > " +
-//			currentID + ")";
-//		}
-//
-//		Statement stmt;
-//		try {
-//			stmt = con.createStatement();
-//			ResultSet rs = stmt.executeQuery(query);
-//			rs.next();
-//			if (rs.getInt(1) > 0){
-//				nextID = rs.getInt(1);
-//				pos = ((nextID - startingID)+1); //calculate the row number
-//			}
-//			stmt.close();
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//		return new int[]{nextID, pos};
-//	}
-
-    /**
      * @param atomID
      * @param toParentID
      * @author steinbel
@@ -1085,38 +1034,6 @@ public abstract class Database {
         }
         return returnVals;
     }
-
-    /**
-     * Create a new collection from an array list of atomIDs which
-     * have yet to be inserted into the database.  Not used as far as
-     * I can tell.
-     *
-     * @param parentID    The key of the parent to insert this
-     * 					collection (0 to insert at root level)
-     * @param name        What to call this collection
-     * @param datatype  collection's datatype
-     * @param comment    What to leave as the comment
-     * @param atomType    The type of atoms you are inserting ("ATOFMSParticle" most likely
-     * @param atomList    An array list of atomID's to insert into the
-     * 					database
-     * @return The CollectionID of the new collection, -1 for
-     * 					failure.
-     *//*
-	 public int createCollectionFromAtoms( String datatype,
-	 int parentID,
-	 String name,
-	 String comment,
-	 ArrayList<String> atomList)
-	 {
-	 int collectionID = createEmptyCollection(datatype,
-	 parentID,
-	 name,
-	 comment,"");
-	 Collection collection = getCollection(collectionID);
-	 if (!insertAtomicList(datatype, atomList,collection))
-	 return -1;
-	 return collectionID;
-	 }*/
 
     /* Copy and Move Collections */
 
