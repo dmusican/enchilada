@@ -23,16 +23,43 @@ bulkInsertInit(). Sets up the below.
 - This version is very similar to the above atomBatch methods, but inserts both atomID pairs and also updates into InternalAtomOrder as it goes.
 - Also sets up alteredCollections.
 
-bulkInsertBatch(atomID, parentID).
+bulkInsertAtom(atomID, parentID).
 - Adds parentID and atomID to AtomMembership, similar to addAtomBatch above.
 - Also adds pair (in reverse order) to InternalAtomOrder.
 
 bulkInsertExecute(). Executes the above queued up queries.
+- Seems to play similar games with alteredCollections.
 
+bulkInsertAtom(bulkInsertAtomRows). This was an effort by me to fix the above. It's redundant with the above.
 
+=========================
 
+The above are in Database.java. Then there's CollectionDivider.java:
 
+putInSubCollectionInit(). Sits on top of atomMatchInit(), and just calls it, but also creates a string to hold collections to hold atoms for deletion.
 
+putInSubCollectionBatch(atomID, target). It adds the atomID to the list of atoms to delete, and then calls addAtomBatch to add the atom and its parent.
+
+putInSubCollectionBulk(atomID, target). Exactly the same as above, except that it calls bulkInsertAtom instead of addAtomBatch.
+
+putInSubCollectionBatchExecute(). Deletes the stored atoms by calling deleteAtomsBatch, then finally executes the queries prepared by calling atomBatchExecute.
+
+putInSubCollectionBulkExecute(). Calls bulkInsertExecute to execute prepared queries, then deletes the stored atoms directly.
+
+=============================
+
+What a disaster. Way too complicated. First: there would seem to be no reason for both of the batch/bulk insert frameworks to exist. Where are each used?
+
+atomBatch: putInSubCollectionBatch only, I think? That, in turn is used in Cluster.assignAtomsToNearestCentroid
+
+bulkInsertAtom: putinSubCollectionBulk only, I think? ALSO only used in Cluster.assignAtomsToNearestCentroid, but a different version of it. It's an overloaded method.
+
+How do these two approaches differ? As far as I can tell, atomBatch is more general, as it allows any SQL query to be added to it. All of the SQL queries are done purely by string construction, and added to a generic empty Statement. bulkInsert, on the other hand, is specifically designed around the approach of adding atoms.
+
+We don't need both; it seems to me we should go with the atomBatch version since it's more general. If I want to convert it later to something involving preparedqueries, fine.
+
+So my goal is to get rid of all of the bulkInsert stuff and see if I can. So the place to start is find were putInSubCollectionBulk is used, and try putting putInSubCollectionBatch, instead.
+
+===================================
 
 BulkInserter. This one is fixed, and should likely just get renamed. It is generally used when importing data, and inserts data into multiple tables. It is a class of its own, and is self-contained.
-
