@@ -203,22 +203,6 @@ public abstract class CollectionDivider {
 	/**
 	 * Creates an emtpy collection of the same datatype in the root level for
 	 * cluster centers.
-	 * @return	- new collection number
-	 */
-	protected int createCenterCollection(){
-		int collID = 0;
-		collID = db.createEmptyCollection(collection.getDatatype(),
-										0,
-										"Centers for " + collection.getName(),
-										"",
-										"");
-		assert (collID != -1) : "Error creating empty center collection.";
-		return collID;
-	}
-	
-	/**
-	 * Creates an emtpy collection of the same datatype in the root level for
-	 * cluster centers.
 	 * @param	name
 	 * @param	comments
 	 * @return	- new collection number
@@ -278,25 +262,6 @@ public abstract class CollectionDivider {
 				subCollectionIDs.get(target-1).intValue());
 	}
 	/**
-	* Does the bulk version of putInSubCollectionBatch
-	* @author christej
-	*/
-	protected boolean putInSubCollectionBulk(int atomID, int target)
-	{
-		atomIDsToDelete.append(atomID + ",");
-
-		try {
-			db.bulkInsertAtom(atomID,
-					subCollectionIDs.get(target-1).intValue());
-			return true;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-		
-	}
-	/**
 	 * Executes putInSubCollectionBatch
 	 */
 	protected void putInSubCollectionBatchExecute()
@@ -323,69 +288,6 @@ public abstract class CollectionDivider {
 		db.atomBatchExecute();
 		System.out.println("Done with DELETEs.");
 		//System.out.println((new Date()).toString());
-	}
-	/**
-	 * Executes putInSubCollectionBulk
-	 * @author christej 
-	 * @author benzaids
-	*/
-	 
-	protected void putInSubCollectionBulkExecute()
-	{
-		System.out.println("About to execute INSERTs.");
-		//System.out.println((new Date()).toString());
-
-		db.bulkInsertExecute();
-
-		System.out.println("Done with INSERTS, about to do DELETE");
-
-		//build a table for deletes
-		//drop the table in case it already (mistakenly) exists
-		System.out.println("Creating deletion table...");
-		try  {
-			Connection dbCon = db.getCon();
-			dbCon.setAutoCommit(false);
-			try (Statement delStmt = dbCon.createStatement()) {
-				delStmt.executeUpdate("DROP TABLE IF EXISTS temp.stuffToDelete");
-				delStmt.executeUpdate("CREATE TEMPORARY TABLE stuffToDelete(atoms int)");
-
-				//put stuff in the tempfile
-				System.out.println("Putting stuff in tempdelete.data...");
-				String atomIDsToDel = atomIDsToDelete.toString();
-				Scanner atomIDs = new Scanner(atomIDsToDel).useDelimiter(",");
-				try (PreparedStatement pstmt = dbCon.prepareStatement(
-						"INSERT INTO temp.stuffToDelete VALUES (?)")) {
-
-
-					while (atomIDs.hasNext()) {
-						pstmt.setInt(1, Integer.parseInt(atomIDs.next()));
-						pstmt.addBatch();
-					}
-					pstmt.executeBatch();
-				}
-				//finally, delete what's in stuffToDelete from AtomMembership
-				//and drop the stuffToDelete table
-				System.out.println("Finally, deleting from AtomMembership...");
-				String deletionquery = "DELETE FROM AtomMembership\n" +
-						"WHERE CollectionID = " + collection.getCollectionID() +
-						"\n" + "AND AtomID IN \n" +
-						"(SELECT atoms FROM temp.stuffToDelete)";
-				System.out.println("Query:");
-				System.out.println(deletionquery);
-				delStmt.executeUpdate(deletionquery);
-				delStmt.executeUpdate("DROP TABLE temp.stuffToDelete");
-				System.out.println("...and dropping deletion table.");
-
-				System.out.println("Done with DELETEs.");
-
-				dbCon.commit();
-				dbCon.setAutoCommit(true);
-			}
-		}
-		catch (SQLException e) {
-			throw new ExceptionAdapter(e);
-		}
-
 	}
 
 	/**

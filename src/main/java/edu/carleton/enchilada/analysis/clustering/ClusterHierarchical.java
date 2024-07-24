@@ -278,60 +278,9 @@ public class ClusterHierarchical extends Cluster {
 			}
 
 		}
-		// no need to create centroids, the cluster hierarchy we've created is what's useful.
-//		if (interactive) {
-//			errorLabel.setText("Updating collections");
-//			errorUpdate.validate();
-//		}
-//		assignAtomsToNearestCentroid(clusterContents);
-		
+
 		return;
 	}
-
-	/**
-	 * For hierarchical clustering we build the clusters as we go, so this is
-	 * pretty easy.
-	 * 
-	 * @param clusterContents
-	 */
-//	protected void assignAtomsToNearestCentroid(HashMap<Integer, ClusterContents> clusterContents)
-//	{
-//		
-//		ArrayList<Centroid> centroidList = new ArrayList<Centroid>();
-//		int particleCount = 0;
-//		putInSubCollectionBatchInit();
-//
-//		try {
-//			db.bulkInsertInit();
-//		} catch (Exception e1) {
-//			e1.printStackTrace();
-//		}
-//
-//		for (Map.Entry<Integer, ClusterContents> entry : clusterContents.entrySet()) {
-//			Centroid temp = new Centroid(entry.getValue().getPeaks(), entry.getValue().getAtomIDList().size());
-//			temp.subCollectionNum = createSubCollection();
-//			for (int atomID : entry.getValue().getAtomIDList()) {
-//				putInSubCollectionBulk(atomID, temp.subCollectionNum);
-//			}
-//			particleCount += temp.numMembers;
-//			centroidList.add(temp);
-//		}
-//		putInSubCollectionBulkExecute();
-//
-//		if (isNormalized){
-//			//boost the peaklist
-//			// By dividing by the smallest peak area, all peaks get scaled up.
-//			// Because we're going to convert these to ints in a minute anything
-//			// smaller than the smallest peak area will get converted to zero.
-//			// it's a hack, I know-jtbigwoo
-//			for (Centroid c: centroidList){
-//				c.peaks.divideAreasBy(smallestNormalizedPeak);
-//			}
-//		}
-//		createCenterAtoms(centroidList, subCollectionIDs);
-//		
-//		printDescriptionToDB(particleCount, centroidList);
-//	}
 
 	/**
 	 * Holds the id's for a pair of clusters and the distance between them.

@@ -60,6 +60,7 @@ We don't need both; it seems to me we should go with the atomBatch version since
 
 So my goal is to get rid of all of the bulkInsert stuff and see if I can. So the place to start is find were putInSubCollectionBulk is used, and try putting putInSubCollectionBatch, instead.
 
+---- DONE! That part seems to be finished.
 ===================================
 
 BulkInserter. This one is fixed, and should likely just get renamed. It is generally used when importing data, and inserts data into multiple tables. It is a class of its own, and is self-contained.

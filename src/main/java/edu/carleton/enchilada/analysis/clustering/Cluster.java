@@ -495,13 +495,13 @@ public abstract class Cluster extends CollectionDivider {
 							System.err.println(
 							"Problem creating sub collection");
 					}
-					putInSubCollectionBulk(thisParticleInfo.getID(),
+					putInSubCollectionBatch(thisParticleInfo.getID(),
 							temp.subCollectionNum);
 					System.out.println("putting in subcollectionbatch " + thisParticleInfo.getID() + " " + temp.subCollectionNum);
 					temp.numMembers++;
 				}
 			}// end with no particle remaining
-			putInSubCollectionBulkExecute();
+			putInSubCollectionBatchExecute();
 		} catch (Exception e) {
 			throw new ExceptionAdapter(e);
 		}
