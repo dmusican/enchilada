@@ -48,6 +48,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -430,7 +431,8 @@ public abstract class Cluster extends CollectionDivider {
 		double distance = 3.0;
 		int chosenCluster = -1;
 		TIntShortHashMap clusterMapping = new TIntShortHashMap();
-		putInSubCollectionBatchInit();
+		ArrayList<Database.BulkInsertAtomRow> atomRows = new ArrayList<>();
+//		putInSubCollectionBatchInit();
 		
 		ArrayList<float[]> tempCentroidList =
 			Cluster.generateCentroidArrays(centroidList,ARRAYOFFSET);
@@ -495,13 +497,39 @@ public abstract class Cluster extends CollectionDivider {
 							System.err.println(
 							"Problem creating sub collection");
 					}
-					putInSubCollectionBatch(thisParticleInfo.getID(),
-							temp.subCollectionNum);
+					atomRows.add(new Database.BulkInsertAtomRow(thisParticleInfo.getID(),
+							temp.subCollectionNum));
+//					putInSubCollectionBatch(thisParticleInfo.getID(),
+//							temp.subCollectionNum);
 					System.out.println("putting in subcollectionbatch " + thisParticleInfo.getID() + " " + temp.subCollectionNum);
 					temp.numMembers++;
 				}
 			}// end with no particle remaining
-			putInSubCollectionBatchExecute();
+			db.bulkInsertAtom(atomRows);
+			StringBuilder atomIDsToDel = new StringBuilder();
+			for (Database.BulkInsertAtomRow atomRow : atomRows) {
+				atomIDsToDel.append(atomRow.atomId());
+				atomIDsToDel.append(",");
+			}
+			// Remove trailing comma
+			atomIDsToDel.deleteCharAt(atomIDsToDel.length()-1);
+
+			// Now get rid of ids that need deleting. Move this code elsewhere, but put it here to try it.
+			db.atomBatchInit();
+			if (!atomIDsToDel.isEmpty() &&
+					atomIDsToDel.length() < 2000) {
+				db.deleteAtomsBatch(atomIDsToDel.toString(),collection);
+			} else if (!atomIDsToDel.isEmpty()) {
+				Scanner atomIDs = new Scanner(atomIDsToDel.toString()).useDelimiter(",");
+				while (atomIDs.hasNext()) {
+					db.deleteAtomBatch(atomIDs.nextInt(), collection);
+				}
+			}
+			db.atomBatchExecute();
+			System.out.println("Done with DELETEs.");
+
+
+//			putInSubCollectionBatchExecute();
 		} catch (Exception e) {
 			throw new ExceptionAdapter(e);
 		}

@@ -88,7 +88,7 @@ public abstract class CollectionDivider {
 	/**
 	 * The collection you are dividing
 	 */
-	protected Collection collection;
+	final protected Collection collection;
 
 	/**
 	 * A pointer to an active InfoWarehouse
