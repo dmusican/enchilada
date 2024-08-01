@@ -514,7 +514,9 @@ public abstract class Cluster extends CollectionDivider {
 				atomIDsToDel.append(",");
 			}
 			// Remove trailing comma
-			atomIDsToDel.deleteCharAt(atomIDsToDel.length()-1);
+			if (!atomIDsToDel.isEmpty()) {
+				atomIDsToDel.deleteCharAt(atomIDsToDel.length() - 1);
+			}
 
 			// Now get rid of ids that need deleting. Move this code elsewhere, but put it here to try it.
 			db.atomBatchInit();
