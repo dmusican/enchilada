@@ -738,11 +738,9 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		// cluster center
 		if (dateTime != null)
 		{
-			int length = dateTime.length();
-			String newDate = dateTime.substring(0, length-2);
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			try {
-				time = df.parse(newDate);
+				time = df.parse(dateTime);
 			}
 			catch (ParseException pe)
 			{
