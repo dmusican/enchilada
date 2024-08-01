@@ -78,7 +78,7 @@ public class ClusterQuery extends Cluster {
 		super.assignAtomsToNearestCentroid(centroids, curs, (double)distance, true, false, true);
 		// ClusterQuery now saves its center atoms -- MM 2014
 		// this seems redundant, but it didn't save centroids until this line was added...
-		super.createCenterAtoms(centroids, subCollectionIDs);
+//		super.createCenterAtoms(centroids, subCollectionIDs);
 		return 0;
 	}
 	public boolean setCursorType(int type) 
