@@ -23,9 +23,8 @@ jobs:
           draft: true
           prerelease: false
           body: |
-            Fixed bug [Query](https://github.com/dmusican/enchilada/issues/17)
-            Fixed bug [Clustering results don't include...](https://github.com/dmusican/enchilada/issues/18)
-            Fixed bug [Aggregation of a collection...](https://github.com/dmusican/enchilada/issues/19)
+            Fixed bug [Cluster Query Issues](https://github.com/dmusican/enchilada/issues/20)
+            User interface change to help with  [Exporting a size histogram...](https://github.com/dmusican/enchilada/issues/21)
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish

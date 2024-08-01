@@ -80,7 +80,7 @@ public class SizeExportDialog extends JDialog implements ActionListener
 	public SizeExportDialog(SizeHistogramWindow sizeHistogramWindow) {
 		super (sizeHistogramWindow,"Export to CSV file", true);
 		this.parent = sizeHistogramWindow;
-		setSize(450,150);
+		setSize(600,150);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		JLabel csvFileLabel = new JLabel("." + EXPORT_FILE_EXTENSION + " File: ");
@@ -121,7 +121,7 @@ public class SizeExportDialog extends JDialog implements ActionListener
 		layout.putConstraint(SpringLayout.NORTH, csvFileField,
                 10, SpringLayout.NORTH, mainPanel);
 		layout.putConstraint(SpringLayout.WEST, csvDotDotDot,
-                375, SpringLayout.WEST, mainPanel);
+                500, SpringLayout.WEST, mainPanel);
 		layout.putConstraint(SpringLayout.NORTH, csvDotDotDot,
                 10, SpringLayout.NORTH, mainPanel);
 		layout.putConstraint(SpringLayout.WEST, binnedButton,
