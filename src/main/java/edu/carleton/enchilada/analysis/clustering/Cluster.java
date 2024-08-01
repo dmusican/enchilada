@@ -497,8 +497,10 @@ public abstract class Cluster extends CollectionDivider {
 							System.err.println(
 							"Problem creating sub collection");
 					}
+					int target = temp.subCollectionNum;
+					int collectionToBeParent = subCollectionIDs.get(target-1);
 					atomRows.add(new Database.BulkInsertAtomRow(thisParticleInfo.getID(),
-							temp.subCollectionNum));
+							collectionToBeParent));
 //					putInSubCollectionBatch(thisParticleInfo.getID(),
 //							temp.subCollectionNum);
 					System.out.println("putting in subcollectionbatch " + thisParticleInfo.getID() + " " + temp.subCollectionNum);
