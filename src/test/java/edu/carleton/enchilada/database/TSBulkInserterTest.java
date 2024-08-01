@@ -84,44 +84,46 @@ public class TSBulkInserterTest extends TestCase {
 			ins.commit();
 			// test it
 			Connection con = db.getCon();
-			PreparedStatement ps = con.prepareStatement(
-					"select atomid, time, value from timeseriesatominfodense where atomid = ?");
-			ResultSet rs;
-			
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(initialDate);
-			cal.set(Calendar.MILLISECOND, 0);
-			initialDate.setTime(cal.getTimeInMillis());
+			try (PreparedStatement ps = con.prepareStatement(
+					"select atomid, time, value from timeseriesatominfodense where atomid = ?")) {
 
-			ps.setInt(1, 22);
-			rs = ps.executeQuery();
-			assertTrue(rs.next());
-			assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
-			assertEquals(0f, rs.getFloat("value"));
-			if (data.size() > 1)
-			{
-				// check the middle one
-				int half = data.size() / 2;
-				cal.add(Calendar.SECOND, 30 * half);
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(initialDate);
+				cal.set(Calendar.MILLISECOND, 0);
 				initialDate.setTime(cal.getTimeInMillis());
 
-				ps.setInt(1, 22 + half);
-				rs = ps.executeQuery();
-				assertTrue(rs.next());
-				assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
-				assertEquals(0f + half, rs.getFloat("value"));
-				
-				// check the last one
-				cal.add(Calendar.SECOND, 30 * (data.size() - half - 1));
-				initialDate.setTime(cal.getTimeInMillis());
+				ps.setInt(1, 22);
+				try (ResultSet rs = ps.executeQuery()) {
+					assertTrue(rs.next());
+					assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
+					assertEquals(0f, rs.getFloat("value"));
+				}
 
-				ps.setInt(1, 22 + data.size() - 1);
-				rs = ps.executeQuery();
-				assertTrue(rs.next());
-				assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
-				assertEquals(0f + data.size() - 1, rs.getFloat("value"));
+				if (data.size() > 1) {
+					// check the middle one
+					int half = data.size() / 2;
+					cal.add(Calendar.SECOND, 30 * half);
+					initialDate.setTime(cal.getTimeInMillis());
+
+					ps.setInt(1, 22 + half);
+					try (ResultSet rs = ps.executeQuery()) {
+						assertTrue(rs.next());
+						assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
+						assertEquals(0f + half, rs.getFloat("value"));
+					}
+
+					// check the last one
+					cal.add(Calendar.SECOND, 30 * (data.size() - half - 1));
+					initialDate.setTime(cal.getTimeInMillis());
+
+					ps.setInt(1, 22 + data.size() - 1);
+					try (ResultSet rs = ps.executeQuery()) {
+						assertTrue(rs.next());
+						assertEquals(db.getDateFormat().format(initialDate), rs.getString("time"));
+						assertEquals(0f + data.size() - 1, rs.getFloat("value"));
+					}
+				}
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 			fail();

@@ -52,7 +52,7 @@ import edu.carleton.enchilada.analysis.BinnedPeakList;
  * @author andersbe
  *
  */
-public interface CollectionCursor {
+public interface CollectionCursor extends AutoCloseable {
 	public boolean next();
 	public ParticleInfo getCurrent();
 	public void close();

@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 /*
- * Basically, a HistList is an ArrayList that can be accessed by peak height
+ * Basically, a BinAddressableArrayList is an ArrayList that can be accessed by peak height
  * rather than integral index.  You tell it how wide an index will be, and
  * it does the rest.
  */

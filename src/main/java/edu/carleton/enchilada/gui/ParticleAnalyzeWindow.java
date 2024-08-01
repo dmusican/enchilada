@@ -238,8 +238,12 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		try {
 			String[] filesToCopy = {"pion-sigs.txt", "nion-sigs.txt", "run.bat", "spectrum.exe"};
 			for (String fileToCopy : filesToCopy) {
-				Files.copy(ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/" + fileToCopy),
-						labelingDir.resolve(fileToCopy), StandardCopyOption.REPLACE_EXISTING);
+				try (var fileToCopyStream =
+							 ParticleAnalyzeWindow.class.getResourceAsStream("/labeling/" + fileToCopy)) {
+                    assert fileToCopyStream != null;
+                    Files.copy(fileToCopyStream,
+							labelingDir.resolve(fileToCopy), StandardCopyOption.REPLACE_EXISTING);
+				}
 			}
 		} catch (IOException e) {
 			throw new ExceptionAdapter(e);
@@ -734,11 +738,9 @@ implements MouseMotionListener, MouseListener, ActionListener, KeyListener {
 		// cluster center
 		if (dateTime != null)
 		{
-			int length = dateTime.length();
-			String newDate = dateTime.substring(0, length-2);
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			try {
-				time = df.parse(newDate);
+				time = df.parse(dateTime);
 			}
 			catch (ParseException pe)
 			{

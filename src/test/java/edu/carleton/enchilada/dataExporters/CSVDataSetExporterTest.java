@@ -159,17 +159,17 @@ public class CSVDataSetExporterTest extends TestCase {
 		boolean result;
 		// let's make a big collection
 		Connection con = db.getCon();
-		Statement stmt = con.createStatement();
-		for (int i = 12; i < 140; i++)
-		{
-			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (" + i + ",'2003-09-02 17:30:38'," + i + ",0." + i + "," + i + ",'Orig file')\n");
-			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2," + i + ")\n");
-			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(" + i + ",2)\n");
+		try (Statement stmt = con.createStatement()) {
+			for (int i = 12; i < 140; i++) {
+				stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoDense VALUES (" + i + ",'2003-09-02 17:30:38'," + i + ",0." + i + "," + i + ",'Orig file')\n");
+				stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2," + i + ")\n");
+				stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(" + i + ",2)\n");
+			}
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-30,15,0.006,12)");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-20,15,0.006,12)");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,0,15,0.006,12)");
+			stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,20,15,0.006,12)");
 		}
-		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-30,15,0.006,12)");
-		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,-20,15,0.006,12)");
-		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,0,15,0.006,12)");
-		stmt.executeUpdate("INSERT INTO ATOFMSAtomInfoSparse VALUES(139,20,15,0.006,12)");
 		Collection coll = db.getCollection(2);
 		csvFile = File.createTempFile("test", ".csv");
 		result = exporter.exportToCSV(coll, csvFile.getPath(), 30);
@@ -188,7 +188,7 @@ public class CSVDataSetExporterTest extends TestCase {
 		assertEquals("0,0.00,0,0.00,0,0.00,0,0.00,0,0.00,0,15.00,", reader.readLine());
 		for (int i = 0; i < 30; i++)
 			reader.readLine();
-		assertEquals(null, reader.readLine());
+        assertNull(reader.readLine());
 	}
 
 	public void testHierarchyExport() throws Exception {

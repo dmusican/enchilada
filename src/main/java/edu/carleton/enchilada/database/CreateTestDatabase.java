@@ -62,16 +62,15 @@ public class CreateTestDatabase {
 		con = db.getCon();
 
 		generateDynamicTables();
-    		
-	    try {
 
-			Statement stmt = con.createStatement();
+		String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '2003-09-02 17:30:38', ?, ?, ?, ?)";
+	    try (Statement stmt = con.createStatement();
 			// Create a database with tables mirroring those in the 
 			// real one so we can test on that one and make sure we
 			// know what the results should be.
 			//stmt.executeUpdate("CREATE DATABASE TestDB");
-			String queryTemplate = "INSERT INTO ATOFMSAtomInfoDense VALUES (?, '2003-09-02 17:30:38', ?, ?, ?, ?)";
-			PreparedStatement pstmt = con.prepareStatement(queryTemplate);
+			PreparedStatement pstmt = con.prepareStatement(queryTemplate)) {
+
 			for (int i=1; i < 12; i++) {
 				pstmt.setInt(1, i);                         // atom id
 				pstmt.setInt(2, i);                         // laserpower
@@ -209,8 +208,7 @@ public class CreateTestDatabase {
 	 *
 	 */
 	public void generateDynamicTables() {
-		try {
-			Statement stmt = con.createStatement();
+		try (Statement stmt = con.createStatement()) {
 
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','DataSetID','INT',1,0,1)\n");
 			stmt.executeUpdate("INSERT INTO MetaData VALUES ('Datatype2','Time','DATETIME',0,0,2)\n");

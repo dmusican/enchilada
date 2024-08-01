@@ -2,12 +2,10 @@ package edu.carleton.enchilada.dataImporters;
 
 import junit.framework.TestCase;
 import java.io.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 import edu.carleton.enchilada.database.Database;
 import edu.carleton.enchilada.database.CreateTestDatabase;
@@ -108,57 +106,48 @@ public class TSImportTest extends TestCase {
 		System.out.println("Ended at   " + new Date());
 
 		// don't need to re-test TSBulkInserter here. just do a couple basics.
-		try {
-			int collectionID = 0;
-			Connection con = db.getCon();
-			PreparedStatement ps = con.prepareStatement(
+		Connection con = db.getCon();
+		int collectionID = 0;
+		try (PreparedStatement ps = con.prepareStatement(
 					"SELECT tsdense.AtomID, tsdense.Time, tsdense.Value, mem.CollectionID, coll.Name\n" +
 					"FROM TimeSeriesAtomInfoDense tsdense, \n" +
 					"AtomMembership mem, \n" +
 					"Collections coll \n" +
 					"WHERE tsdense.Time = ? and " +
 					"mem.AtomID = tsdense.AtomID and " +
-					"coll.CollectionID = mem.CollectionID");
+					"coll.CollectionID = mem.CollectionID")) {
 			SimpleDateFormat dForm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			ps.setString(1, dForm.format(firstParticleTime));
-			ResultSet rs = ps.executeQuery();
-			if (rs.next())
-			{
-				assertEquals("Inserted wrong value for first particle", rs.getInt("Value"), 0);
-				assertEquals("Inserted wrong collection name for first file", rs.getString("Name"), "Val");
-				collectionID = rs.getInt("CollectionID");
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					assertEquals("Inserted wrong value for first particle", rs.getInt("Value"), 0);
+					assertEquals("Inserted wrong collection name for first file", rs.getString("Name"), "Val");
+					collectionID = rs.getInt("CollectionID");
+				} else {
+					fail("Did not insert the correct time value for first particle");
+				}
 			}
-			else
-			{
-				fail("Did not insert the correct time value for first particle");
-			}
-			rs.close();
 
-			rs = con.createStatement().executeQuery(
+			try (Statement stmt = con.createStatement();
+				 ResultSet rs = stmt.executeQuery(
 					"SELECT count(*) \n" +
-					"FROM InternalAtomOrder " +
-					"WHERE CollectionID = " + collectionID);
-			if (rs.next())
-			{
-				assertEquals("Inserted the wrong number of particles into InternalAtomOrder", 5000, rs.getInt(1));
+							"FROM InternalAtomOrder " +
+							"WHERE CollectionID = " + collectionID)) {
+				if (rs.next()) {
+					assertEquals("Inserted the wrong number of particles into InternalAtomOrder", 5000, rs.getInt(1));
+				} else {
+					fail("Did not insert any values into InternalAtomOrder");
+				}
+				ps.setString(1, dForm.format(firstExcelParticleTime));
 			}
-			else
-			{
-				fail("Did not insert any values into InternalAtomOrder");
+
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					assertEquals("Inserted wrong value for first excel particle", rs.getInt("Value"), 0);
+				} else {
+					fail("Did not insert the correct time value for first excel particle");
+				}
 			}
-			ps.setString(1, dForm.format(firstExcelParticleTime));
-			rs.close();
-			rs = ps.executeQuery();
-			if (rs.next())
-			{
-				assertEquals("Inserted wrong value for first excel particle", rs.getInt("Value"), 0);
-			}
-			else
-			{
-				fail("Did not insert the correct time value for first excel particle");
-			}
-			rs.close();
-			ps.close();
 			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();

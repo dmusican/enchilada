@@ -91,9 +91,6 @@ import java.util.*;
  * Mass spectrum querying added by Michael Murphy, University of Toronto, 2013.
  */
 public abstract class Database {
-    private static final String accessDBURLPrefix = "jdbc:odbc:Driver={Microsoft Access Driver (*.mdb)};DBQ=";
-    private static final String accessDBURLSuffix = ";READONLY=false}";
-
     protected Connection con;
     protected String url;
     protected String port;
@@ -117,9 +114,9 @@ public abstract class Database {
     private int randomSeed = 0;
 
     /**
-     * Construct an instance of either SQLServerDatabase or MySQLDatabase
+     * Construct an instance of database
      *
-     * @param dbname the name of the database to use (SpASMSdb, TestDB, etc)
+     * @param dbName the name of the database to use (SpASMSdb, TestDB, etc)
      * @return an InfoWarehouse backed by a relational database
      */
     public static Database getDatabase(String dbName) {
@@ -131,7 +128,7 @@ public abstract class Database {
     }
 
     /**
-     * Construct an instance of either SQLServerDatabase or MySQLDatabase
+     * Construct an instance of database
      *
      * @return an InfoWarehouse backed by a relational database
      */
@@ -181,36 +178,7 @@ public abstract class Database {
     }
 
     /**
-     * Find if the database is present
-     *
-     * @param command the SQL to get a list of databases
-     * @return true if present
-     */
-    protected boolean isPresentImpl(String command) {
-        boolean foundDatabase = false;
-        String testdb = database;
-        try {
-            database = "";
-            openConnectionNoDB();
-            Connection con = getCon();
-
-            // See if database exists.
-            try (Statement stmt = con.createStatement();
-                 ResultSet rs = stmt.executeQuery(command)) {
-                while (!foundDatabase && rs.next()) {
-                    if (rs.getString(1).equalsIgnoreCase(testdb))
-                        foundDatabase = true;
-                }
-            }
-        } catch (SQLException e) {
-            ErrorLogger.displayException(null, "Error in testing if " + testdb + " is present.");
-        }
-        database = testdb;
-        return foundDatabase;
-    }
-
-    /**
-     * Retrieve the {@link java.sql.Connection Connection} for this database
+     * Retrieve the {@link Connection Connection} for this database
      */
     public Connection getCon() {
         return con;
@@ -229,10 +197,6 @@ public abstract class Database {
         try {
             con = DriverManager.getConnection(connectionstr, user, pass);
             con.setAutoCommit(true);
-            //ResultSet rs = con.createStatement().executeQuery("SELECT db_name()");
-            //rs.next();
-            //System.out.println("use database: "+rs.getString(1));
-
         } catch (Exception e) {
             ErrorLogger.writeExceptionToLogAndPrompt("Database", "Failed to establish a connection to " + database);
             System.err.println("Failed to establish a connection to database");
@@ -298,179 +262,6 @@ public abstract class Database {
             Collection collection,
             int datasetID, int nextID, boolean importing);
 
-    /**
-     * Abstract representation of something that adds and executes batches.
-     * Used since SQL Server can execute batches more quickly with StringBuilders -
-     * but these are incompatible in MySQL.
-     *
-     * @author shaferia
-     */
-    protected abstract class BatchExecuter {
-        protected Statement stmt;
-
-        /**
-         * Create a BatchExecuter that will add to the given statement
-         *
-         * @param stmt the statement to add SQL to
-         */
-        public BatchExecuter(Statement stmt) {
-            this.stmt = stmt;
-        }
-
-        /**
-         * Add an SQL string to the statement
-         *
-         * @param sql the query to add
-         */
-        public abstract void append(String sql) throws SQLException;
-
-        /**
-         * Execute all SQL held in this BatchExecuter
-         */
-        public abstract void execute() throws SQLException;
-    }
-
-    protected abstract class Inserter {
-        protected BatchExecuter stmt;
-        protected String table;
-
-        public Inserter(BatchExecuter stmt, String table) {
-            this.stmt = stmt;
-            this.table = table;
-        }
-
-        /**
-         * Add values to the series of INSERT commands or bulk file that
-         * this Inserter will insert
-         *
-         * @param values the delimited set of values to insert
-         * @throws SQLException
-         */
-        public abstract void append(String values) throws SQLException;
-
-        /**
-         * @return free any resources used by this Inserter
-         */
-        public abstract void close();
-
-        /**
-         * Get rid of any files or other system stuff we've created.
-         */
-        public abstract void cleanUp();
-    }
-
-    /**
-     * Executes bulk insert statements using bulk files
-     *
-     * @author shaferia
-     */
-    protected abstract class BulkInserter extends Inserter {
-        protected File tempFile;
-        protected BufferedWriter file;
-
-        public BulkInserter(BatchExecuter stmt, String table) {
-            super(stmt, table);
-            try {
-                //tempFile = File.createTempFile("bulkfile", ".txt");
-                tempFile = new File("TEMP" + File.separator + "bulkfile" + ".txt");
-                tempFile.deleteOnExit();
-                file = new BufferedWriter(new FileWriter(tempFile));
-            } catch (IOException ex) {
-                System.err.println("Couldn't create bulk file " + tempFile.getAbsolutePath() + "" +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-            try {
-                stmt.append(getBatchSQL());
-            } catch (SQLException ex) {
-                System.err.println("Couldn't attach bulk SQL for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        /**
-         * @return the SQL string needed to import the batch file
-         */
-        protected abstract String getBatchSQL();
-
-        public void append(String values) throws SQLException {
-            try {
-                file.write(values);
-                file.newLine();
-            } catch (IOException ex) {
-                throw new SQLException("Couldn't write to file: " + tempFile.getAbsolutePath());
-            }
-        }
-
-        public void close() {
-            try {
-                file.close();
-            } catch (IOException ex) {
-                System.err.println("Couldn't close bulk file " + tempFile.getAbsolutePath() +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public void cleanUp() {
-            tempFile.delete();
-        }
-    }
-
-    /**
-     * Basic BulkBucket class to construct a flat file and to prepare statement for Bulk Inserting.
-     *
-     * @author SLH
-     */
-    public class BulkBucket {
-        protected BufferedWriter file;
-        protected String table;
-        protected File tempFile;
-
-        public BulkBucket(String tableName) throws SQLException {
-
-            table = tableName;
-
-            try {
-                tempFile = File.createTempFile(table, ".txt");
-//				tempFile = new File("TEMP"+File.separator+"table"+".txt");
-                tempFile.deleteOnExit();
-                System.out.println(tempFile);
-                file = new BufferedWriter(new FileWriter(tempFile));
-            } catch (IOException ex) {
-                System.err.println("Couldn't create bulk file " + table +
-                                           ".txt for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public void append(String values) throws SQLException {
-            try {
-                file.write(values);
-                file.newLine();
-            } catch (IOException ex) {
-                throw new SQLException("Couldn't write to file: " + tempFile.getAbsolutePath());
-            }
-        }
-
-        public void close() {
-            try {
-                file.close();
-            } catch (IOException ex) {
-                System.err.println("Couldn't close bulk file " + tempFile.getAbsolutePath() +
-                                           " for table " + table);
-                ex.printStackTrace();
-            }
-        }
-
-        public String sqlCmd() {
-            return "BULK INSERT " + table + " FROM '" + tempFile.getAbsolutePath() + "' WITH (FIELDTERMINATOR=',')\n";
-        }
-
-        public void cleanUp() {
-            tempFile.delete();
-        }
-    }
 
     /**
      * Data_bulkBucket class constructs mutiple flat files for Bulk Inserting AMS/ATOFMS/Time Series particle data.
@@ -478,182 +269,217 @@ public abstract class Database {
      *
      * @author SLH
      */
-    public class Data_bulkBucket implements AutoCloseable {
+
+    private record ATOFMSAtomInfoDenseRow(int atomId, String timestamp, double laserPower,
+                                          double size, int scatDelay, String origFilename) {}
+    private record ATOFMSAtomInfoSparseRow(int atomId, double peakLocation, int peakArea,
+                                           double relPeakArea, int peakHeight) {}
+    private record AMSAtomInfoDenseRow(int atomId, String timestamp) {}
+    private record AMSAtomInfoSparseRow(int atomId, double peakLocation, double relPeakArea) {}
+    private record AtomMembershipRow(int collectionId, int atomId) {}
+    private record DataSetMembersRow(int origDatasetId, int atomId) {}
+    private record InternalAtomOrderRow(int atomId, int collectionId) {}
+
+    public class BulkInserter {
         String[] tables;
-        PreparedStatement[] buckets;
+        ArrayList<ATOFMSAtomInfoDenseRow> ATOFMSAtomInfoDenseRows = new ArrayList<>();
+        ArrayList<ATOFMSAtomInfoSparseRow> ATOFMSAtomInfoSparseRows = new ArrayList<>();
+        ArrayList<AMSAtomInfoDenseRow> AMSAtomInfoDenseRows = new ArrayList<>();
+        ArrayList<AMSAtomInfoSparseRow> AMSAtomInfoSparseRows = new ArrayList<>();
+        ArrayList<AtomMembershipRow> AtomMembershipRows = new ArrayList<>();
+        ArrayList<DataSetMembersRow> DataSetMembersRows = new ArrayList<>();
+        ArrayList<InternalAtomOrderRow> InternalAtomOrderRows = new ArrayList<>();
 
-        public Data_bulkBucket(String[] tables) {
-
+        public BulkInserter(String[] tables) {
             this.tables = tables;
-            buckets = new PreparedStatement[tables.length];
-
-            try {
-                for (int i = 0; i < tables.length; i++)
-                    if (tables[i].equals("ATOFMSAtomInfoDense"))
-                        buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoDense VALUES(?,?,?,?,?,?);");
-                    else if (tables[i].equals("ATOFMSAtomInfoSparse"))
-                        buckets[i] = con.prepareStatement("INSERT INTO ATOFMSAtomInfoSparse VALUES(?,?,?,?,?);");
-                    else if (tables[i].equals("AMSAtomInfoDense"))
-                        buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoDense VALUES(?,?);");
-                    else if (tables[i].equals("AMSAtomInfoSparse"))
-                        buckets[i] = con.prepareStatement("INSERT INTO AMSAtomInfoSparse VALUES(?,?,?);");
-                    else if (tables[i].equals("AtomMembership"))
-                        buckets[i] = con.prepareStatement("INSERT INTO AtomMembership VALUES(?,?);");
-                    else if (tables[i].equals("DataSetMembers"))
-                        buckets[i] = con.prepareStatement("INSERT INTO DataSetMembers VALUES(?,?);");
-                    else if (tables[i].equals("InternalAtomOrder"))
-                        buckets[i] = con.prepareStatement("INSERT INTO InternalAtomOrder VALUES(?,?);");
-                    else
-                        throw new UnsupportedOperationException("Unknown type of data: " + tables[i]);
-            } catch (SQLException e) {
-                throw new ExceptionAdapter(e);
-            }
         }
 
-        public void executeBuckets() {
-            try {
-                con.setAutoCommit(false);
-                for (PreparedStatement bucket : buckets)
-                    bucket.executeBatch();
-                con.commit();
-                con.setAutoCommit(true);
-            } catch (SQLException throwables) {
-                throw new ExceptionAdapter(throwables);
-            }
-        }
+        /**
+         * saveDataParticle takes a string of dense info, a string of sparse info,
+         * the collection, the datasetID and the nextID to prepare for bulk insertion
+         *
+         * @param dense      - string of dense info
+         * @param sparse     - string of sparse info
+         * @param collection - current collection
+         * @param datasetID  - current datasetID
+         * @param nextID     - next ID
+         */
+        public void queueInsertion(String dense, ArrayList<String> sparse,
+                                     Collection collection, int datasetID, int nextID) {
+            String commaDelimitedRegex = "\\s*,\\s*";
 
-        public void close() {
-            try {
-                for (int i = 0; i < tables.length; i++)
-                    buckets[i].close();
-            } catch (SQLException e) {
-                throw new ExceptionAdapter(e);
-            }
-        }
-    }
-
-
-    /**
-     * @param the names of the database tables for different type of particle data
-     * @return Data_bulkBucket
-     * @author SLH
-     */
-    public Data_bulkBucket getDatabulkBucket(String[] tables) {
-        return new Data_bulkBucket(tables);
-    }
-
-    /**
-     * BulkInsertDataParticles executes the particle data bulk insertion batch statements
-     *
-     * @param bigBucket - Data_bulkBucket object holding different datatype of particle data
-     * @return
-     * @author SLH
-     */
-    public void BulkInsertDataParticles(Data_bulkBucket bigBucket) {
-        bigBucket.executeBuckets();
-    }
-
-    /**
-     * saveDataParticle takes a string of dense info, a string of sparse info,
-     * the collection, the datasetID and the nextID and Prepare temporary files
-     * for bulk insertion into the dynamic tables based on the collection's datatype.
-     *
-     * @param dense      - string of dense info
-     * @param sparse     - string of sparse info
-     * @param collection - current collection
-     * @param datasetID  - current datasetID
-     * @param nextID     - next ID
-     * @return nextID if successful
-     * @author SLH
-     */
-    public int saveDataParticle(
-            String dense, ArrayList<String> sparse,
-            Collection collection,
-            int datasetID, int nextID, Data_bulkBucket bigBucket) {
-        int num_tables = bigBucket.tables.length;
-        String commaDelimitedRegex = "\\s*,\\s*";
-        try {
-            for (int i = 0; i < num_tables; i++) {
-                PreparedStatement bucket = bigBucket.buckets[i];
-                if (bigBucket.tables[i].equals("ATOFMSAtomInfoDense")) {
-                    String[] delimitedValues = dense.split(commaDelimitedRegex);
-                    bucket.setInt(1, nextID);                                    // atomid
-                    bucket.setString(2, delimitedValues[0]);                         // timestamp
-                    bucket.setDouble(3, Double.parseDouble(delimitedValues[1]));     // laserpower
-                    bucket.setDouble(4, Double.parseDouble(delimitedValues[2]));     // size
-                    bucket.setInt(5, Integer.parseInt(delimitedValues[3]));          // scatdelay
-                    bucket.setString(6, delimitedValues[4]);                         // origfilename
-                    bucket.addBatch();
-                } else if (bigBucket.tables[i].equals("ATOFMSAtomInfoSparse")) {
-                    for (String row : sparse) {
-                        String[] delimitedValues = row.split(commaDelimitedRegex);
-                        bucket.setInt(1, nextID);                                    // atomid
-                        bucket.setDouble(2, Double.parseDouble(
-                                delimitedValues[0]));                         // peaklocation
-                        bucket.setInt(3, Integer.parseInt(delimitedValues[1]));     // peakarea
-                        bucket.setDouble(4, Double.parseDouble(delimitedValues[2]));     // relpeakarea
-                        bucket.setInt(5, Integer.parseInt(delimitedValues[3]));          // peakheight
-                        bucket.addBatch();
+            for (String table : tables) {
+                switch (table) {
+                    case "ATOFMSAtomInfoDense" -> {
+                        String[] delimitedValues = dense.split(commaDelimitedRegex);
+                        ATOFMSAtomInfoDenseRows.add(new ATOFMSAtomInfoDenseRow(
+                                nextID,
+                                delimitedValues[0],
+                                Double.parseDouble(delimitedValues[1]),
+                                Double.parseDouble(delimitedValues[2]),
+                                Integer.parseInt(delimitedValues[3]),
+                                delimitedValues[4]));
                     }
-                } else if (bigBucket.tables[i].equals("AMSAtomInfoDense")) {
-                    String[] delimitedValues = dense.split(commaDelimitedRegex);
-                    bucket.setInt(1, nextID);                // atom id
-                    bucket.setString(2, delimitedValues[0]);     // timestamp
-                    bucket.addBatch();
-                } else if (bigBucket.tables[i].equals("AMSAtomInfoSparse")) {
-                    for (String row : sparse) {
-                        String[] delimitedValues = row.split(commaDelimitedRegex);
-                        bucket.setInt(1, nextID);                                       // atomid
-                        bucket.setDouble(2, Double.parseDouble(delimitedValues[0]));    // peaklocation
-                        bucket.setDouble(3, Double.parseDouble(delimitedValues[1]));    // relpeakarea
-                        bucket.addBatch();
+                    case "ATOFMSAtomInfoSparse" -> {
+                        for (String row : sparse) {
+                            String[] delimitedValues = row.split(commaDelimitedRegex);
+                            ATOFMSAtomInfoSparseRows.add(new ATOFMSAtomInfoSparseRow(
+                                    nextID,
+                                    Double.parseDouble(delimitedValues[0]),
+                                    Integer.parseInt(delimitedValues[1]),
+                                    Double.parseDouble(delimitedValues[2]),
+                                    Integer.parseInt(delimitedValues[3])));
+                        }
                     }
-                } else if (bigBucket.tables[i].equals("AtomMembership")) {
-                    bucket.setInt(1, collection.getCollectionID());
-                    bucket.setInt(2, nextID);
-                    bucket.addBatch();
-                } else if (bigBucket.tables[i].equals("DataSetMembers")) {
-                    bucket.setInt(1, datasetID);
-                    bucket.setInt(2, nextID);
-                    bucket.addBatch();
-                } else if (bigBucket.tables[i].equals("InternalAtomOrder")) {
-                    bucket.setInt(1, nextID);
-                    bucket.setInt(2, collection.getCollectionID());
-                    bucket.addBatch();
-                } else {
-                    throw new UnsupportedOperationException();
+                    case "AMSAtomInfoDense" -> {
+                        String[] delimitedValues = dense.split(commaDelimitedRegex);
+                        AMSAtomInfoDenseRows.add(new AMSAtomInfoDenseRow(
+                                nextID,
+                                delimitedValues[0]));
+                    }
+                    case "AMSAtomInfoSparse" -> {
+                        for (String row : sparse) {
+                            String[] delimitedValues = row.split(commaDelimitedRegex);
+                            AMSAtomInfoSparseRows.add(new AMSAtomInfoSparseRow(
+                                    nextID,
+                                    Double.parseDouble(delimitedValues[0]),
+                                    Double.parseDouble(delimitedValues[1])));
+                        }
+                    }
+                    case "AtomMembership" -> {
+                        AtomMembershipRows.add(new AtomMembershipRow(
+                                collection.getCollectionID(),
+                                nextID));
+                    }
+                    case "DataSetMembers" -> {
+                        DataSetMembersRows.add(new DataSetMembersRow(
+                                datasetID,
+                                nextID));
+                    }
+                    case "InternalAtomOrder" -> {
+                        InternalAtomOrderRows.add(new InternalAtomOrderRow(
+                                nextID,
+                                collection.getCollectionID()));
+                    }
+                    default -> {
+                        throw new UnsupportedOperationException();
+                    }
                 }
             }
 
-        } catch (SQLException e) {
-            ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                     "SQL Exception inserting atom.  Please check incoming data for correct format.");
-            System.err.println("Exception inserting particle.");
-            e.printStackTrace();
-
-            return -1;
-        }
-        return nextID;    // this is ignored.
-    }
-
-    /**
-     * Executes bulk insert statements with a sequence of INSERTs.
-     *
-     * @author shaferia
-     */
-    protected class BatchInserter extends Inserter {
-        public BatchInserter(BatchExecuter stmt, String table) {
-            super(stmt, table);
         }
 
-        public void append(String values) throws SQLException {
-            stmt.append("INSERT INTO " + table + " VALUES(" + values + ")");
+        private void commitBatch(Statement stmt) {
+            try {
+                con.setAutoCommit(false);
+                stmt.executeBatch();
+                con.commit();
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new ExceptionAdapter(e);
+            }
         }
-
-        public void close() {
-        }
-
-        public void cleanUp() {
+        public void executeBatch() {
+            try {
+                for (String table : tables) {
+                    switch (table) {
+                        case "ATOFMSAtomInfoDense" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO ATOFMSAtomInfoDense VALUES(?,?,?,?,?,?);")) {
+                                for (ATOFMSAtomInfoDenseRow row : ATOFMSAtomInfoDenseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setString(2, row.timestamp);
+                                    stmt.setDouble(3, row.laserPower);
+                                    stmt.setDouble(4, row.size);
+                                    stmt.setInt(5, row.scatDelay);
+                                    stmt.setString(6, row.origFilename);
+                                    stmt.addBatch();
+                                }
+                                ATOFMSAtomInfoDenseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "ATOFMSAtomInfoSparse" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO ATOFMSAtomInfoSparse VALUES(?,?,?,?,?);")) {
+                                for (ATOFMSAtomInfoSparseRow row : ATOFMSAtomInfoSparseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setDouble(2, row.peakLocation);
+                                    stmt.setInt(3, row.peakArea);
+                                    stmt.setDouble(4, row.relPeakArea);
+                                    stmt.setInt(5, row.peakHeight);
+                                    stmt.addBatch();
+                                }
+                                ATOFMSAtomInfoSparseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AMSAtomInfoDense" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AMSAtomInfoDense VALUES(?,?);")) {
+                                for (AMSAtomInfoDenseRow row : AMSAtomInfoDenseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setString(2, row.timestamp);
+                                    stmt.addBatch();
+                                }
+                                AMSAtomInfoDenseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AMSAtomInfoSparse" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AMSAtomInfoSparse VALUES(?,?,?);")) {
+                                for (AMSAtomInfoSparseRow row : AMSAtomInfoSparseRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setDouble(2, row.peakLocation);
+                                    stmt.setDouble(3, row.relPeakArea);
+                                    stmt.addBatch();
+                                }
+                                AMSAtomInfoSparseRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "AtomMembership" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO AtomMembership VALUES(?,?);")) {
+                                for (AtomMembershipRow row : AtomMembershipRows) {
+                                    stmt.setInt(1, row.collectionId);
+                                    stmt.setInt(2, row.atomId);
+                                    stmt.addBatch();
+                                }
+                                AtomMembershipRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "DataSetMembers" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO DataSetMembers VALUES(?,?);")) {
+                                for (DataSetMembersRow row : DataSetMembersRows) {
+                                    stmt.setInt(1, row.origDatasetId);
+                                    stmt.setInt(2, row.atomId);
+                                    stmt.addBatch();
+                                }
+                                DataSetMembersRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                        case "InternalAtomOrder" -> {
+                            try (PreparedStatement stmt = con.prepareStatement(
+                                    "INSERT INTO InternalAtomOrder VALUES(?,?);")) {
+                                for (InternalAtomOrderRow row : InternalAtomOrderRows) {
+                                    stmt.setInt(1, row.atomId);
+                                    stmt.setInt(2, row.collectionId);
+                                    stmt.addBatch();
+                                }
+                                InternalAtomOrderRows = new ArrayList<>();
+                                commitBatch(stmt);
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                throw new ExceptionAdapter(e);
+            }
         }
     }
 
@@ -728,14 +554,9 @@ public abstract class Database {
         Database blankDb = Database.getDatabase("");
         try {
             blankDb.openConnectionNoDB();
-            Statement stmt = blankDb.getCon().createStatement();
-            //TODO-POSTGRES
-            //stmt.executeUpdate("create database " + dbName);
-            stmt.executeUpdate("create database \"" + dbName + "\"");
-            //String sql = "ALTER DATABASE "+dbName+" SET RECOVERY SIMPLE";
-            //stmt.executeUpdate(sql);
-            //TODO-POSTGRES
-            stmt.close();
+            try (Statement stmt = blankDb.con.createStatement()) {
+                stmt.executeUpdate("create database \"" + dbName + "\"");
+            }
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(blankDb.getName(), "Error rebuilding database.");
             System.err.println("Error in rebuilding database.");
@@ -753,7 +574,6 @@ public abstract class Database {
      */
     public static boolean dropDatabase(String dbName) {
         Database db = null;
-        Connection con = null;
 
         // Connect to SQL Server independent of a particular database,
         // and drop and add the database.
@@ -848,57 +668,6 @@ public abstract class Database {
 
         return indexed;
     }
-
-    /**
-     * Returns the adjacent atom for the collection, according to InternalAtomOrder.
-     * @param collection    The ID of the collection under scrutiny.
-     * @param currentID        The current atom's ID.
-     * @param position        1 for next atomID, -1 for previous atomID.
-     * @return index[0] The ID of the adjacent atom in the collection.
-     * 			index[1] The position of the adjacent atom in the collection.
-     */
-// COMMENTED OUT BECAUSE WE DON'T USE THIS FOR ANYTHING AND IT'S NOT RELIABLE ANYWAY - jtbigwoo
-//	public int[] getAdjacentAtomInCollection(int collection, int currentID, int position){
-//		int nextID = -99;
-//		int pos = -77;
-//		String query = "";
-//		//have to deal with which window ("page" of collection) we're starting in
-//		int startingID = getFirstAtomInCollection(getCollection(collection));
-//
-//		//we want the starting id of the window in which this atom lives
-//		int i = currentID / 1000;
-//		for (int j = 0; j<i; j++)
-//			if ( !((startingID + 1000) >= currentID) )
-//				startingID +=1000;
-//
-//		//if looking for previous atom
-//		if (position <0){
-//			query = "SELECT MAX(AtomID) FROM InternalAtomOrder " +
-//			"WHERE (CollectionID = " + collection + ") AND (AtomID < " +
-//			currentID + ")";
-//		} else if (position >0){	//if looking for next atom
-//			query = "SELECT MIN(AtomID)FROM InternalAtomOrder " +
-//			"WHERE (CollectionID = " + collection + ") AND (AtomID > " +
-//			currentID + ")";
-//		}
-//
-//		Statement stmt;
-//		try {
-//			stmt = con.createStatement();
-//			ResultSet rs = stmt.executeQuery(query);
-//			rs.next();
-//			if (rs.getInt(1) > 0){
-//				nextID = rs.getInt(1);
-//				pos = ((nextID - startingID)+1); //calculate the row number
-//			}
-//			stmt.close();
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//		return new int[]{nextID, pos};
-//	}
 
     /**
      * @param atomID
@@ -1110,8 +879,8 @@ public abstract class Database {
             while (!allSubChildren.isEmpty()) {
                 int nextParent = allSubChildren.get(0);
                 if (completeHierarchy.containsKey(nextParent)) {
-                    subHierarchy.put(nextParent, completeHierarchy.get(new Integer(nextParent)));
-                    allSubChildren.addAll(completeHierarchy.get(new Integer(nextParent)));
+                    subHierarchy.put(nextParent, completeHierarchy.get(nextParent));
+                    allSubChildren.addAll(completeHierarchy.get(nextParent));
                 }
                 allSubChildren.remove(0);
             }
@@ -1266,43 +1035,11 @@ public abstract class Database {
         return returnVals;
     }
 
-    /**
-     * Create a new collection from an array list of atomIDs which
-     * have yet to be inserted into the database.  Not used as far as
-     * I can tell.
-     *
-     * @param parentID    The key of the parent to insert this
-     * 					collection (0 to insert at root level)
-     * @param name        What to call this collection
-     * @param datatype  collection's datatype
-     * @param comment    What to leave as the comment
-     * @param atomType    The type of atoms you are inserting ("ATOFMSParticle" most likely
-     * @param atomList    An array list of atomID's to insert into the
-     * 					database
-     * @return The CollectionID of the new collection, -1 for
-     * 					failure.
-     *//*
-	 public int createCollectionFromAtoms( String datatype,
-	 int parentID,
-	 String name,
-	 String comment,
-	 ArrayList<String> atomList)
-	 {
-	 int collectionID = createEmptyCollection(datatype,
-	 parentID,
-	 name,
-	 comment,"");
-	 Collection collection = getCollection(collectionID);
-	 if (!insertAtomicList(datatype, atomList,collection))
-	 return -1;
-	 return collectionID;
-	 }*/
-
     /* Copy and Move Collections */
 
     /**
-     * @param collectionID The collection id of the collection to move.
-     * @param toParentID   The collection id of the new parent.
+     * @param collection The collection id of the collection to move.
+     * @param toCollection   The collection id of the new parent.
      * @return The collection id of the copy.
      * @author steinbel - altered method Oct. 2006
      * Similar to moveCollection, except instead of removing the
@@ -1370,8 +1107,8 @@ public abstract class Database {
     }
 
     /**
-     * @param collectionID The collection id of the collection to move.
-     * @param toParentID   The collection id of the new parent.
+     * @param collection The collection id of the collection to move.
+     * @param toCollection   The collection id of the new parent.
      * @return True on success.
      * @author steinbel - altered Oct. 2006
      * <p>
@@ -1501,8 +1238,8 @@ public abstract class Database {
             e.printStackTrace();
             return false;
         }
-        if (!alteredCollections.contains(new Integer(parentID)))
-            alteredCollections.add(new Integer(parentID));
+        if (!alteredCollections.contains(parentID))
+            alteredCollections.add(parentID);
         return true;
     }
 
@@ -1560,7 +1297,7 @@ public abstract class Database {
      * the ownership of all its children (collections and atoms) to
      * their grandparent collection.
      *
-     * @param collectionID The ID of the collection to remove.
+     * @param collection The ID of the collection to remove.
      * @return true on success.
      */
     public boolean orphanAndAdopt(Collection collection) {
@@ -1855,42 +1592,6 @@ public abstract class Database {
     }
 
     /**
-     * adds a move-atom call to a batch statement.
-     * @return true if successful
-     *
-     * NOT USED AS OF 12/05
-
-    public boolean moveAtomBatch(int atomID, int fromParentID, int toParentID)
-    {
-    if (toParentID == 0)
-    {
-    System.err.println("Cannot move atoms to the root " +
-    "collection.");
-    return false;
-    }
-
-    try {
-    Statement stmt = con.createStatement();
-    //System.out.println("AtomID: " + atomID + " from: " +
-    //		fromParentID + " to: " + toParentID);
-    stmt.addBatch(
-    "UPDATE AtomMembership\n" +
-    "SET CollectionID = " + toParentID + "\n" +
-    "WHERE AtomID = " + atomID + " AND CollectionID = " +
-    fromParentID);
-    stmt.close();
-    } catch (SQLException e) {
-    new ExceptionDialog("SQL Exception updating AtomMembership table.");
-    System.err.println("Exception updating membership table");
-    e.printStackTrace();
-    }
-    return true;
-    }
-     */
-
-    /* Atom Batch Init and Execute */
-
-    /**
      * initializes atom batches for moving atoms and adding atoms.
      */
     public void atomBatchInit() {
@@ -1935,6 +1636,68 @@ public abstract class Database {
             e.printStackTrace();
         }
     }
+
+    public record BulkInsertAtomRow (int atomId, int parentId) {};
+
+    public void bulkInsertAtom(List<BulkInsertAtomRow> bulkInsertAtomRows) {
+        try (PreparedStatement bulkInsertStatementAtomMembership =
+                con.prepareStatement("INSERT INTO AtomMembership VALUES (?, ?)");
+             PreparedStatement bulkInsertStatementInternalAtomOrder =
+                con.prepareStatement("INSERT INTO InternalAtomOrder VALUES (?, ?)");) {
+            ArrayList<Integer> alteredCollections = new ArrayList<>();
+
+            for (BulkInsertAtomRow row : bulkInsertAtomRows) {
+                if (!alteredCollections.contains(row.parentId))
+                    alteredCollections.add(row.parentId);
+
+                bulkInsertStatementAtomMembership.setInt(1, row.parentId);
+                bulkInsertStatementAtomMembership.setInt(2, row.atomId);
+                bulkInsertStatementAtomMembership.addBatch();
+
+                bulkInsertStatementInternalAtomOrder.setInt(1, row.atomId);
+                bulkInsertStatementInternalAtomOrder.setInt(2, row.parentId);
+                bulkInsertStatementInternalAtomOrder.addBatch();
+            }
+
+
+            long time = System.currentTimeMillis();
+            beginTransaction();
+            bulkInsertStatementAtomMembership.executeBatch();
+            commitTransaction();
+            beginTransaction();
+            bulkInsertStatementInternalAtomOrder.executeBatch();
+            commitTransaction();
+
+            System.out.println("Time: " + (System.currentTimeMillis() - time));
+            System.out.println("done inserting now time for altering collections");
+
+            time = System.currentTimeMillis();
+            System.out.println("alteredCollections.size() " + alteredCollections.size());
+            for (Integer alteredCollection : alteredCollections)
+                updateInternalAtomOrder(getCollection(alteredCollection));
+
+            //when the parents of all the altered collections are the same
+            //don't need to update the parent FOR EACH subcollection, just at end
+            ArrayList<Collection> parents = new ArrayList<Collection>();
+            Collection temp;
+            for (Integer alteredCollection : alteredCollections) {
+                temp = getCollection(alteredCollection).getParentCollection();
+                if (!parents.contains(temp))
+                    parents.add(temp);
+            }
+            //only update each distinct parent once
+            for (Collection parent : parents) updateAncestors(parent);
+            if (batchStatement != null) {
+                batchStatement.close();
+            }
+
+        } catch (SQLException e) {
+            throw new ExceptionAdapter(e);
+        }
+
+
+    }
+
 
     /**
      * Initializes atom batches for moving atoms and adding atoms.
@@ -2228,16 +1991,7 @@ public abstract class Database {
      * gets all the atoms underneath the given collection.
      */
     public ArrayList<Integer> getAllDescendedAtoms(Collection collection) {
-        ArrayList<Integer> results = new ArrayList<Integer>(1000);
-        try (ResultSet rs = getAllAtomsRS(collection)) {
-            while (rs.next())
-                results.add(rs.getInt(1));
-        } catch (SQLException e) {
-            ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving children of the collection.");
-            System.err.println("Error retrieving children.");
-            e.printStackTrace();
-        }
-        return results;
+        return getAllAtomsRS(collection);
     }
 
     /**
@@ -2271,43 +2025,12 @@ public abstract class Database {
         // Construct a set of all collections that descend from this one,
         // including this one.
         ArrayList<Integer> lookUpNext = new ArrayList<Integer>();
-        boolean status = lookUpNext.add(new Integer(collectionID));
+        boolean status = lookUpNext.add(collectionID);
         assert status : "lookUpNext queue full";
 
         Set<Integer> descCollections = new HashSet<Integer>();
         if (includeTopLevel)
-            descCollections.add(new Integer(collectionID));
-
-        // As long as there is at least one collection to lookup, find
-        // all subchildren for all of these collections. Add them to the
-        // set of all collections we have visited and plan to visit
-        // then next time (if we haven't). (This is essentially a breadth
-        // first search on the graph of collection relationships).
-        while (!lookUpNext.isEmpty()) {
-            ArrayList<Integer> subChildren =
-                    getImmediateSubCollections(lookUpNext);
-            lookUpNext.clear();
-            for (Integer col : subChildren)
-                if (!descCollections.contains(col)) {
-                    descCollections.add(col);
-                    lookUpNext.add(col);
-                }
-        }
-
-        return descCollections;
-    }
-
-    public Set<Integer> getAllDescendantCollectionsNew(int collectionID, boolean includeTopLevel) {
-
-        // Construct a set of all collections that descend from this one,
-        // including this one.
-        ArrayList<Integer> lookUpNext = new ArrayList<Integer>();
-        boolean status = lookUpNext.add(new Integer(collectionID));
-        assert status : "lookUpNext queue full";
-
-        Set<Integer> descCollections = new HashSet<Integer>();
-        if (includeTopLevel)
-            descCollections.add(new Integer(collectionID));
+            descCollections.add(collectionID);
 
         // As long as there is at least one collection to lookup, find
         // all subchildren for all of these collections. Add them to the
@@ -2341,22 +2064,20 @@ public abstract class Database {
      * @param collection
      * @return - resultset
      */
-    public ResultSet getAllAtomsRS(Collection collection) {
-        ResultSet returnThis = null;
-        try {
-            Statement stmt = con.createStatement();
-            returnThis = stmt.executeQuery("SELECT AtomID " +
+    public ArrayList<Integer> getAllAtomsRS(Collection collection) {
+        ArrayList<Integer> atoms = new ArrayList<>();
+        try (Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT AtomID " +
                                                    "FROM InternalAtomOrder WHERE CollectionID = " +
-                                                   collection.getCollectionID() + " ORDER BY AtomID");
-            //NOTE: Atoms are already ordered by AtomID, and this might be
-            // redundant.  If needed, you can take this out to optimize and
-            // only order when needed in each method. - AR
-            //stmt.close();
+                                                   collection.getCollectionID() + " ORDER BY AtomID")) {
+            while (rs.next()) {
+                atoms.add(rs.getInt(1));
+            }
         } catch (SQLException e) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception retrieving children of the collection.");
             e.printStackTrace();
         }
-        return returnThis;
+        return atoms;
     }
 
     /**
@@ -2447,70 +2168,6 @@ public abstract class Database {
             e.printStackTrace();
         }
         return particleInfo;
-    }
-
-    public void exportDatabase(String filename, int fileType) throws FileNotFoundException {
-        DatabaseConnection dbconn = null;
-        IDataSet dataSet = null;
-        PrintWriter output = new PrintWriter(filename);
-        dbconn = new DatabaseConnection(con);
-        try {
-            ITableFilter filter = new DatabaseSequenceFilter(dbconn);
-            dataSet = new FilteredDataSet(filter, dbconn.createDataSet());
-            switch (fileType) {
-                case 1:
-                    FlatXmlDataSet.write(dataSet, output);
-                    break;
-                case 2:
-                    XlsDataSet.write(dataSet, new FileOutputStream(filename));
-                    break;
-                case 3:
-                    try (FileWriter dummy = new FileWriter(filename)) {
-                        dummy.write("#this is a dummy file\n" +
-                                "#the real data is stored in the directory of the same name");
-                    }
-                    String dirName = filename.substring(0, filename.lastIndexOf("."));
-                    File dir = new File(dirName);
-                    boolean success = dir.mkdir();
-                    if (!success) {
-                        throw new FileNotFoundException();
-                    }
-                    CsvDataSetWriter.write(dataSet, dir);
-
-                    break;
-                default:
-                    System.err.println("Invalid fileType: " + fileType);
-            }
-
-            //
-            //dbconn.close();
-        } catch (Exception e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-    }
-
-    public void importDatabase(String filename, int fileType) throws FileNotFoundException {
-        DatabaseConnection dbconn = null;
-        //IDataSet dataSet = null;
-        FileInputStream input = new FileInputStream(filename);
-        try {
-            dbconn = new DatabaseConnection(con);
-            //dataSet = dbconn.createDataSet();
-            FlatXmlDataSet data = new FlatXmlDataSet(input);
-            InsertIdentityOperation.CLEAN_INSERT.execute(dbconn, data);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-		/*try {
-			dbconn.close();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		*/
     }
 
     /**
@@ -2627,7 +2284,7 @@ public abstract class Database {
     public String backupDatabase(String name) {
         String ret = "Succeeded";
 
-        try (Statement stmt = getCon().createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("backup to '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
@@ -2648,7 +2305,7 @@ public abstract class Database {
         closeConnection();
         openConnection();
         String ret = "Succeeded";
-        try (Statement stmt = getCon().createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("restore from '" + name + "'");
         } catch (SQLException ex) {
             ErrorLogger.writeExceptionToLogAndPrompt(getName(),
@@ -2776,7 +2433,7 @@ public abstract class Database {
      *                   overrides sOdbcConnection
      * @return date associated with the mock dataset.
      */
-    public java.util.Date exportToMSAnalyzeDatabase(
+    public Date exportToMSAnalyzeDatabase(
             Collection collection,
             String newName,
             String fileName) throws IOException, SQLException {
@@ -3050,10 +2707,6 @@ public abstract class Database {
     }
 
     /**
-     * (non-Javadoc)
-     *
-     * @see database.InfoWarehouse#getPeaks(int)
-     * <p>
      * gets an arraylist of peaks given a datatype and atomID.
      * ATOFMS-specific.
      */
@@ -3101,9 +2754,9 @@ public abstract class Database {
 
     /* Cursor classes */
     private class ClusteringCursor implements CollectionCursor {
-        protected InstancedResultSet irs;
-        protected ResultSet rs;
-        protected Statement stmt = null;
+        private ArrayList<Integer> atoms;
+        private Iterator<Integer> atomsIterator;
+        private Integer currentAtom = null;
         private Collection collection;
         private ClusterInformation cInfo;
         private String datatype;
@@ -3113,62 +2766,33 @@ public abstract class Database {
             this.collection = collection;
             datatype = collection.getDatatype();
             this.cInfo = cInfo;
-            rs = getAllAtomsRS(collection);
+            atoms = getAllAtomsRS(collection);
+            atomsIterator = atoms.iterator();
         }
 
         public boolean next() {
-            try {
-                return rs.next();
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error checking the " +
-                                           "bounds of " +
-                                           "the ResultSet.");
-                e.printStackTrace();
+            if (atomsIterator.hasNext()) {
+                currentAtom = atomsIterator.next();
+                return true;
+            } else {
+                currentAtom = null;
                 return false;
             }
         }
 
         public ParticleInfo getCurrent() {
-
             ParticleInfo particleInfo = new ParticleInfo();
-            try {
-                particleInfo.setID(rs.getInt(1));
-                particleInfo.setBinnedList(getPeakListfromAtomID(rs.getInt(1)));
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error retrieving the " +
-                                           "next row");
-                e.printStackTrace();
-                return null;
-            }
+            particleInfo.setID(currentAtom);
+            particleInfo.setBinnedList(getPeakListfromAtomID(currentAtom));
             return particleInfo;
         }
 
         public void close() {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                e.printStackTrace();
-            }
         }
 
         public void reset() {
-            try {
-                rs.close();
-                rs = getAllAtomsRS(collection);
-            } catch (SQLException e) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving data through a clustering cursor.");
-                System.err.println("Error resetting a " +
-                                           "resultset " +
-                                           "for that collection:");
-                e.printStackTrace();
-            }
+            atomsIterator = atoms.iterator();
+            currentAtom = null;
         }
 
         public ParticleInfo get(int i) throws NoSuchMethodException {
@@ -3508,7 +3132,6 @@ public abstract class Database {
      */
     private class AtomInfoOnlyCursor
             implements CollectionCursor {
-        protected InstancedResultSet irs;
         protected ResultSet partInfRS = null;
         protected Statement stmt = null;
         Collection collection;
@@ -3656,9 +3279,9 @@ public abstract class Database {
      * you'll get five particles--rownum >= 1 and rownum <= 5 does.)
      */
     private class SQLAtomIDCursor implements CollectionCursor {
-        private final String query;
-        private Statement stmt;
-        private ResultSet rs;
+        private ArrayList<Integer> atoms;
+        private Iterator<Integer> atomsIterator;
+        private Integer currentAtom = null;
 
         /**
          * Sets up a cursor that returns only the AtomIDs in the collection
@@ -3680,15 +3303,16 @@ public abstract class Database {
             String sparsewhere = "";
             String[] splitwhere = where.split(";", -1);
 
-            if (splitwhere[0].length() > 0)
+            if (!splitwhere[0].isEmpty())
                 densewhere += "WHERE " + splitwhere[0];
-            if (splitwhere.length > 1 && splitwhere[1].length() > 0)
+            if (splitwhere.length > 1 && !splitwhere[1].isEmpty())
                 sparsewhere += "AND " + splitwhere[1];
 
             String densename = getDynamicTableName(DynamicTable.AtomInfoDense, collection.getDatatype());
             String sparsename = getDynamicTableName(DynamicTable.AtomInfoSparse, collection.getDatatype());
             // MM: This query allows Enchilada to filter for criteria from both the dense and sparse datatables
-            query = "SELECT DISTINCT AtomID FROM (\n" + // DISTINCT should be redundant here...
+            // DISTINCT should be redundant here...
+            String query = "SELECT DISTINCT AtomID FROM (\n" + // DISTINCT should be redundant here...
                     "    SELECT DISTINCT d.*, ROW_NUMBER() OVER (ORDER BY InternalAtomOrder.AtomID) AS rownum\n" +
                     "        FROM " + densename + " AS d, InternalAtomOrder\n" +
                     "        WHERE InternalAtomOrder.CollectionID = " + collectionID + " AND d.AtomID = InternalAtomOrder.AtomID\n" +
@@ -3701,9 +3325,13 @@ public abstract class Database {
                     "        )\n" +
                     ") AS temptable " + densewhere;
 
-            try {
-                stmt = getCon().createStatement();
-                rs = stmt.executeQuery(query);
+            try (Statement stmt = con.createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
+                atoms = new ArrayList<>();
+                while (rs.next()) {
+                    atoms.add(rs.getInt(1));
+                }
+                atomsIterator = atoms.iterator();
             } catch (SQLException ex) {
                 ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception creating SQLAtomIDCursor.");
                 ex.printStackTrace();
@@ -3711,13 +3339,6 @@ public abstract class Database {
         }
 
         public void close() {
-            try {
-                stmt.close();
-                rs.close();
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception closing SQLAtomIDCursor.");
-                ex.printStackTrace();
-            }
         }
 
         public ParticleInfo get(int i) throws NoSuchMethodException {
@@ -3727,15 +3348,8 @@ public abstract class Database {
 
         public ParticleInfo getCurrent() {
             ParticleInfo p = new ParticleInfo();
-            try {
-                p.setID(rs.getInt(1));
-                return p;
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "SQL Exception retrieving AtomID with SQLAtomIDCursor.");
-                ex.printStackTrace();
-                return null;
-            }
+            p.setID(currentAtom);
+            return p;
         }
 
         /**
@@ -3747,23 +3361,18 @@ public abstract class Database {
         }
 
         public boolean next() {
-            try {
-                return rs.next();
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(),
-                                                         "Could not advance to next AtomID with SQLAtomIDCursor");
+            if (atomsIterator.hasNext()) {
+                currentAtom = atomsIterator.next();
+                return true;
+            } else {
+                currentAtom = null;
                 return false;
             }
         }
 
         public void reset() {
-            try {
-                stmt = getCon().createStatement();
-                rs = stmt.executeQuery(query);
-            } catch (SQLException ex) {
-                ErrorLogger.writeExceptionToLogAndPrompt(getName(), "SQL Exception resetting SQLAtomIDCursor.");
-                ex.printStackTrace();
-            }
+            atomsIterator = atoms.iterator();
+            currentAtom = null;
         }
     }
 
@@ -3776,9 +3385,6 @@ public abstract class Database {
         public Collection collection;
         Database db;
 
-        /**
-         * @param collectionID
-         */
         public SQLCursor(Collection col, String where, Database db) {
             super(col);
             collection = col;
@@ -3904,7 +3510,7 @@ public abstract class Database {
     private class BinnedCursor extends PeakCursor {
 
         /**
-         * @param collectionID
+         * @param collection
          */
         public BinnedCursor(Collection collection) {
             super(collection);
@@ -3998,7 +3604,6 @@ public abstract class Database {
      * info kept in memory.
      */
     public class MemoryBinnedCursor extends BinnedCursor {
-        Database db;
         boolean firstPass = true;
         int position = -1;
 
@@ -5007,7 +4612,7 @@ public abstract class Database {
     /* @guru Jamie Olson
      * @see database.InfoWarehouse#getConditionalTSCollectionData(collection.Collection, java.util.ArrayList, java.util.ArrayList)
      */
-    public Hashtable<java.util.Date, Double> getConditionalTSCollectionData(
+    public Hashtable<Date, Double> getConditionalTSCollectionData(
             Collection seq,
             ArrayList<Collection> conditionalSeqs, ArrayList<String> conditionStrs) {
 		/*String s = null;
@@ -5074,7 +4679,7 @@ public abstract class Database {
                     "		WHERE M.CollectionID = " + seq.getCollectionID() + ") A " +
                     "ON (T.AtomID = A.AtomID)" + " \n";
         }
-        Hashtable<java.util.Date, Double> retData = new Hashtable<java.util.Date, Double>();
+        Hashtable<Date, Double> retData = new Hashtable<Date, Double>();
 
         try {
             Statement stmt = con.createStatement();

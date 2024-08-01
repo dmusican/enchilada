@@ -65,8 +65,7 @@ public class CreateTestDatabase2 {
 		db.openConnection();
 		con = db.getCon();
 
-	    try {
-			Statement stmt = con.createStatement();
+	    try (Statement stmt = con.createStatement()) {
 			// Create a database with tables mirroring those in the 
 			// real one so we can test on that one and make sure we
 			// know what the results should be.

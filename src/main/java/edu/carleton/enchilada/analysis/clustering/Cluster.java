@@ -48,6 +48,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +64,7 @@ import edu.carleton.enchilada.analysis.DistanceMetric;
 import edu.carleton.enchilada.analysis.DummyNormalizer;
 import edu.carleton.enchilada.analysis.Normalizer;
 import edu.carleton.enchilada.analysis.PeakTransform;
+import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import edu.carleton.enchilada.errorframework.NoSubCollectionException;
 import gnu.trove.map.hash.TIntShortHashMap;
 
@@ -429,7 +431,8 @@ public abstract class Cluster extends CollectionDivider {
 		double distance = 3.0;
 		int chosenCluster = -1;
 		TIntShortHashMap clusterMapping = new TIntShortHashMap();
-		putInSubCollectionBatchInit();
+		ArrayList<Database.BulkInsertAtomRow> atomRows = new ArrayList<>();
+//		putInSubCollectionBatchInit();
 		
 		ArrayList<float[]> tempCentroidList =
 			Cluster.generateCentroidArrays(centroidList,ARRAYOFFSET);
@@ -494,15 +497,45 @@ public abstract class Cluster extends CollectionDivider {
 							System.err.println(
 							"Problem creating sub collection");
 					}
-					putInSubCollectionBulk(thisParticleInfo.getID(),
-							temp.subCollectionNum);
+					int target = temp.subCollectionNum;
+					int collectionToBeParent = subCollectionIDs.get(target-1);
+					atomRows.add(new Database.BulkInsertAtomRow(thisParticleInfo.getID(),
+							collectionToBeParent));
+//					putInSubCollectionBatch(thisParticleInfo.getID(),
+//							temp.subCollectionNum);
 					System.out.println("putting in subcollectionbatch " + thisParticleInfo.getID() + " " + temp.subCollectionNum);
 					temp.numMembers++;
 				}
 			}// end with no particle remaining
-			putInSubCollectionBulkExecute();
+			db.bulkInsertAtom(atomRows);
+			StringBuilder atomIDsToDel = new StringBuilder();
+			for (Database.BulkInsertAtomRow atomRow : atomRows) {
+				atomIDsToDel.append(atomRow.atomId());
+				atomIDsToDel.append(",");
+			}
+			// Remove trailing comma
+			if (!atomIDsToDel.isEmpty()) {
+				atomIDsToDel.deleteCharAt(atomIDsToDel.length() - 1);
+			}
+
+			// Now get rid of ids that need deleting. Move this code elsewhere, but put it here to try it.
+			db.atomBatchInit();
+			if (!atomIDsToDel.isEmpty() &&
+					atomIDsToDel.length() < 2000) {
+				db.deleteAtomsBatch(atomIDsToDel.toString(),collection);
+			} else if (!atomIDsToDel.isEmpty()) {
+				Scanner atomIDs = new Scanner(atomIDsToDel.toString()).useDelimiter(",");
+				while (atomIDs.hasNext()) {
+					db.deleteAtomBatch(atomIDs.nextInt(), collection);
+				}
+			}
+			db.atomBatchExecute();
+			System.out.println("Done with DELETEs.");
+
+
+//			putInSubCollectionBatchExecute();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new ExceptionAdapter(e);
 		}
 		curs.reset();
 		if(!changeCentroids){

@@ -43,11 +43,13 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
+import javax.xml.transform.Result;
 
 import edu.carleton.enchilada.errorframework.ExceptionAdapter;
 import junit.framework.TestCase;
@@ -313,23 +315,26 @@ public class SPASSDataSetImporterTest extends TestCase {
 	 */
 	private void testDataLength(int items, int numpeaks) {
 		Connection con = db.getCon();
-		ResultSet rs = null;
-		try {
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM ATOFMSAtomInfoDense");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
+		try (Statement stmt = con.createStatement()){
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM ATOFMSAtomInfoDense")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
+
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM AtomMembership")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
 			
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM AtomMembership");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM DataSetMembers")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), items);
+			}
 			
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM DataSetMembers");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), items);
-			
-			rs = con.createStatement().executeQuery("SELECT count(*) FROM ATOFMSAtomInfoSparse");
-			assertTrue(rs.next());
-			assertEquals(rs.getInt(1), numpeaks);			
+			try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM ATOFMSAtomInfoSparse")) {
+				assertTrue(rs.next());
+				assertEquals(rs.getInt(1), numpeaks);
+			}
 		}
 		catch (SQLException ex) {
 			ex.printStackTrace();
@@ -355,12 +360,11 @@ public class SPASSDataSetImporterTest extends TestCase {
 		int[] peakVals = GenData.peakVals;
 		
 		Connection con = db.getCon();
-		ResultSet rs = null;
 		//Check dense atom info for ordering and timestamps
-		try {
-			rs = con.createStatement().executeQuery(
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery(
 					"SELECT * FROM ATOFMSAtomInfoDense WHERE AtomID >= " + AtomIDStart + 
-					" AND AtomID < " + (AtomIDStart + items));
+					" AND AtomID < " + (AtomIDStart + items))) {
 			for (int i = 0; i < items; ++i) {
 				rs.next();
 				assertEquals(rs.getInt(1), i + AtomIDStart);
@@ -376,9 +380,9 @@ public class SPASSDataSetImporterTest extends TestCase {
 		}
 		
 		//check for correct atom membership
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID);
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM AtomMembership WHERE CollectionID = " + CollectionID)) {
 			
 			for (int i = 0; i < items; ++i) {
 				assertTrue(rs.next());
@@ -394,9 +398,9 @@ public class SPASSDataSetImporterTest extends TestCase {
 		}
 		
 		//check for the correct OrigDataSetID on each Atom
-		try {
-			rs = con.createStatement().executeQuery(
-					"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID);
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM DataSetMembers WHERE OrigDataSetID = " + OrigDataSetID)) {
 			
 			for (int i = 0; i < items; ++i) {
 				assertTrue(rs.next());
@@ -410,10 +414,10 @@ public class SPASSDataSetImporterTest extends TestCase {
 		}
 		
 		//check that sparse is correct
-		try {
-			rs = con.createStatement().executeQuery(
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery(
 					"SELECT * FROM ATOFMSAtomInfoSparse WHERE AtomID >= " + AtomIDStart + 
-					" AND AtomID < " + (AtomIDStart + items));
+					" AND AtomID < " + (AtomIDStart + items))) {
 			
 			for (int i = 0; i < items * peaks.length; ++i) {
 				assertTrue(rs.next());

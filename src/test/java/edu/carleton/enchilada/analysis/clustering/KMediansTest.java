@@ -160,12 +160,12 @@ Key:	Value:
 	     */
 	    public void testKMediansOneParticle() throws Exception {
 	    	Connection con = db.getCon();
-	    	Statement stmt = con.createStatement();
-
-	    	stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
-	    	stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
-			stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
-			stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+	    	try (Statement stmt = con.createStatement()) {
+				stmt.executeUpdate("DELETE from AtomMembership where collectionId = 2");
+				stmt.executeUpdate("DELETE from InternalAtomOrder where collectionId = 2");
+				stmt.executeUpdate("INSERT INTO AtomMembership VALUES(2,2)");
+				stmt.executeUpdate("INSERT INTO InternalAtomOrder VALUES(2,2)");
+			}
 			
 	        int cID = 2;
 	        int k = 1;

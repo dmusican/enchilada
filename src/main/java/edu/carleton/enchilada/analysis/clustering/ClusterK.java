@@ -818,11 +818,12 @@ public abstract class ClusterK extends Cluster {
 		}
 		else {
 			db.seedRandom(randomNumber);
-			CollectionCursor randCurs = 
+			try (CollectionCursor randCurs =
 				db.getRandomizedCursor(db.getCollection(collectionID));
-			NonZeroCursor partCurs = new NonZeroCursor(randCurs);
-			partCurs.next();
-			newCent = getCurrentParticleAsCentroid(partCurs);
+				 NonZeroCursor partCurs = new NonZeroCursor(randCurs)) {
+				partCurs.next();
+				newCent = getCurrentParticleAsCentroid(partCurs);
+			}
 		}
 
 		assert (newCent != null) : "Error adding centroid";

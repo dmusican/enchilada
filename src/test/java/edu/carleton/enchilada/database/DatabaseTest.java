@@ -11,8 +11,6 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is EDAM Enchilada's SQLServerDatabase unit test class.
- *
  * The Initial Developer of the Original Code is
  * The EDAM Project at Carleton College.
  * Portions created by the Initial Developer are Copyright (C) 2005
@@ -167,37 +165,39 @@ public class DatabaseTest extends TestCase {
 		
 		int[] ids = db.createEmptyCollectionAndDataset("ATOFMS", 0,
 				"dataset",  "comment", "'mCalFile', 'sCalFile', 12, 20, 0.005, 0");
-		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = con.createStatement().executeQuery(
+
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement()) {
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT *\n" +
 					"FROM ATOFMSDataSetInfo\n" +
-					"WHERE DataSetID = " + ids[1]);
-			assertTrue(rs.next());
-			assertEquals("dataset", rs.getString(2));
-			assertEquals("mCalFile", rs.getString(3));
-			assertEquals("sCalFile", rs.getString(4));
-			assertEquals(12, rs.getInt(5));
-			assertEquals(20, rs.getInt(6));
-			assertTrue(Math.abs(rs.getFloat(7) - (float)0.005) <= 0.00001);
-			assertFalse(rs.next());
-			rs = stmt.executeQuery(
+					"WHERE DataSetID = " + ids[1])) {
+				assertTrue(rs.next());
+				assertEquals("dataset", rs.getString(2));
+				assertEquals("mCalFile", rs.getString(3));
+				assertEquals("sCalFile", rs.getString(4));
+				assertEquals(12, rs.getInt(5));
+				assertEquals(20, rs.getInt(6));
+				assertTrue(Math.abs(rs.getFloat(7) - (float) 0.005) <= 0.00001);
+				assertFalse(rs.next());
+			}
+
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT * FROM Collections\n" +
-					"WHERE CollectionID = " + ids[0]);
-			rs.next();
-			assertEquals("dataset", rs.getString("Name"));
-			assertEquals("comment", rs.getString("Comment"));
-			assertFalse(rs.next());
-			rs = stmt.executeQuery(
+					"WHERE CollectionID = " + ids[0])) {
+				rs.next();
+				assertEquals("dataset", rs.getString("Name"));
+				assertEquals("comment", rs.getString("Comment"));
+				assertFalse(rs.next());
+			}
+
+			try (ResultSet rs = stmt.executeQuery(
 					"SELECT ParentID FROM CollectionRelationships\n" +
-					"WHERE ChildID = " + ids[0]);
-			assertTrue(rs.next());
-			assertEquals(0, rs.getInt(1));
-			assertFalse(rs.next());
-			rs.close();
-			stmt.close();
+					"WHERE ChildID = " + ids[0])) {
+				assertTrue(rs.next());
+				assertEquals(0, rs.getInt(1));
+				assertFalse(rs.next());
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -1463,37 +1463,6 @@ public class DatabaseTest extends TestCase {
 	}
 
 	/**
-	 * @author shaferia
-	 */
-	public void testJoin()
-	{
-		int[] intsraw = {1, 2, 3, 4, 5};
-		ArrayList<Integer> ints = new ArrayList<Integer>();
-		for (int i : intsraw)
-			ints.add(i);
-		ArrayList<String> strings = new ArrayList<String>();
-		for (int i : intsraw)
-			strings.add(i + "");
-		
-		ArrayList<Object> mixed = new ArrayList<Object>();
-		mixed.add(new Integer(2));
-		mixed.add("hey");
-		mixed.add(new Float(2.0));
-		
-		assertEquals(SQLServerDatabase.join(ints, ","), "1,2,3,4,5");
-		assertEquals(SQLServerDatabase.join(ints, ""), "12345");
-		assertEquals(SQLServerDatabase.join(new ArrayList<String>(), ","), "");
-		assertEquals(SQLServerDatabase.join(ints, "-"), SQLServerDatabase.join(strings, "-"));
-		assertEquals(SQLServerDatabase.join(strings, ",,"), "1,,2,,3,,4,,5");
-		assertEquals(SQLServerDatabase.join(mixed, "."), "2.hey.2.0");
-		
-		ArrayList<Integer> oneint = new ArrayList<Integer>();
-		oneint.add(new Integer(2));
-		
-		assertEquals(SQLServerDatabase.join(oneint, ","), "2");
-	}
-
-	/**
 	 * Use java.util.Foramtter to create a formatted string
 	 * @param format the format specification
 	 * @param args variables to format
@@ -1511,11 +1480,10 @@ public class DatabaseTest extends TestCase {
 		db.openConnection();
 		
 		assertTrue(db.addCenterAtom(2, 3));
-		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms WHERE AtomID = 2");
+
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms WHERE AtomID = 2")) {
 			
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 2);
@@ -1527,19 +1495,17 @@ public class DatabaseTest extends TestCase {
 		
 		assertTrue(db.addCenterAtom(3, 4));
 		
-		try {
-			Connection con = db.getCon();
-			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms ORDER BY CollectionID");
-			
+		try (Statement stmt = con.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM CenterAtoms ORDER BY CollectionID")) {
+
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 2);
 			assertEquals(rs.getInt("CollectionID"), 3);
-			
+
 			assertTrue(rs.next());
 			assertEquals(rs.getInt("AtomID"), 3);
 			assertEquals(rs.getInt("CollectionID"), 4);
-			
+
 			assertFalse(rs.next());
 		}
 		catch (SQLException ex) {
@@ -1823,21 +1789,18 @@ public class DatabaseTest extends TestCase {
 	 */
 	public void testGetColNames() throws SQLException {
 		db.openConnection();
-		
+
 		//Test Metadata given by database (from ResultSetMetaData) 
 		//	against hardcoded MetaData in database
 		for (String type : db.getKnownDatatypes()) {
 			for (DynamicTable dynt : DynamicTable.values()) {
 				ArrayList<String> names = db.getColNames(type, dynt);
-				
-				try	{
-					Connection con = db.getCon();
-					Statement stmt = con.createStatement();
-					ResultSet rs = stmt.executeQuery(
-							";\n" +
-							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
+
+				Connection con = db.getCon();
+				try	(Statement stmt = con.createStatement();
+						ResultSet rs = stmt.executeQuery("SELECT * FROM " + db.getDynamicTableName(dynt, type))) {
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-					
+
 					for (int i = 1; i < rsmd.getColumnCount() + 1; ++i) {
 						assertTrue(names.get(i - 1).equalsIgnoreCase(
 								rsmd.getColumnName(i)));
@@ -1850,10 +1813,10 @@ public class DatabaseTest extends TestCase {
 				}
 			}
 		}
-		
+
 		db.closeConnection();
 	}
-	
+
 	/**
 	 * @author shaferia
 	 */
@@ -1875,20 +1838,12 @@ public class DatabaseTest extends TestCase {
 			for (DynamicTable dynt : DynamicTable.values()) {
 				ArrayList<ArrayList<String>> names = db.getColNamesAndTypes(type, dynt);
 				
-				//System.out.printf("*** %s%s *** \n", type, dynt);
-				
-				try	{
-					Connection con = db.getCon();
-					Statement stmt = con.createStatement();
-					ResultSet rs = stmt.executeQuery(
-							";\n" +
-							"SELECT * FROM " + db.getDynamicTableName(dynt, type));
+				Connection con = db.getCon();
+				try	(Statement stmt = con.createStatement();
+						ResultSet rs = stmt.executeQuery("SELECT * FROM " + db.getDynamicTableName(dynt, type))) {
 					java.sql.ResultSetMetaData rsmd = rs.getMetaData();
 
 					for (int i = 1; i < rsmd.getColumnCount() + 1; ++i) {
-						//System.out.printf("Name: %-20.20s - %-20.20s Type: %-20.20s - %-20.20s\n",
-						//		names.get(i - 1).get(0), rsmd.getColumnName(i),
-						//		names.get(i - 1).get(1), rsmd.getColumnTypeName(i));
 						assertEquals(names.get(i - 1).get(0),
 								rsmd.getColumnName(i));
 						//assertEquals(names.get(i - 1).get(1), typeConv.get(rsmd.getColumnType(i)));
@@ -1920,9 +1875,9 @@ public class DatabaseTest extends TestCase {
 	
 		//getKnownDatatypes uses Java for creating distinctness of datatypes:
 		//	see if that's the same result as using SQL SELECT DISTINCT
-		try {
-			ResultSet rs = db.getCon().createStatement().executeQuery(
-					"SELECT DISTINCT Datatype FROM MetaData");
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery(
+					"SELECT DISTINCT Datatype FROM MetaData")) {
 			
 			for (int i = 0; rs.next(); ++i){
 				assertEquals(types.get(i), rs.getString(1));
@@ -2179,17 +2134,16 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 	}
 	
-	// ***SLH  BulkInsertDataParticles saveDataParticle
-	public void testsaveAtofmsParticle_BulkInsertAtofmsParticles() throws SQLException {
+	public void testSaveAtofmsParticleUpdatedBulkInsert() throws SQLException {
 		String[] tables= {"ATOFMSAtomInfoDense", "ATOFMSAtomInfoSparse", "AtomMembership", "DataSetMembers",
-						  "InternalAtomOrder"};
+				"InternalAtomOrder"};
 		String dense_str = "12-30-06 10:59:49, 1.89E-4, 2.4032946, 4286,E:\\Data\\12-29-2003\\h\\h-031230105949-00001.amz";
 		String[] sparse_str = {"23.0, 56673, 0.60352063, 2625", "40.0, 5289, 0.05632348, 450", "-16.0, 17893, 0.06354161, 2607"};
 
 		int datasetid = 100;
 		int nextAtomID = 100;
 		db.openConnection();
-		Database.Data_bulkBucket bkts = db.getDatabulkBucket(tables);
+		Database.BulkInserter bulkInserter = db.new BulkInserter(tables);
 
 		ArrayList<String> sparse_arraylist = new ArrayList<>();
 
@@ -2197,11 +2151,10 @@ public class DatabaseTest extends TestCase {
 
 		// ATOFMS table insertion
 		Collection c = db.getCollection(0);
-		assertEquals(db.saveDataParticle(dense_str, sparse_arraylist, c, datasetid, nextAtomID, bkts), nextAtomID);
-		// atofms_bkt.close();
-		db.BulkInsertDataParticles(bkts);
+		bulkInserter.queueInsertion(dense_str, sparse_arraylist, c, datasetid, nextAtomID);
+		bulkInserter.executeBatch();
 		db.closeConnection();
-		
+
 		//check ATOFMS dense data
 		db.openConnection();
 		Statement stmt = db.getCon().createStatement();
@@ -2264,29 +2217,28 @@ public class DatabaseTest extends TestCase {
 
 
 	}
-	
-	public void testsaveAmsParticle_BulkInsertAmsParticles() throws SQLException {
-		
+
+	public void testSaveAmsParticleUpdatedBulkInsert() throws SQLException {
+
 		String[] tables= {"AMSAtomInfoDense", "AMSAtomInfoSparse"};
 		String ams_dense_str = "12-30-06 10:59:50";
 		String[] ams_sparse_str = {"14.0,0.0140019", "30.0,0.2438613", "31.0,9.876385E-4", "32.0,4.877227E-4"};
-		
+
 		int datasetid = 100;
 		int nextAtomID = 100;
 		db.openConnection();
-		Database.Data_bulkBucket bkts = db.getDatabulkBucket(tables);
+		Database.BulkInserter bulkInserter = db.new BulkInserter(tables);
 
 		ArrayList<String> ams_sparse_arraylist = new ArrayList<>();
 
 		Collections.addAll(ams_sparse_arraylist, ams_sparse_str);
-		
+
 		// AMS table insertion
 		Collection c = db.getCollection(0);
-		assertEquals(db.saveDataParticle(ams_dense_str, ams_sparse_arraylist, c, datasetid, nextAtomID, bkts), nextAtomID);
-		// atofms_bkt.close();
-		db.BulkInsertDataParticles(bkts);
+		bulkInserter.queueInsertion(ams_dense_str, ams_sparse_arraylist, c, datasetid, nextAtomID);
+		bulkInserter.executeBatch();
 		db.closeConnection();
-		
+
 		//check AMS dense data
 		db.openConnection();
 		Statement stmt = db.getCon().createStatement();
@@ -2318,7 +2270,6 @@ public class DatabaseTest extends TestCase {
 		db.closeConnection();
 
 	}
-
 
 
 	/**
@@ -2358,17 +2309,13 @@ public class DatabaseTest extends TestCase {
 	{
 		Collection c;
 		Vector<Vector<Object>> particleInfo = new Vector<Vector<Object>>();
-		Connection con;
-		Statement stmt;
 
 		String manual = " INSERT INTO Collections VALUES "+
 		"(7,'Seven', 'seven', 'sevendescrip', 'ATOFMS')";
 
 		db.openConnection();
-		con = db.getCon();
-		try
-		{
-			stmt = con.createStatement();
+		Connection con = db.getCon();
+		try (Statement stmt = con.createStatement()) {
 			stmt.executeUpdate("INSERT INTO Collections VALUES (7, 'Seven', 'seven', 'sevendescrip', 'ATOFMS')\n");
 			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,1)\n");
 			stmt.executeUpdate("INSERT INTO AtomMembership VALUES (7,3)\n");
@@ -2480,10 +2427,12 @@ public class DatabaseTest extends TestCase {
 		File tmpFile = File.createTempFile("backup-test", ".sqlite");
 		tmpFile.deleteOnExit();
 		db.backupDatabase(tmpFile.getAbsolutePath());
-		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
-		db.restoreDatabase(tmpFile.getAbsolutePath());
 		try (Statement stmt = db.getCon().createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			stmt.executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		}
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense")) {
 			int count = 0;
 			while (rs.next()) {
 				count++;
@@ -2497,10 +2446,12 @@ public class DatabaseTest extends TestCase {
 		File tmpFile = File.createTempFile("backup test", ".sqlite");
 		tmpFile.deleteOnExit();
 		db.backupDatabase(tmpFile.getAbsolutePath());
-		db.getCon().createStatement().executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
-		db.restoreDatabase(tmpFile.getAbsolutePath());
 		try (Statement stmt = db.getCon().createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense");
+			stmt.executeUpdate("DELETE FROM ATOFMSAtomInfoDense WHERE 1=1");
+		}
+		db.restoreDatabase(tmpFile.getAbsolutePath());
+		try (Statement stmt = db.getCon().createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM ATOFMSAtomInfoDense")) {
 			int count = 0;
 			while (rs.next()) {
 				count++;
